@@ -143,7 +143,7 @@ public partial class MainWindow : Window
     private void ShowAddedToast(CartLine line)
     {
         AddedToastTitle.Text = line.Product.Name;
-        AddedToastSubtitle.Text = $"{Vm.ItemCountLabel}  ·  {Vm.Total:N2} DH";
+        AddedToastSubtitle.Text = $"{Vm.ItemCountLabel}  ·  {Loc.Ltr($"{Vm.Total:N2} DH")}";
 
         AddedToastImage.Source = string.IsNullOrWhiteSpace(line.Product.ImagePath)
             ? null
@@ -440,7 +440,7 @@ public partial class MainWindow : Window
 
         if (Vm.LastInvoiceNumber <= 0) return;   // CompleteSale reported the failure already
 
-        ConfirmDetail.Text = $"Ticket #{Vm.LastInvoiceNumber}  ·  {total:N2} DH";
+        ConfirmDetail.Text = $"{Loc.T("Ticket #{0}", Vm.LastInvoiceNumber)}  ·  {Loc.Ltr($"{total:N2} DH")}";
 
         // Print before the animation so paper starts moving immediately; any failure is
         // reported in the confirmation line rather than stopping the till, because the sale

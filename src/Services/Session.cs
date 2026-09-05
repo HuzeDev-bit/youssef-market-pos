@@ -84,12 +84,13 @@ public static class Session
     /// <summary>True once the owner has unlocked the back office with the admin password.</summary>
     public static bool IsOwnerUnlocked { get; private set; }
 
-    public static string CurrentName => Current?.Name ?? (IsOwnerUnlocked ? OwnerLabel : "Till");
+    public static string CurrentName =>
+        Current?.Name ?? (IsOwnerUnlocked ? OwnerLabel : Loc.T("The till"));
 
     /// <summary>The owner's own name, or the plain word until they have given one.</summary>
     public static string OwnerLabel =>
         string.IsNullOrWhiteSpace(AppSettings.Current.OwnerName)
-            ? "Owner" : AppSettings.Current.OwnerName.Trim();
+            ? Loc.T("Owner") : AppSettings.Current.OwnerName.Trim();
     public static int? CurrentId => Current?.Id;
 
     /// <summary>

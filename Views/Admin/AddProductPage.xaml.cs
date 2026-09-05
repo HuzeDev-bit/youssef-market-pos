@@ -85,8 +85,8 @@ public partial class AddProductPage : AdminPageBase
             Category = p.Category,
             // A dash, never 0.00 — nothing is free to buy, and a zero here would be a figure
             // somebody might price against.
-            CostLabel = p.Cost > 0m ? $"{p.Cost:N2} DH" : "\u2014",
-            PriceLabel = $"{p.Price:N2} DH",
+            CostLabel = p.Cost > 0m ? Loc.Ltr($"{p.Cost:N2} DH") : "\u2014",
+            PriceLabel = Loc.Ltr($"{p.Price:N2} DH"),
             StockLabel = p.Unit == Unit.Kg ? $"{p.Stock:0.###} kg" : $"{p.Stock:0.###}",
             AddedLabel = Ago(p),
         }).ToList();
@@ -282,7 +282,7 @@ public partial class AddProductPage : AdminPageBase
         var hasQuantity = TryAmount(AddQuantityBox.Text, out var quantity);
 
         AddTotalCost.Text = hasCost && hasQuantity && cost > 0m && quantity > 0m
-            ? $"{Math.Round(cost * quantity, 2):N2} DH"
+            ? Loc.Ltr($"{Math.Round(cost * quantity, 2):N2} DH")
             : "—";
 
         if (!hasCost || !hasPrice || price <= 0m)

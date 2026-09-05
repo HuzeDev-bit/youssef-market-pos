@@ -1,4 +1,4 @@
-<local:AdminPageBase x:Class="MarketPos.Views.Admin.AddProductPage"
+﻿<local:AdminPageBase x:Class="MarketPos.Views.Admin.AddProductPage"
                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                      xmlns:local="clr-namespace:MarketPos.Views.Admin">
@@ -20,7 +20,7 @@
                         <StackPanel Orientation="Horizontal">
                             <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Plus}"
                                   Width="14" Height="14"/>
-                            <TextBlock Text="Add product" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="إضافة منتج" Margin="9,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </Grid>
@@ -44,7 +44,7 @@
                                 <ColumnDefinition Width="1*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="PRODUCT" Style="{StaticResource Text.ColumnHead}"/>
-                            <TextBlock Grid.Column="1" Text="CATEGORY" Style="{StaticResource Text.ColumnHead}"/>
+                            <TextBlock Grid.Column="1" Text="الفئة" Style="{StaticResource Text.ColumnHead}"/>
                             <TextBlock Grid.Column="2" Text="BOUGHT FOR" Style="{StaticResource Text.ColumnHead}"
                                        TextAlignment="Right"/>
                             <TextBlock Grid.Column="3" Text="SELLING FOR" Style="{StaticResource Text.ColumnHead}"
@@ -146,7 +146,7 @@
                         </Button>
                     </Grid>
 
-                    <TextBlock Text="BARCODE" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                    <TextBlock Text="الباركود" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="290"/>
@@ -173,11 +173,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="NAME" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                            <TextBlock Text="الاسم" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
                             <TextBox x:Name="AddNameBox" Style="{StaticResource TextBox.Field}" Height="40"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="CATEGORY" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                            <TextBlock Text="الفئة" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
                             <ComboBox x:Name="AddCategoryBox" Style="{StaticResource ComboBox.Form}"
                                       Height="40" IsEditable="True"/>
                         </StackPanel>

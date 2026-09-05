@@ -1,4 +1,4 @@
-<Window x:Class="MarketPos.Views.Admin.CategoryWindow"
+﻿<Window x:Class="MarketPos.Views.Admin.CategoryWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Category" Width="420" SizeToContent="Height"
@@ -48,7 +48,7 @@
                 </Button>
 
                 <StackPanel Grid.Column="1" Margin="14,0,0,0">
-                    <TextBlock Text="NAME" Style="{StaticResource Text.FieldLabel}" Margin="2,0,0,6"/>
+                    <TextBlock Text="الاسم" Style="{StaticResource Text.FieldLabel}" Margin="2,0,0,6"/>
                     <TextBox x:Name="NameBox" Style="{StaticResource TextBox.Field}"/>
 
                     <TextBlock Text="ICON" Style="{StaticResource Text.FieldLabel}" Margin="2,12,0,6"/>
@@ -89,9 +89,9 @@
                         Foreground="{StaticResource Brush.Danger}" Click="Deactivate_Click"
                         Visibility="Collapsed"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource Button.PillMuted}" Content="Cancel" Width="100"
+                    <Button Style="{StaticResource Button.PillMuted}" Content="إلغاء" Width="100"
                             Click="Cancel_Click" Margin="0,0,10,0"/>
-                    <Button Style="{StaticResource Button.Pill}" Content="Save" Width="120"
+                    <Button Style="{StaticResource Button.Pill}" Content="حفظ" Width="120"
                             Click="Save_Click"/>
                 </StackPanel>
             </Grid>

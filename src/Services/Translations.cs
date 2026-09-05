@@ -19,6 +19,9 @@ public static class Translations
             [" — take them off the shelf and record the loss."] =
                 (" — retirez-les du rayon et enregistrez la perte.",
                  " — أزلها من الرف وسجّل الخسارة."),
+            ["*** DUPLICATA / REPRINT ***"] =
+                ("*** DUPLICATA / REPRINT ***",
+                 "*** نسخة / إعادة طباعة ***"),
             ["= gross profit"] =
                 ("= bénéfice brut",
                  "= الربح الإجمالي"),
@@ -103,6 +106,9 @@ public static class Translations
             ["Attach"] =
                 ("Joindre",
                  "إرفاق"),
+            ["Autre"] =
+                ("Autre",
+                 "أخرى"),
             ["BACK OFFICE ADDRESS"] =
                 ("ADRESSE DE L'ARRIÈRE-BOUTIQUE",
                  "عنوان جهاز الإدارة"),
@@ -187,6 +193,12 @@ public static class Translations
             ["Cannot see profit, salaries, supplier debt or settings."] =
                 ("Ne voit ni le bénéfice, ni les salaires, ni la dette fournisseurs, ni les réglages.",
                  "لا يرى الأرباح ولا الرواتب ولا ديون الموردين ولا الإعدادات."),
+            ["Carte"] =
+                ("Carte",
+                 "بطاقة"),
+            ["Cashier"] =
+                ("Caissier",
+                 "الكاشير"),
             ["Cashiers browse these to find products that have no barcode."] =
                 ("Les caissiers les parcourent pour trouver les produits sans code-barres.",
                  "يتصفحها الكاشيرات للعثور على المنتجات التي بلا باركود."),
@@ -301,6 +313,9 @@ public static class Translations
             ["Enter what it sells for."] =
                 ("Indiquez son prix de vente.",
                  "أدخل سعر بيعه."),
+            ["Especes"] =
+                ("Especes",
+                 "نقداً"),
             ["Every amount needs a currency after it."] =
                 ("Chaque montant a besoin d'une devise.",
                  "كل مبلغ يحتاج عملة بعده."),
@@ -439,9 +454,15 @@ public static class Translations
             ["Make an in-store code for a product with no printed barcode"] =
                 ("Créer un code interne pour un produit sans code-barres imprimé",
                  "إنشاء رمز داخلي لمنتج بدون باركود مطبوع"),
+            ["Manager"] =
+                ("Gérant",
+                 "المسؤول"),
             ["Manages products and stock levels, and can see stock movements. No money screens."] =
                 ("Gère les produits et les niveaux de stock, et voit les mouvements. Aucun écran d'argent.",
                  "يدير المنتجات ومستويات المخزون ويرى الحركات. لا شاشات مالية."),
+            ["Merci et a bientot"] =
+                ("Merci et a bientot",
+                 "شكراً لكم وإلى اللقاء"),
             ["Minimise"] =
                 ("Réduire",
                  "تصغير"),
@@ -622,6 +643,9 @@ public static class Translations
             ["Over 100%"] =
                 ("Plus de 100 %",
                  "أكثر من 100%"),
+            ["Owner"] =
+                ("Propriétaire",
+                 "المالك"),
             ["Owner only"] =
                 ("Réservé au propriétaire",
                  "للمالك فقط"),
@@ -841,6 +865,9 @@ public static class Translations
             ["Rename it, change its picture, or hide it"] =
                 ("Le renommer, changer son image, ou le masquer",
                  "إعادة تسميتها أو تغيير صورتها أو إخفاؤها"),
+            ["Rendu"] =
+                ("Rendu",
+                 "الباقي"),
             ["Rent, electricity, water, repairs — anything that is not stock."] =
                 ("Loyer, électricité, eau, réparations — tout ce qui n'est pas du stock.",
                  "الكراء والكهرباء والماء والإصلاحات — كل ما ليس مخزوناً."),
@@ -1024,12 +1051,18 @@ public static class Translations
             ["Sold at the till"] =
                 ("Vendu en caisse",
                  "يُباع في الصندوق"),
+            ["Sous-total"] =
+                ("Sous-total",
+                 "المجموع الفرعي"),
             ["Staff, wages and who can open the back office"] =
                 ("Le personnel, les salaires et qui peut ouvrir l'arrière-boutique",
                  "الموظفون والأجور ومن يمكنه فتح الإدارة"),
             ["Stock that came in"] =
                 ("Stock entré",
                  "المخزون الوارد"),
+            ["Stock worker"] =
+                ("Magasinier",
+                 "عامل المخزون"),
             ["Subtotal"] =
                 ("Sous-total",
                  "المجموع الفرعي"),
@@ -1063,6 +1096,9 @@ public static class Translations
             ["TOTAL COST"] =
                 ("COÛT TOTAL",
                  "التكلفة الإجمالية"),
+            ["TVA"] =
+                ("TVA",
+                 "الضريبة"),
             ["Test"] =
                 ("Tester",
                  "اختبار"),
@@ -1105,6 +1141,9 @@ public static class Translations
             ["The stock quantity must be a number."] =
                 ("La quantité en stock doit être un nombre.",
                  "يجب أن تكون كمية المخزون رقماً."),
+            ["The till"] =
+                ("La caisse",
+                 "الصندوق"),
             ["The till took"] =
                 ("La caisse a encaissé",
                  "ما حصّله الصندوق"),
@@ -1138,6 +1177,9 @@ public static class Translations
             ["Tick what is coming back, then say why."] =
                 ("Cochez ce qui revient, puis indiquez pourquoi.",
                  "حدد ما يُرجع، ثم بيّن السبب."),
+            ["Ticket N. {0}"] =
+                ("Ticket N. {0}",
+                 "إيصال رقم {0}"),
             ["Tickets"] =
                 ("Tickets",
                  "التذاكر"),
@@ -1147,6 +1189,9 @@ public static class Translations
             ["Total"] =
                 ("Total",
                  "المجموع"),
+            ["Total HT"] =
+                ("Total HT",
+                 "المجموع دون ضريبة"),
             ["Try a different name or barcode."] =
                 ("Essayez un autre nom ou code-barres.",
                  "جرّب اسماً أو باركود آخر."),
@@ -1303,6 +1348,9 @@ public static class Translations
             ["completed in this period"] =
                 ("terminées sur cette période",
                  "مكتملة في هذه الفترة"),
+            ["copy - not a new sale"] =
+                ("copie - pas une nouvelle vente",
+                 "نسخة - ليست عملية بيع جديدة"),
             ["cost you {0} · you keep {1} ({2}%)"] =
                 ("vous a coûté {0} · vous gardez {1} ({2} %)",
                  "كلّفك {0} · تحتفظ بـ {1} ({2}%)"),

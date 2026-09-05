@@ -84,13 +84,13 @@ public sealed class Worker
     public string Note { get; init; } = string.Empty;
     public bool HasPin { get; init; }
 
-    public string RoleLabel => Role switch
+    public string RoleLabel => Services.Loc.T(Role switch
     {
         WorkerRole.Owner => "Owner",
         WorkerRole.Manager => "Manager",
         WorkerRole.StockWorker => "Stock worker",
         _ => "Cashier",
-    };
+    });
 
     /// <summary>First letter, for the avatar circle. Photographs of staff are not worth the trouble.</summary>
     public string Initial => Name.Length > 0 ? Name[..1].ToUpperInvariant() : "?";

@@ -1,10 +1,11 @@
-<Window x:Class="MarketPos.Views.ReprintWindow"
+﻿<Window x:Class="MarketPos.Views.ReprintWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Reprint Receipt" Width="520" Height="640"
+        Title="إعادة طباعة الإيصال" Width="520" Height="640"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         WindowStyle="None"
+        FlowDirection="RightToLeft"
         AllowsTransparency="True"
         Background="Transparent"
         ShowInTaskbar="False"
@@ -25,8 +26,8 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0">
-                <TextBlock Text="Reprint Receipt" Style="{StaticResource Text.Title}" FontSize="20"/>
-                <TextBlock Text="Enter the receipt number printed on a completed sale. Nothing is charged again."
+                <TextBlock Text="إعادة طباعة الإيصال" Style="{StaticResource Text.Title}" FontSize="20"/>
+                <TextBlock Text="أدخل رقم الإيصال المطبوع على عملية البيع المكتملة. لن يتم احتساب أي مبلغ مجدداً."
                            Style="{StaticResource Text.Muted}" Margin="0,4,0,16"/>
             </StackPanel>
 
@@ -38,12 +39,12 @@
                 <TextBox x:Name="NumberBox" Grid.Column="0" Style="{StaticResource TextBox.Plain}"
                          FontSize="20" Padding="14,11"
                          PreviewTextInput="NumberBox_PreviewTextInput" KeyDown="NumberBox_KeyDown"/>
-                <Button Grid.Column="1" Style="{StaticResource Button.PillMuted}" Content="Find"
+                <Button Grid.Column="1" Style="{StaticResource Button.PillMuted}" Content="بحث"
                         Margin="10,0,0,0" Click="Find_Click"/>
             </Grid>
 
             <StackPanel Grid.Row="2" Margin="0,0,0,12">
-                <TextBlock Text="RECENT RECEIPTS" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
+                <TextBlock Text="الإيصالات الأخيرة" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
                 <ItemsControl x:Name="RecentList">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
@@ -53,7 +54,7 @@
 
             <Border Grid.Row="3" Background="{StaticResource Brush.Card}" CornerRadius="14" Padding="10">
                 <Grid>
-                    <TextBlock x:Name="EmptyText" Text="Enter a receipt number to see it here"
+                    <TextBlock x:Name="EmptyText" Text="أدخل رقم الإيصال لعرضه هنا"
                                TextWrapping="Wrap" TextAlignment="Center" MaxWidth="320"
                                Style="{StaticResource Text.Muted}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -69,8 +70,8 @@
             </Border>
 
             <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
-                <Button Style="{StaticResource Button.PillMuted}" Content="Close" MinWidth="120" Click="Close_Click"/>
-                <Button x:Name="PrintButton" Style="{StaticResource Button.Pill}" Content="Reprint Receipt"
+                <Button Style="{StaticResource Button.PillMuted}" Content="إغلاق" MinWidth="120" Click="Close_Click"/>
+                <Button x:Name="PrintButton" Style="{StaticResource Button.Pill}" Content="إعادة طباعة الإيصال"
                         MinWidth="180" Margin="12,0,0,0" IsEnabled="False" Click="Print_Click"/>
             </StackPanel>
 

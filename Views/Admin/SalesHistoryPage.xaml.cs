@@ -172,7 +172,7 @@ public partial class SalesHistoryPage : AdminPageBase
 
     // ============================== Helpers ==============================
 
-    private static string Money(decimal value) => $"{value:N2} DH";
+    private static string Money(decimal value) => Loc.Ltr($"{value:N2} DH");
 
     private static string Plural(int count) => count == 1 ? string.Empty : "s";
 

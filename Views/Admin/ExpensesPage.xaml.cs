@@ -28,7 +28,7 @@ public partial class ExpensesPage : AdminPageBase
         public decimal Share { get; init; }
         public double BarWidth { get; set; }
 
-        public string AmountLabel => $"{Amount:N2} {AppSettings.Current.Currency}";
+        public string AmountLabel => Loc.Ltr($"{Amount:N2} {AppSettings.Current.Currency}");
         public string ShareLabel => $"{Share * 100m:0}% of what was spent";
     }
 

@@ -34,17 +34,18 @@
     <!-- The other projects live under this one on disk, and the SDK compiles everything
          beneath a project folder by default - which pulled Core's sources into the app a
          second time and produced duplicate-attribute errors nobody would guess the cause of. -->
-    <Compile Remove="src\**;server\**" />
-    <None Remove="src\**;server\**" />
-    <Page Remove="src\**;server\**" />
-    <EmbeddedResource Remove="src\**;server\**" />
-    <Resource Remove="src\**;server\**" />
+    <Compile Remove="src\**;server\**;launcher\**" />
+    <None Remove="src\**;server\**;launcher\**" />
+    <Page Remove="src\**;server\**;launcher\**" />
+    <EmbeddedResource Remove="src\**;server\**;launcher\**" />
+    <Resource Remove="src\**;server\**;launcher\**" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- The shop's rules live in Core, with no screen attached, so the server can enforce the
          same ones. SQLite comes in through it rather than being referenced twice. -->
     <ProjectReference Include="src\MarketPos.Core.csproj" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

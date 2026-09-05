@@ -54,12 +54,17 @@ public sealed class AppSettings
     public string ExportFolder { get; set; } = string.Empty;
 
     /// <summary>
-    /// Which language the interface is in: "en", "fr" or "ar". Empty means English.
+    /// Which language the interface is in: "en", "fr" or "ar".
+    ///
+    /// Arabic by default, because this is one shop's software and that is the language spoken
+    /// in it. A machine with no settings file yet — every machine, the first time it is
+    /// switched on — opens in the shop's own language rather than in the one the code happens
+    /// to be written in.
     ///
     /// Stored as a code rather than an enum so the file stays readable to somebody being
     /// talked through it on the phone, which is the whole reason these settings are JSON.
     /// </summary>
-    public string Language { get; set; } = "en";
+    public string Language { get; set; } = "ar";
 
     // ---------------------------- The shop's network ----------------------------
 

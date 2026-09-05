@@ -637,6 +637,14 @@ public static class SelfTest
                     ? $"{Translations.Table.Count} phrases, French and Arabic"
                     : $"{missing.Count} half-done, first: {missing[0]}");
 
+            // A shop that has never been switched on has no settings file, so this is the
+            // language the client actually meets on the first run. It is the one setting that
+            // is wrong by being merely reasonable: English is the language the code is written
+            // in, not the language spoken in the shop.
+            Verdict(report, ref failures, "a machine with no settings opens in Arabic",
+                new AppSettings().Language == "ar",
+                $"the default is \"{new AppSettings().Language}\"");
+
             // The words the till says while somebody is standing at it. Asked of the table
             // rather than by comparing strings: "Total" is French for Total, and a test that
             // called that a gap would be a test nobody could satisfy.

@@ -1,4 +1,4 @@
-<Window x:Class="MarketPos.Views.SettingsWindow"
+﻿<Window x:Class="MarketPos.Views.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:conv="clr-namespace:MarketPos.Converters"
@@ -6,6 +6,7 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         WindowStyle="None"
+        FlowDirection="RightToLeft"
         AllowsTransparency="True"
         Background="Transparent"
         ShowInTaskbar="False"
@@ -21,22 +22,22 @@
         </Border.Effect>
 
         <StackPanel>
-            <TextBlock Text="Settings" Style="{StaticResource Text.Title}" FontSize="20"/>
-            <TextBlock Text="The shop, and how it prints" Style="{StaticResource Text.Muted}"
+            <TextBlock Text="الإعدادات" Style="{StaticResource Text.Title}" FontSize="20"/>
+            <TextBlock Text="المتجر، وكيفية الطباعة" Style="{StaticResource Text.Muted}"
                        Margin="0,4,0,18"/>
 
             <!-- First, because it changes every other word on this screen. -->
-            <TextBlock Text="LANGUAGE" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
+            <TextBlock Text="اللغة" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
             <ComboBox x:Name="LanguageBox" Style="{StaticResource ComboBox.Field}"/>
             <TextBlock Style="{StaticResource Text.Muted}" FontSize="11" Margin="2,8,2,0"
                        TextWrapping="Wrap"
-                       Text="The whole app, in your language. It changes when the app restarts."/>
+                       Text="التطبيق بالكامل بلغتك. يتغير عند إعادة تشغيل التطبيق."/>
 
             <Border Height="1" Background="{StaticResource Brush.Border}" Margin="0,22,0,20"/>
 
             <!-- These are on every receipt and every report, so leaving them uneditable meant
                  a shop called "Market" charging in "DH" whatever it actually was. -->
-            <TextBlock Text="SHOP NAME" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
+            <TextBlock Text="اسم المتجر" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
             <TextBox x:Name="ShopNameBox" Style="{StaticResource TextBox.Field}"/>
 
             <Grid Margin="0,16,0,0">
@@ -46,34 +47,34 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="PHONE" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
+                    <TextBlock Text="الهاتف" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
                     <TextBox x:Name="ShopPhoneBox" Style="{StaticResource TextBox.Field}"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="CURRENCY" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
+                    <TextBlock Text="العملة" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
                     <TextBox x:Name="CurrencyBox" Style="{StaticResource TextBox.Field}"
-                             ToolTip="Shown after every amount in the app and on receipts"/>
+                             ToolTip="يظهر بعد كل مبلغ في التطبيق وعلى الإيصالات"/>
                 </StackPanel>
             </Grid>
 
-            <TextBlock Text="ADDRESS" Style="{StaticResource Text.Eyebrow}" Margin="2,16,0,8"/>
+            <TextBlock Text="العنوان" Style="{StaticResource Text.Eyebrow}" Margin="2,16,0,8"/>
             <TextBox x:Name="ShopAddressBox" Style="{StaticResource TextBox.Field}"/>
 
-            <TextBlock Text="RECEIPT FOOTER" Style="{StaticResource Text.Eyebrow}" Margin="2,16,0,8"/>
+            <TextBlock Text="تذييل الإيصال" Style="{StaticResource Text.Eyebrow}" Margin="2,16,0,8"/>
             <TextBox x:Name="FooterBox" Style="{StaticResource TextBox.Field}"
-                     ToolTip="The last line of every receipt"/>
+                     ToolTip="السطر الأخير من كل إيصال"/>
 
             <Border Height="1" Background="{StaticResource Brush.Border}" Margin="0,22,0,20"/>
 
-            <TextBlock Text="RECEIPT PRINTER" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
+            <TextBlock Text="طابعة الإيصالات" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
             <ComboBox x:Name="PrinterBox" Style="{StaticResource ComboBox.Field}"/>
             <TextBlock x:Name="DefaultHint" Style="{StaticResource Text.Muted}" FontSize="11"
                        Margin="2,8,2,0" TextWrapping="Wrap"/>
 
             <CheckBox x:Name="AutoPrintBox" Margin="2,18,0,0" FontSize="14"
-                      Content="Print the receipt automatically after each sale"/>
+                      Content="طباعة الإيصال تلقائياً بعد كل عملية بيع"/>
             <TextBlock Style="{StaticResource Text.Muted}" FontSize="11" Margin="24,6,2,0" TextWrapping="Wrap"
-                       Text="The receipt goes straight to the printer with no dialog. Turn this off to print only on demand from the Tickets page."/>
+                       Text="يذهب الإيصال مباشرة إلى الطابعة بدون حوار. أوقف هذا لطباعة الإيصال عند الطلب فقط من صفحة الفواتير."/>
 
             <Border Height="1" Background="{StaticResource Brush.Border}" Margin="0,22,0,20"/>
 
@@ -81,12 +82,12 @@
                  Blank on a shop with one computer, which is most of them. Filling it in turns
                  this machine into a till: it keeps a copy of the catalogue and hands its sales
                  to the machine that owns the books. -->
-            <TextBlock Text="BACK OFFICE ADDRESS" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
+            <TextBlock Text="عنوان المكتب الخلفي" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
             <TextBox x:Name="ServerBox" Style="{StaticResource TextBox.Field}"
-                     ToolTip="Where the back-office computer answers, e.g. http://192.168.1.20:5000"/>
+                     ToolTip="عنوان جهاز المكتب الخلفي، مثل http://192.168.1.20:5000"/>
             <TextBlock Style="{StaticResource Text.Muted}" FontSize="11" Margin="2,8,2,0"
                        TextWrapping="Wrap"
-                       Text="Leave empty if this is the only computer in the shop. Fill it in on a second till, and it will keep selling even when the back office is off — sales catch up when it comes back."/>
+                       Text="اتركه فارغاً إذا كان هذا الجهاز الوحيد في المتجر. أملأه على كاشير ثانٍ وسيواصل البيع حتى عند إيقاف المكتب الخلفي."/>
 
             <Grid Margin="0,16,0,0">
                 <Grid.ColumnDefinitions>
@@ -95,12 +96,12 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="THIS TILL IS CALLED" Style="{StaticResource Text.Eyebrow}"
+                    <TextBlock Text="اسم هذا الكاشير" Style="{StaticResource Text.Eyebrow}"
                                Margin="2,0,0,8"/>
                     <TextBox x:Name="TillNameBox" Style="{StaticResource TextBox.Field}"
-                             ToolTip="Shown on the back office beside sales that came from here"/>
+                             ToolTip="يظهر في المكتب الخلفي بجانب المبيعات القادمة من هنا"/>
                 </StackPanel>
-                <Button Grid.Column="2" Style="{StaticResource Button.PillMuted}" Content="Test"
+                <Button Grid.Column="2" Style="{StaticResource Button.PillMuted}" Content="اختبار"
                         VerticalAlignment="Bottom" Height="40" Click="TestLink_Click"/>
             </Grid>
 
@@ -121,11 +122,11 @@
 
                 <!-- VerticalAlignment Center keeps the buttons their own height regardless of
                      what else lands in this row. -->
-                <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}" Content="Test print"
+                <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}" Content="طباعة تجريبية"
                         VerticalAlignment="Center" Click="TestPrint_Click"/>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{StaticResource Button.PillMuted}" Content="Cancel" Click="Cancel_Click"/>
-                    <Button Style="{StaticResource Button.Pill}" Content="Save" Margin="10,0,0,0" Click="Save_Click"/>
+                    <Button Style="{StaticResource Button.PillMuted}" Content="إلغاء" Click="Cancel_Click"/>
+                    <Button Style="{StaticResource Button.Pill}" Content="حفظ" Margin="10,0,0,0" Click="Save_Click"/>
                 </StackPanel>
             </Grid>
         </StackPanel>

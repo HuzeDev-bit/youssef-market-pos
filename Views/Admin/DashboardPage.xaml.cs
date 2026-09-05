@@ -26,7 +26,7 @@ public sealed class SoldRow
     /// A dash rather than 0.00 when the product has no purchase price: nothing on earth is
     /// free, so a zero here would be a lie the owner might price against.
     /// </summary>
-    public string CostLabel => Cost <= 0m ? "—" : $"{Cost:N2} DH";
+    public string CostLabel => Cost <= 0m ? "—" : Services.Loc.Ltr($"{Cost:N2} DH");
 }
 
 /// <summary>One line of the Running out table.</summary>

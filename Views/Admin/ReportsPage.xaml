@@ -1,4 +1,4 @@
-<local:AdminPageBase x:Class="MarketPos.Views.Admin.ReportsPage"
+﻿<local:AdminPageBase x:Class="MarketPos.Views.Admin.ReportsPage"
                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                      xmlns:local="clr-namespace:MarketPos.Views.Admin">
@@ -62,7 +62,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Margin="18,16">
-                    <TextBlock Text="REVENUE" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock Text="الإيراد" Style="{StaticResource Summary.Label}"/>
                     <TextBlock x:Name="RevenueValue" Style="{StaticResource Summary.Value}"/>
                     <TextBlock x:Name="RevenueNote" Style="{StaticResource Summary.Note}"/>
                 </StackPanel>
@@ -83,7 +83,7 @@
                 <Border Grid.Column="5" Style="{StaticResource Divider.V}"/>
 
                 <StackPanel Grid.Column="6" Margin="18,16">
-                    <TextBlock Text="SALES" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock Text="المبيعات" Style="{StaticResource Summary.Label}"/>
                     <TextBlock x:Name="SalesValue" Style="{StaticResource Summary.Value}"/>
                     <TextBlock x:Name="SalesNote" Style="{StaticResource Summary.Note}"/>
                 </StackPanel>

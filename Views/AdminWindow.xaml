@@ -5,7 +5,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:conv="clr-namespace:MarketPos.Converters"
-        Title="Market — Back office"
+        Title="السوق — المكتب الخلفي"
+        FlowDirection="RightToLeft"
         WindowStyle="None"
         WindowState="Maximized"
         ResizeMode="CanResize"
@@ -48,7 +49,7 @@
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
                     <StackPanel x:Name="NavList">
-                        <TextBlock Text="DAILY" Style="{StaticResource Text.Eyebrow}" Margin="12,4,0,6"/>
+                        <TextBlock Text="اليومي" Style="{StaticResource Text.Eyebrow}" Margin="12,4,0,6"/>
                         <RadioButton x:Name="NavDashboard" Style="{StaticResource Button.Nav}" GroupName="admin"
                                      Checked="Nav_Checked" Tag="Dashboard">
                             <StackPanel Orientation="Horizontal">
@@ -56,7 +57,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Dashboard}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Dashboard.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="Dashboard" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="لوحة التحكم" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
@@ -66,11 +67,11 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.SalesHistory}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.SalesHistory.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="Sales history" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="سجل المبيعات" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
 
-                        <TextBlock Text="STOCK" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <TextBlock Text="المخزون" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
                                      Checked="Nav_Checked" Tag="AddProduct">
                             <StackPanel Orientation="Horizontal">
@@ -78,7 +79,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.AddProduct}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.AddProduct.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="Add product" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="إضافة منتج" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
@@ -88,7 +89,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Categories}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Categories.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="Categories" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="الفئات" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
@@ -98,11 +99,11 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Inventory}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Inventory.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="Inventory" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="الجرد" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
 
-                        <TextBlock Text="MONEY" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <TextBlock Text="المالية" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
                                      Checked="Nav_Checked" Tag="Suppliers">
                             <StackPanel Orientation="Horizontal">
@@ -110,7 +111,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Suppliers}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Suppliers.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="Suppliers" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="الموردون" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
@@ -120,11 +121,11 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Expenses}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Expenses.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="Expenses" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="المصاريف" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
 
-                        <TextBlock Text="PEOPLE" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <TextBlock Text="الأشخاص" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
                                      Checked="Nav_Checked" Tag="Workers">
                             <StackPanel Orientation="Horizontal">
@@ -132,11 +133,11 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Workers}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Workers.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="Workers" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="الموظفون" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
 
-                        <TextBlock Text="INSIGHT" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <TextBlock Text="التحليلات" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
                         <RadioButton x:Name="NavReports" Style="{StaticResource Button.Nav}" GroupName="admin"
                                      Checked="Nav_Checked" Tag="Reports">
                             <Grid>
@@ -145,7 +146,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Reports}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Reports.Filled}"/>
                                 </Grid>
-                                    <TextBlock Text="Reports" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="التقارير" Margin="11,0,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Border Style="{StaticResource Badge.Bad}" HorizontalAlignment="Right"
                                         Padding="7,1" CornerRadius="9"
@@ -161,7 +162,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Activity}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Activity.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="Activity log" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="سجل النشاط" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                         <Border Height="14"/>
@@ -182,7 +183,7 @@
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <Button Style="{StaticResource Button.RowAction}"
-                                    ToolTip="Shop settings" Click="Settings_Click">
+                                    ToolTip="إعدادات المتجر" Click="Settings_Click">
                                 <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Settings}"/>
                             </Button>
                             <Button x:Name="PasswordButton" Style="{StaticResource Button.RowAction}"
@@ -190,11 +191,11 @@
                                 <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Lock}"/>
                             </Button>
                             <Button Style="{StaticResource Button.RowAction}"
-                                    ToolTip="Sign out" Click="SignOut_Click">
+                                    ToolTip="تسجيل الخروج" Click="SignOut_Click">
                                 <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Power}"/>
                             </Button>
                             <Button Style="{StaticResource Button.RowAction}"
-                                    ToolTip="Back to the till" Click="BackToTill_Click">
+                                    ToolTip="العودة للكاشير" Click="BackToTill_Click">
                                 <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Back}"/>
                             </Button>
                         </StackPanel>
@@ -222,7 +223,7 @@
                          that looks like the logo above it. It had been a step above body text,
                          which left every page reading as one flat surface. -->
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock x:Name="PageTitle" Text="Dashboard"
+                        <TextBlock x:Name="PageTitle" Text="لوحة التحكم"
                                    Style="{StaticResource Text.Title}"
                                    FontSize="{StaticResource Size.Display}"/>
                         <TextBlock x:Name="PageSubtitle" Style="{StaticResource Text.Muted}"
@@ -230,14 +231,14 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Style="{StaticResource Button.RowAction}" ToolTip="Reload"
+                        <Button Style="{StaticResource Button.RowAction}" ToolTip="تحديث"
                                 Click="Refresh_Click" Margin="0,0,6,0">
                             <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Refresh}"/>
                         </Button>
-                        <Button Style="{StaticResource Button.WinControl}" ToolTip="Minimise" Click="Minimise_Click">
+                        <Button Style="{StaticResource Button.WinControl}" ToolTip="تصغير" Click="Minimise_Click">
                             <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Minimize}"/>
                         </Button>
-                        <Button Style="{StaticResource Button.Close}" ToolTip="Close the back office"
+                        <Button Style="{StaticResource Button.Close}" ToolTip="إغلاق المكتب الخلفي"
                                 Click="Close_Click" Margin="6,0,0,0">
                             <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Close}"/>
                         </Button>
@@ -248,24 +249,24 @@
                      the numbers; a filter over a list of suppliers would just be noise. -->
                 <Border Grid.Row="1" x:Name="DateBar" Margin="14,4,20,14" Visibility="Collapsed">
                     <StackPanel Orientation="Horizontal">
-                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="Today"
+                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="اليوم"
                                       IsChecked="{Binding Dates.IsToday, Mode=OneWay}" Checked="Preset_Checked" Tag="Today"/>
-                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="Yesterday"
+                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="أمس"
                                       IsChecked="{Binding Dates.IsYesterday, Mode=OneWay}" Checked="Preset_Checked" Tag="Yesterday"/>
-                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="This week"
+                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="هذا الأسبوع"
                                       IsChecked="{Binding Dates.IsThisWeek, Mode=OneWay}" Checked="Preset_Checked" Tag="ThisWeek"/>
-                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="This month"
+                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="هذا الشهر"
                                       IsChecked="{Binding Dates.IsThisMonth, Mode=OneWay}" Checked="Preset_Checked" Tag="ThisMonth"/>
-                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="This year"
+                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="هذه السنة"
                                       IsChecked="{Binding Dates.IsThisYear, Mode=OneWay}" Checked="Preset_Checked" Tag="ThisYear"/>
-                        <ToggleButton x:Name="CustomChip" Style="{StaticResource Button.DateChip}" Content="Custom"
+                        <ToggleButton x:Name="CustomChip" Style="{StaticResource Button.DateChip}" Content="مخصص"
                                       IsChecked="{Binding Dates.IsCustom, Mode=OneWay}" Checked="Preset_Checked" Tag="Custom"/>
 
                         <StackPanel Orientation="Horizontal" Margin="8,0,0,0"
                                     Visibility="{Binding Dates.IsCustom, Converter={StaticResource BoolVis}}">
                             <DatePicker Style="{StaticResource DatePicker.Field}" Width="128"
                                         SelectedDate="{Binding Dates.CustomFrom, Mode=TwoWay}"/>
-                            <TextBlock Text="to" Style="{StaticResource Text.Muted}" Margin="8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="إلى" Style="{StaticResource Text.Muted}" Margin="8,0" VerticalAlignment="Center"/>
                             <DatePicker Style="{StaticResource DatePicker.Field}" Width="128"
                                         SelectedDate="{Binding Dates.CustomTo, Mode=TwoWay}"/>
                         </StackPanel>

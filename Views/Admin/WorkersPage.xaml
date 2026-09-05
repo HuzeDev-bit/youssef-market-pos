@@ -1,4 +1,4 @@
-<local:AdminPageBase x:Class="MarketPos.Views.Admin.WorkersPage"
+﻿<local:AdminPageBase x:Class="MarketPos.Views.Admin.WorkersPage"
                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                      xmlns:local="clr-namespace:MarketPos.Views.Admin">
@@ -46,7 +46,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Margin="18,16">
-                    <TextBlock Text="STAFF" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock Text="الموظفون" Style="{StaticResource Summary.Label}"/>
                     <TextBlock x:Name="CountValue" Style="{StaticResource Summary.Value}"/>
                     <TextBlock x:Name="CountNote" Style="{StaticResource Summary.Note}"/>
                 </StackPanel>
@@ -90,7 +90,7 @@
                        TextTrimming="CharacterEllipsis"/>
 
             <Button Grid.Column="2" Style="{StaticResource Button.Small}" Height="36"
-                    Content="Add worker" Click="Add_Click"/>
+                    Content="إضافة موظف" Click="Add_Click"/>
         </Grid>
 
         <!-- ==================== The staff ==================== -->
@@ -114,7 +114,7 @@
                         <ColumnDefinition Width="132"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="WORKER" Style="{StaticResource Text.ColumnHead}"/>
-                    <TextBlock Grid.Column="1" Text="ROLE" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="1" Text="الدور" Style="{StaticResource Text.ColumnHead}"/>
                     <TextBlock Grid.Column="2" Text="WAGE" Style="{StaticResource Text.ColumnHead}"/>
                     <TextBlock x:Name="DueHead" Grid.Column="3" Text="DUE"
                                Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>

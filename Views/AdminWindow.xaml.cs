@@ -325,13 +325,13 @@ public sealed class AdminShellViewModel : ViewModelBase
 
     public string BusinessName => AppSettings.Current.BusinessName;
     public string UserName => Session.CurrentName;
-    public string UserRole => Session.CurrentRole switch
+    public string UserRole => Loc.T(Session.CurrentRole switch
     {
         WorkerRole.Owner => "Owner",
         WorkerRole.Manager => "Manager",
         WorkerRole.StockWorker => "Stock worker",
         _ => "Cashier",
-    };
+    });
 
     public int AlertCount
     {

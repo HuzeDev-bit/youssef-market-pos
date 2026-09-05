@@ -1,4 +1,4 @@
-<local:AdminPageBase x:Class="MarketPos.Views.Admin.CategoriesPage"
+﻿<local:AdminPageBase x:Class="MarketPos.Views.Admin.CategoriesPage"
                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                      xmlns:local="clr-namespace:MarketPos.Views.Admin">
@@ -46,7 +46,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Margin="18,16">
-                    <TextBlock Text="CATEGORIES" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock Text="الفئات" Style="{StaticResource Summary.Label}"/>
                     <TextBlock x:Name="CountValue" Style="{StaticResource Summary.Value}"/>
                     <TextBlock x:Name="CountNote" Style="{StaticResource Summary.Note}"/>
                 </StackPanel>
@@ -90,7 +90,7 @@
                        TextTrimming="CharacterEllipsis"/>
 
             <Button Grid.Column="2" Style="{StaticResource Button.Small}" Height="36"
-                    Content="Add category" Click="Add_Click"/>
+                    Content="إضافة فئة" Click="Add_Click"/>
         </Grid>
 
         <!-- ==================== The categories ====================
@@ -182,7 +182,7 @@
                     <Path Style="{StaticResource Icon}" Data="{StaticResource Nav.Categories}"
                           Width="30" Height="30" StrokeThickness="1.4"
                           Stroke="{StaticResource Brush.Muted}"/>
-                    <TextBlock Text="No categories yet" Style="{StaticResource Text.EmptyTitle}"/>
+                    <TextBlock Text="لا توجد فئات بعد" Style="{StaticResource Text.EmptyTitle}"/>
                     <TextBlock Style="{StaticResource Text.EmptyBody}"
                                Text="Categories are how a cashier finds something with no barcode. Add one for each kind of shelf."/>
                 </StackPanel>

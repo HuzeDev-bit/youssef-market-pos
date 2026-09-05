@@ -1,4 +1,4 @@
-<local:AdminPageBase x:Class="MarketPos.Views.Admin.ActivityPage"
+﻿<local:AdminPageBase x:Class="MarketPos.Views.Admin.ActivityPage"
                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                      xmlns:local="clr-namespace:MarketPos.Views.Admin">

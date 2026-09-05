@@ -177,15 +177,18 @@ public static class ReceiptPrinter
     }
 
     /// <summary>
-    /// The payment line, in French — the language on a Moroccan till receipt. ASCII only:
-    /// thermal printers fall back to the codepage 437 glyph set and would print "EspÃ¨ces".
+    /// The payment line, in whatever language the shop is set to.
+    ///
+    /// The French spellings stay as the source text because that is what a Moroccan till
+    /// receipt has always said, and they are written without accents on purpose: a thermal
+    /// printer driven as raw ESC/POS falls back to codepage 437 and would print "EspÃ¨ces".
     /// </summary>
-    private static string MethodLabel(PaymentMethod method) => method switch
+    private static string MethodLabel(PaymentMethod method) => Loc.T(method switch
     {
         PaymentMethod.Card => "Carte",
         PaymentMethod.Other => "Autre",
         _ => "Especes",
-    };
+    });
 
     /// <summary>The receipt as fixed-width text. Public so a future ESC/POS driver can reuse it verbatim.</summary>
     public static string BuildBody(Receipt receipt, bool isDuplicate)
@@ -198,12 +201,12 @@ public static class ReceiptPrinter
         {
             // Loud, and repeated at the foot: a copy must never be mistaken for a second
             // sale when the drawer is counted at the end of the shift.
-            sb.AppendLine(Centre("*** DUPLICATA / REPRINT ***"));
-            sb.AppendLine(Centre("copy - not a new sale"));
+            sb.AppendLine(Centre(Loc.T("*** DUPLICATA / REPRINT ***")));
+            sb.AppendLine(Centre(Loc.T("copy - not a new sale")));
             sb.AppendLine(Rule());
         }
 
-        sb.AppendLine(Pair($"Ticket N. {receipt.InvoiceNumber}",
+        sb.AppendLine(Pair(Loc.T("Ticket N. {0}", receipt.InvoiceNumber),
                             receipt.SoldAt.ToString("dd/MM/yy HH:mm", CultureInfo.InvariantCulture)));
         sb.AppendLine(Rule());
 
@@ -218,7 +221,7 @@ public static class ReceiptPrinter
 
         if (receipt.HasDiscount)
         {
-            sb.AppendLine(Pair("Sous-total", Money(receipt.GrossBeforeDiscount)));
+            sb.AppendLine(Pair(Loc.T("Sous-total"), Money(receipt.GrossBeforeDiscount)));
             sb.AppendLine(Pair(receipt.DiscountLabel, "-" + Money(receipt.DiscountAmount)));
         }
 
@@ -230,24 +233,24 @@ public static class ReceiptPrinter
         // an ICE or an IF and has to print it, and an unregistered one has neither.
         if (AppSettings.Current.TaxId.Trim().Length > 0)
         {
-            sb.AppendLine(Pair("Total HT", Money(receipt.Subtotal)));
-            sb.AppendLine(Pair("TVA", Money(receipt.Tax)));
+            sb.AppendLine(Pair(Loc.T("Total HT"), Money(receipt.Subtotal)));
+            sb.AppendLine(Pair(Loc.T("TVA"), Money(receipt.Tax)));
             sb.AppendLine(Rule());
         }
 
-        sb.AppendLine(Pair("TOTAL", Money(receipt.Total)));
+        sb.AppendLine(Pair(Loc.T("TOTAL"), Money(receipt.Total)));
         sb.AppendLine(Rule());
 
         sb.AppendLine(Pair(MethodLabel(receipt.PaymentMethod),
                            Money(receipt.AmountTendered)));
         if (receipt.PaymentMethod == PaymentMethod.Cash && receipt.ChangeGiven > 0)
-            sb.AppendLine(Pair("Rendu", Money(receipt.ChangeGiven)));
+            sb.AppendLine(Pair(Loc.T("Rendu"), Money(receipt.ChangeGiven)));
 
         sb.AppendLine(Rule());
-        sb.AppendLine(Centre("Merci et a bientot"));
+        sb.AppendLine(Centre(Loc.T("Merci et a bientot")));
 
         if (isDuplicate)
-            sb.AppendLine(Centre("*** DUPLICATA / REPRINT ***"));
+            sb.AppendLine(Centre(Loc.T("*** DUPLICATA / REPRINT ***")));
 
         return sb.ToString().TrimEnd();
     }

@@ -27,6 +27,13 @@ public partial class App : Application
             args.Handled = true;
         };
 
+        // Before anything else, including the headless modes. Every label is translated as it
+        // loads and Arabic lays the whole interface out right to left — and the diagnostics
+        // that photograph every screen have to go through the same path the shop does, or they
+        // report on an app nobody will ever run.
+        Loc.Load();
+        Localizer.Start();
+
         if (e.Args.Contains("--flowtest"))
         {
             // Runs before Catalog.Load so the scratch database is not seeded with demo
@@ -51,11 +58,6 @@ public partial class App : Application
             return;
         }
 
-        // Before any window exists: every label is translated as it loads, and Arabic lays the
-        // whole interface out right to left.
-        Loc.Load();
-        Localizer.Start();
-
         try
         {
             // Must run before the main window builds its view model — the product grid
@@ -72,6 +74,16 @@ public partial class App : Application
         }
 
         if (e.Args.Contains("--selftest")) SelfTest.Run(this);
+
+        // Start the back-office server so both backend and frontend run together
+        // from this single executable.
+        ShopServer.Start();
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        ShopServer.Stop();
+        base.OnExit(e);
     }
 
     /// <summary>

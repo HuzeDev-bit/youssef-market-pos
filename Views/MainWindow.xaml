@@ -1,4 +1,4 @@
-<!-- Text is laid out in Ideal mode, not Display. Display uses GDI-compatible metrics
+﻿<!-- Text is laid out in Ideal mode, not Display. Display uses GDI-compatible metrics
      tuned for the fonts Windows ships with; it snaps an embedded face to whole pixels
      and crops the result, which is why descenders looked cut off. -->
 <Window x:Class="MarketPos.Views.MainWindow"
@@ -11,6 +11,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         Title="Market POS"
         WindowStyle="None"
+        FlowDirection="RightToLeft"
         ResizeMode="NoResize"
         ShowInTaskbar="True"
         Background="{StaticResource Brush.Page}"
@@ -99,7 +100,7 @@
                             <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Check}"
                                   Width="34" Height="34" StrokeThickness="2.4"/>
                         </Border>
-                        <TextBlock Text="Payment confirmed" Style="{StaticResource Text.Title}" FontSize="19"
+                        <TextBlock Text="تم تأكيد الدفع" Style="{StaticResource Text.Title}" FontSize="19"
                                    HorizontalAlignment="Center" Margin="0,16,0,0"/>
                         <TextBlock x:Name="ConfirmDetail" Style="{StaticResource Text.Muted}" FontSize="13"
                                    HorizontalAlignment="Center" Margin="0,6,0,0"/>
@@ -137,7 +138,7 @@
                     <!-- 22 is the measured text origin of the box (18px content-host inset +
                          border + the TextBox's own internal offset). Placeholder, typed text
                          and caret therefore all start on exactly the same pixel. -->
-                    <TextBlock Text="Search"
+                    <TextBlock Text="بحث"
                                FontSize="14" Margin="22,0,0,0"
                                VerticalAlignment="Center" IsHitTestVisible="False"
                                Foreground="{StaticResource Brush.Muted}">
@@ -170,7 +171,7 @@
                     <Button x:Name="LinkChip" Style="{StaticResource Button.PillMuted}"
                             Height="34" Margin="0,0,10,0" Visibility="Collapsed"
                             Click="LinkChip_Click"
-                            ToolTip="Press to send now">
+                            ToolTip="اضغط للإرسال الآن">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse x:Name="LinkDot" Width="8" Height="8" VerticalAlignment="Center"
                                      Fill="{StaticResource Brush.Muted}"/>
@@ -184,18 +185,18 @@
                     <ToggleButton Style="{StaticResource Button.TogglePill}" Height="34"
                                   FontSize="12.5" Margin="0,0,14,0"
                                   IsChecked="{Binding IsPriceCheck, Mode=TwoWay}"
-                                  ToolTip="Scan an item to see its price without selling it">
+                                  ToolTip="امسح منتجاً لعرض سعره دون بيع">
                         <StackPanel Orientation="Horizontal">
                             <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Search}"
                                   Width="13" Height="13" VerticalAlignment="Center"/>
-                            <TextBlock Text="Price check" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="فحص السعر" Margin="8,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ToggleButton>
 
-                    <Button Style="{StaticResource Button.WinControl}" ToolTip="Minimize" Click="Minimize_Click">
+                    <Button Style="{StaticResource Button.WinControl}" ToolTip="تصغير" Click="Minimize_Click">
                         <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Minimize}"/>
                     </Button>
-                    <Button Style="{StaticResource Button.Close}" ToolTip="Close" Click="Close_Click" Margin="4,0,0,0">
+                    <Button Style="{StaticResource Button.Close}" ToolTip="إغلاق" Click="Close_Click" Margin="4,0,0,0">
                         <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Close}"/>
                     </Button>
                 </StackPanel>
@@ -228,11 +229,11 @@
                 <DockPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" LastChildFill="False"
                            Margin="0,-10,0,20">
                     <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
-                        <RadioButton x:Name="RailSale" Style="{StaticResource Button.Rail}" GroupName="rail" ToolTip="Sale"
+                        <RadioButton x:Name="RailSale" Style="{StaticResource Button.Rail}" GroupName="rail" ToolTip="البيع"
                                      IsChecked="{Binding IsSalePage, Mode=OneWay}" Checked="Nav_Sale">
                             <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Cart}"/>
                         </RadioButton>
-                        <RadioButton x:Name="RailProducts" Style="{StaticResource Button.Rail}" GroupName="rail" ToolTip="Products"
+                        <RadioButton x:Name="RailProducts" Style="{StaticResource Button.Rail}" GroupName="rail" ToolTip="المنتجات"
                                      IsChecked="{Binding IsProductsPage, Mode=OneWay}" Checked="Nav_Products">
                             <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Bag}"/>
                         </RadioButton>
@@ -246,11 +247,11 @@
                         <!-- Opens the back office in its own window rather than switching page, so the
                              till stays a single-purpose screen a cashier cannot get lost in. -->
                         <RadioButton x:Name="RailAdmin" Style="{StaticResource Button.Rail}" GroupName="rail"
-                                     ToolTip="Back office" Checked="Nav_Admin">
+                                     ToolTip="المكتب الخلفي" Checked="Nav_Admin">
                             <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Lock}"/>
                         </RadioButton>
                         <Button x:Name="SignOutButton" Style="{StaticResource Button.Circle}"
-                                ToolTip="Close the till" Click="Logout_Click" Margin="0,10">
+                                ToolTip="إغلاق الكاشير" Click="Logout_Click" Margin="0,10">
                             <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Power}" Width="19" Height="19"/>
                         </Button>
                     </StackPanel>
@@ -303,7 +304,7 @@
                             <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Pause}"
                                   Width="13" Height="13" StrokeThickness="2"
                                   TextElement.Foreground="{StaticResource Brush.Muted}"/>
-                            <TextBlock Text="ON HOLD" Style="{StaticResource Text.Eyebrow}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="قيد الانتظار" Style="{StaticResource Text.Eyebrow}" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <ItemsControl ItemsSource="{Binding HeldTickets}">
@@ -330,7 +331,7 @@
                                                     Margin="0,0,8,0" VerticalAlignment="Center"
                                                     Background="Transparent"
                                                     Foreground="{StaticResource Brush.Muted}"
-                                                    ToolTip="Discard this ticket"
+                                                    ToolTip="حذف هذه الفاتورة"
                                                     Command="{Binding DataContext.DiscardTicketCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                     CommandParameter="{Binding}">
                                                 <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Close}"
@@ -351,12 +352,12 @@
 
                         <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}"
                                 VerticalAlignment="Center" FontSize="13" Padding="16,9"
-                                ToolTip="Print another copy of a past receipt"
+                                ToolTip="اطبع نسخة من إيصال سابق"
                                 Click="Reprint_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Receipt}"
                                       Width="14" Height="14"/>
-                                <TextBlock Text="Reprint receipt" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="إعادة طباعة الإيصال" Margin="8,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
@@ -371,16 +372,16 @@
                     <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Search}"
                           Width="34" Height="34" StrokeThickness="1.4"
                           TextElement.Foreground="{StaticResource Brush.Muted}"/>
-                    <TextBlock x:Name="EmptyTitle" Text="No products found"
+                    <TextBlock x:Name="EmptyTitle" Text="لا توجد منتجات"
                                Style="{StaticResource Text.Title}" FontSize="16"
                                Foreground="{StaticResource Brush.Muted}"
                                HorizontalAlignment="Center" Margin="0,14,0,0"/>
                     <TextBlock x:Name="EmptyBody" Style="{StaticResource Text.Muted}"
                                HorizontalAlignment="Center"
                                Margin="0,6,0,0" TextAlignment="Center" MaxWidth="300" TextWrapping="Wrap"
-                               Text="Nothing here matches what you typed, or the category filter is hiding it."/>
+                               Text="لا يوجد تطابق لما كتبته، أو الفئة مخفية."/>
                     <Button x:Name="ClearSearchButton" Style="{StaticResource Button.PillMuted}"
-                            Content="Clear search"
+                            Content="مسح البحث"
                             HorizontalAlignment="Center" Margin="0,18,0,0"
                             Command="{Binding ClearSearchCommand}"/>
                 </StackPanel>
@@ -475,8 +476,8 @@
                     <!-- Header swaps between the category list and a drilled-into category -->
                     <Grid Grid.Row="0" Margin="2,0,0,18">
                         <StackPanel Visibility="{Binding IsCategoryListVisible, Converter={StaticResource BoolVis}}">
-                            <TextBlock Text="Products" Style="{StaticResource Text.Title}"/>
-                            <TextBlock Text="Pick a category to see what is in it."
+                            <TextBlock Text="المنتجات" Style="{StaticResource Text.Title}"/>
+                            <TextBlock Text="اختر فئة لعرض محتواها."
                                        Style="{StaticResource Text.Muted}" Margin="0,4,0,0"/>
                         </StackPanel>
 
@@ -484,13 +485,13 @@
                                     Visibility="{Binding IsCategoryOpen, Converter={StaticResource BoolVis}}">
                             <Button Style="{StaticResource Button.Round}" Width="38" Height="38"
                                     VerticalAlignment="Center" Margin="0,0,14,0"
-                                    ToolTip="Back to categories" Click="CategoryBack_Click">
+                                    ToolTip="العودة للفئات" Click="CategoryBack_Click">
                                 <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Back}"
                                       Width="16" Height="16"/>
                             </Button>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="{Binding OpenCategory}" Style="{StaticResource Text.Title}"/>
-                                <TextBlock Text="Products in this category"
+                                <TextBlock Text="منتجات هذه الفئة"
                                            Style="{StaticResource Text.Muted}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </StackPanel>
@@ -593,12 +594,12 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel Grid.Row="0" Margin="2,0,0,14">
-                        <TextBlock Text="Tickets" Style="{StaticResource Text.Title}"/>
+                        <TextBlock Text="الفواتير" Style="{StaticResource Text.Title}"/>
                         <TextBlock Text="{Binding TicketsHeadline}" Style="{StaticResource Text.Muted}" Margin="0,4,0,0"/>
                     </StackPanel>
 
                     <TextBlock Grid.Row="1" Margin="2,0,0,12" Style="{StaticResource Text.Muted}"
-                               Text="Type a receipt number in the search bar above, or pick a ticket to view and reprint it."/>
+                               Text="اكتب رقم الإيصال في خانة البحث أعلاه، أو اختر فاتورة لعرضها وإعادة طباعتها."/>
 
                     <Grid Grid.Row="2">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -606,12 +607,12 @@
                             <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Receipt}"
                                   Width="34" Height="34" StrokeThickness="1.4"
                                   TextElement.Foreground="{StaticResource Brush.Muted}"/>
-                            <TextBlock Text="No tickets yet" Style="{StaticResource Text.Title}" FontSize="16"
+                            <TextBlock Text="لا توجد فواتير بعد" Style="{StaticResource Text.Title}" FontSize="16"
                                        Foreground="{StaticResource Brush.Muted}"
                                        HorizontalAlignment="Center" Margin="0,14,0,0"/>
                             <TextBlock Style="{StaticResource Text.Muted}" HorizontalAlignment="Center"
                                        Margin="0,6,0,0" TextAlignment="Center" MaxWidth="330" TextWrapping="Wrap"
-                                       Text="Completed sales appear here. Finish a sale with Pay and its ticket lands in this list."/>
+                                       Text="تظهر هنا المبيعات المكتملة. أتمم عملية بيع بالضغط على دفع ليظهر الإيصال هنا."/>
                         </StackPanel>
 
                         <ScrollViewer VerticalScrollBarVisibility="Hidden"
@@ -678,10 +679,10 @@
 
                         <StackPanel DataContext="{Binding PriceCheckResult}">
                             <Grid Margin="0,0,0,18">
-                                <TextBlock Text="PRICE CHECK" Style="{StaticResource Text.Eyebrow}"
+                                <TextBlock Text="فحص السعر" Style="{StaticResource Text.Eyebrow}"
                                            VerticalAlignment="Center"/>
                                 <Button Style="{StaticResource Button.Circle}" Width="28" Height="28"
-                                        HorizontalAlignment="Right" ToolTip="Close"
+                                        HorizontalAlignment="Right" ToolTip="إغلاق"
                                         Click="ClosePriceCheck_Click">
                                     <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Close}"
                                           Width="12" Height="12"/>
@@ -724,7 +725,7 @@
                                            Margin="0,10,0,0" TextWrapping="Wrap"/>
                             </StackPanel>
 
-                            <TextBlock Text="Scan the next item, or press Esc to go back to selling"
+                            <TextBlock Text="امسح المنتج التالي، أو اضغط Esc للعودة للبيع"
                                        Style="{StaticResource Text.Muted}" FontSize="11.5"
                                        Margin="0,22,0,0"/>
                         </StackPanel>
@@ -836,7 +837,7 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding ItemCountLabel}" Style="{StaticResource Text.Muted}"/>
-                                <TextBlock Text="Current Sale" Style="{StaticResource Text.Title}" FontSize="16" Margin="0,2,0,0"/>
+                                <TextBlock Text="البيع الحالي" Style="{StaticResource Text.Title}" FontSize="16" Margin="0,2,0,0"/>
                             </StackPanel>
                             <Border Grid.Column="1" Style="{StaticResource Avatar.Circle}"
                                     TextElement.Foreground="{StaticResource Brush.Accent}">
@@ -943,7 +944,7 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Subtotal" Style="{StaticResource Text.Muted}"/>
+                                <TextBlock Grid.Column="0" Text="المجموع الجزئي" Style="{StaticResource Text.Muted}"/>
                                 <TextBlock Grid.Column="1" Text="{Binding GrossBeforeDiscount, Converter={StaticResource Money}}" Style="{StaticResource Text.Body}"/>
                             </Grid>
 
@@ -967,7 +968,7 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Total" Style="{StaticResource Text.Title}"/>
+                                <TextBlock Grid.Column="0" Text="الإجمالي" Style="{StaticResource Text.Title}"/>
                                 <TextBlock Grid.Column="1" Text="{Binding Total, Converter={StaticResource Money}}"
                                            Style="{StaticResource Text.Title}" Foreground="{StaticResource Brush.Accent}"/>
                             </Grid>
@@ -978,7 +979,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Minus}"
                                           Width="13" Height="13"/>
-                                    <TextBlock Text="Remise" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="الخصم" Margin="8,0,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
@@ -988,7 +989,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Pause}"
                                           Width="13" Height="13"/>
-                                    <TextBlock Text="Hold ticket" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="تعليق الفاتورة" Margin="8,0,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
@@ -998,9 +999,9 @@
                                     <ColumnDefinition Width="12"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}" Content="Cancel"
+                                <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}" Content="إلغاء"
                                         IsEnabled="{Binding HasItems}" Click="CancelSale_Click"/>
-                                <Button Grid.Column="2" Style="{StaticResource Button.Pill}" Content="Pay"
+                                <Button Grid.Column="2" Style="{StaticResource Button.Pill}" Content="دفع"
                                         FontSize="16" Padding="22,14"
                                         Command="{Binding PayCommand}"/>
                             </Grid>

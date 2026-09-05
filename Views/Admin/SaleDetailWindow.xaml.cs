@@ -172,7 +172,7 @@ public partial class SaleDetailWindow : Window
 
         var amount = new TextBlock
         {
-            Text = $"{value:N2} DH",
+            Text = Loc.Ltr($"{value:N2} DH"),
             Style = (Style)FindResource(big ? "Text.StatSmall" : "Text.Money"),
             HorizontalAlignment = HorizontalAlignment.Right,
         };
@@ -192,7 +192,7 @@ public partial class SaleDetailWindow : Window
         var total = _lines.Where(l => l.Selected).Sum(l => l.ReturnValue);
         RefundTotalText.Text = total <= 0m
             ? "Nothing selected yet."
-            : $"Refunding {total:N2} DH";
+            : Loc.T("Refunding {0}", Loc.Ltr($"{total:N2} DH"));
     }
 
     // ------------------------------- Actions -------------------------------

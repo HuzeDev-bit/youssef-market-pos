@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Input;
 using MarketPos.Data;
 using MarketPos.Models;
+using MarketPos.Services;
 
 namespace MarketPos.Views.Admin;
 
@@ -169,7 +170,7 @@ public partial class SupplierWindow : Window
         if (TotalText is null || Editor is null) return;
 
         var total = Editor.Total;
-        TotalText.Text = $"{total:N2} DH";
+        TotalText.Text = Loc.Ltr($"{total:N2} DH");
 
         DeliveryEditor.TryMoney(PaidBox.Text, out var paid);
         var remaining = total - paid;
