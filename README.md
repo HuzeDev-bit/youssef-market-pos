@@ -29,15 +29,17 @@ cost at the moment it sold, and it keeps selling when the network is not there.
 - Bills, wages, and a profit statement you can read top to bottom and argue with line by line.
 - Every change recorded against whoever made it.
 
-**In three languages** — English, French, Arabic. Arabic lays the whole interface out right to
-left. Changed in Settings; the app restarts into it.
+**In three languages** — Arabic (Default), French, English. Arabic lays the whole interface out right to
+left (RTL).
 
 ---
 
-## Running it
+## Running it (تشغيل البرنامج)
 
-**[Download MarketPos.exe](https://github.com/HuzeDev-bit/youssef-market-pos/releases/latest/download/MarketPos.exe)**
+**[📥 Download MarketPos.exe (تحميل مباشر)](https://github.com/HuzeDev-bit/youssef-market-pos/releases/latest/download/MarketPos.exe)**
 and double-click it. One file, nothing to install, nothing to unzip — .NET is inside it.
+
+> **Single executable**: Double-clicking `MarketPos.exe` starts **both the backend server** (port 5000) and the **WPF frontend till** simultaneously in full Arabic. Closing the window shuts down both safely.
 
 Windows warns that the publisher is unknown, because the file is not signed:
 **More info → Run anyway**.
