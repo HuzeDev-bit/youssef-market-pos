@@ -356,8 +356,8 @@ public sealed class SaleViewModel : ViewModelBase
 
     public string DiscountLabel => DiscountKind switch
     {
-        DiscountKind.Percent => $"Remise ({DiscountValue:0.##}%)",
-        DiscountKind.Fixed => $"Remise ({DiscountValue:0.00} DH)",
+        DiscountKind.Percent => Loc.T("Remise ({0}%)", Loc.Ltr($"{DiscountValue:0.##}")),
+        DiscountKind.Fixed => Loc.T("Remise ({0} DH)", Loc.Ltr($"{DiscountValue:0.00}")),
         _ => "Remise",
     };
 

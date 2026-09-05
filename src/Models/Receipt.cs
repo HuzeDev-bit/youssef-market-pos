@@ -26,8 +26,9 @@ public sealed class Receipt
     /// <summary>"Remise (10%)" or "Remise (10.00 DH)" — empty when no discount was given.</summary>
     public string DiscountLabel => DiscountKind switch
     {
-        DiscountKind.Percent => $"Remise ({DiscountValue:0.##}%)",
-        DiscountKind.Fixed => $"Remise ({DiscountValue:0.00} DH)",
+        DiscountKind.Percent => Services.Loc.T("Remise ({0}%)", Services.Loc.Ltr($"{DiscountValue:0.##}")),
+        DiscountKind.Fixed => Services.Loc.T("Remise ({0} DH)",
+            Services.Loc.Ltr($"{DiscountValue:0.00}")),
         _ => string.Empty,
     };
 

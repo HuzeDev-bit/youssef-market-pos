@@ -57,7 +57,7 @@ public sealed class Product
         barcode.Length == 13 && barcode[0] == '2' && barcode.All(char.IsAsciiDigit);
 
     /// <summary>Shelf-price label for the product tile, e.g. "6.90 DH/kg" or "8.50 DH".</summary>
-    public string PriceLabel => Unit == Unit.Kg
+    public string PriceLabel => Services.Loc.Ltr(Unit == Unit.Kg
         ? $"{Price.ToString("0.00")} DH/kg"
-        : $"{Price.ToString("0.00")} DH";
+        : $"{Price.ToString("0.00")} DH");
 }
