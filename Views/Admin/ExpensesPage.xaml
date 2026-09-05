@@ -1,0 +1,286 @@
+<local:AdminPageBase x:Class="MarketPos.Views.Admin.ExpensesPage"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:local="clr-namespace:MarketPos.Views.Admin">
+
+    <local:AdminPageBase.Resources>
+        <Style x:Key="Divider.V" TargetType="Border">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Panel}"/>
+            <Setter Property="Margin" Value="0,16"/>
+        </Style>
+
+        <Style x:Key="Summary.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Eyebrow}">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="Summary.Value" TargetType="TextBlock" BasedOn="{StaticResource Text.Stat}">
+            <Setter Property="FontSize" Value="23"/>
+        </Style>
+
+        <Style x:Key="Summary.Note" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,5,0,0"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+    </local:AdminPageBase.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="14"/>
+            <ColumnDefinition Width="360"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ==================== What the shop spent ==================== -->
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                Background="{StaticResource Brush.Card}" CornerRadius="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="18,16">
+                    <TextBlock Text="SPENT" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="TotalValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="TotalNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="1" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="2" Margin="18,16">
+                    <TextBlock Text="BIGGEST" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="BiggestValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="BiggestNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="3" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="4" Margin="18,16">
+                    <TextBlock Text="EVERY MONTH" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="FixedValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="FixedNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="5" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="6" Margin="18,16">
+                    <TextBlock Text="SHARE OF SALES" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="ShareValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="ShareNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== Toolbar ==================== -->
+        <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="260"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{StaticResource Brush.Card}" CornerRadius="10" Height="36">
+                <Grid>
+                    <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Search}"
+                          Width="13" Height="13" HorizontalAlignment="Left" Margin="13,0,0,0"
+                          Stroke="{StaticResource Brush.Muted}"/>
+                    <TextBox x:Name="SearchBox" Style="{StaticResource TextBox.Plain}" Height="36"
+                             Background="Transparent" BorderThickness="0" Margin="33,0,10,0"
+                             VerticalContentAlignment="Center" FontSize="13"
+                             CaretBrush="{StaticResource Brush.Text}" TextChanged="Filter_Changed"/>
+                    <TextBlock Text="What it was for" Style="{StaticResource Text.Muted}"
+                               Margin="35,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                               Visibility="{Binding Text, ElementName=SearchBox,
+                                            Converter={StaticResource InvStrVis}}"/>
+                </Grid>
+            </Border>
+
+            <ComboBox x:Name="KindFilter" Grid.Column="1" Style="{StaticResource ComboBox.Form}"
+                      Width="180" Height="36" Margin="10,0,0,0"
+                      SelectionChanged="Filter_Changed"/>
+
+            <Button Grid.Column="3" Style="{StaticResource Button.Small}" Height="36"
+                    Content="Add expense" Click="Add_Click"/>
+        </Grid>
+
+        <!-- ==================== Every bill ==================== -->
+        <Border Grid.Row="2" Grid.Column="0" Margin="0,14,0,0"
+                Background="{StaticResource Brush.Card}" CornerRadius="16" Padding="10,14,10,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="12,0,12,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="1.3*"/>
+                        <ColumnDefinition Width="1.1*"/>
+                        <ColumnDefinition Width="1.1*"/>
+                        <ColumnDefinition Width="52"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="WHEN" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="1" Text="WHAT FOR" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="2" Text="KIND" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="3" Text="PAID BY" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="4" Text="AMOUNT" Style="{StaticResource Text.ColumnHead}"
+                               TextAlignment="Right"/>
+                </Grid>
+
+                <Border Grid.Row="1" Style="{StaticResource Rule}" Margin="12,0,12,4"
+                        Background="{StaticResource Brush.Panel}"/>
+
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <ItemsControl x:Name="Rows">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Button Style="{StaticResource Button.Row}" Padding="12,0"
+                                                Click="Row_Click" Tag="{Binding Id}"
+                                                ToolTip="Change it, or cancel it">
+                                            <Grid Height="38">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="1.2*"/>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="1.3*"/>
+                                                    <ColumnDefinition Width="1.1*"/>
+                                                    <ColumnDefinition Width="1.1*"/>
+                                                    <ColumnDefinition Width="52"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0" Style="{StaticResource Text.CellMuted}"
+                                                           Text="{Binding SpentOn, StringFormat='d MMM yyyy'}"/>
+
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock x:Name="what" Text="{Binding Name}"
+                                                               Style="{StaticResource Text.Cell}"
+                                                               FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <Border x:Name="repeats" Style="{StaticResource Badge.Neutral}"
+                                                            Margin="8,0,0,0" Visibility="Collapsed">
+                                                        <TextBlock Text="{Binding RepeatLabel}"/>
+                                                    </Border>
+                                                </StackPanel>
+
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Text.CellMuted}"
+                                                           Text="{Binding Category}"/>
+                                                <TextBlock Grid.Column="3" Style="{StaticResource Text.CellMuted}"
+                                                           Text="{Binding Method}"/>
+                                                <TextBlock x:Name="amount" Grid.Column="4"
+                                                           Style="{StaticResource Text.Money}"
+                                                           Text="{Binding Amount, Converter={StaticResource Money}}"/>
+                                            </Grid>
+                                        </Button>
+
+                                        <Button x:Name="repeatButton" Style="{StaticResource Button.RowAction}"
+                                                HorizontalAlignment="Right" Margin="0,0,16,0"
+                                                ToolTip="Put this month's in" Click="Repeat_Click"
+                                                Tag="{Binding Id}" Visibility="Collapsed">
+                                            <Path Style="{StaticResource Icon.Small}"
+                                                  Data="{StaticResource Icon.Refresh}"/>
+                                        </Button>
+                                    </Grid>
+
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Repeats}" Value="True">
+                                            <Setter TargetName="repeats" Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <!-- Cancelled bills stay on the list, because the record
+                                             matters — but they did not happen, so they are struck
+                                             through and left out of every figure above. -->
+                                        <DataTrigger Binding="{Binding IsVoid}" Value="True">
+                                            <Setter TargetName="amount" Property="TextDecorations"
+                                                    Value="Strikethrough"/>
+                                            <Setter TargetName="amount" Property="Foreground"
+                                                    Value="{StaticResource Brush.Muted}"/>
+                                            <Setter TargetName="what" Property="Foreground"
+                                                    Value="{StaticResource Brush.Muted}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel x:Name="Empty" Style="{StaticResource Panel.Empty}" Visibility="Collapsed">
+                            <Path Style="{StaticResource Icon}" Data="{StaticResource Nav.Expenses}"
+                                  Width="30" Height="30" StrokeThickness="1.4"
+                                  Stroke="{StaticResource Brush.Muted}"/>
+                            <TextBlock x:Name="EmptyTitle" Style="{StaticResource Text.EmptyTitle}"/>
+                            <TextBlock x:Name="EmptyBody" Style="{StaticResource Text.EmptyBody}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- ==================== Where it goes ==================== -->
+        <Border Grid.Row="2" Grid.Column="2" Margin="0,14,0,0"
+                Background="{StaticResource Brush.Card}" CornerRadius="16" Padding="18,16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="WHERE IT GOES" Style="{StaticResource Text.Eyebrow}"/>
+                    <TextBlock x:Name="ByKindNote" Style="{StaticResource Text.Muted}" FontSize="11.5"
+                               Margin="0,6,0,0" TextWrapping="Wrap"/>
+                    <Border Style="{StaticResource Rule}" Margin="0,12,0,0"
+                            Background="{StaticResource Brush.Panel}"/>
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+                    <StackPanel>
+                        <ItemsControl x:Name="ByKind">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,13">
+                                        <Grid>
+                                            <TextBlock Text="{Binding Kind}"
+                                                       Style="{StaticResource Text.Cell}"/>
+                                            <TextBlock Text="{Binding AmountLabel}"
+                                                       Style="{StaticResource Text.Money}"
+                                                       HorizontalAlignment="Right"/>
+                                        </Grid>
+
+                                        <Border Height="8" CornerRadius="4" Margin="0,7,0,0"
+                                                Background="{StaticResource Brush.Panel}"
+                                                HorizontalAlignment="Stretch">
+                                            <Border Background="{StaticResource Brush.Accent}"
+                                                    CornerRadius="4" HorizontalAlignment="Left"
+                                                    Width="{Binding BarWidth}"/>
+                                        </Border>
+
+                                        <TextBlock Text="{Binding ShareLabel}"
+                                                   Style="{StaticResource Text.Muted}"
+                                                   FontSize="11" Margin="0,5,0,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock x:Name="NoKinds" Style="{StaticResource Text.Muted}" FontSize="12"
+                                   TextWrapping="Wrap" Visibility="Collapsed"
+                                   Text="Nothing spent in this period."/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</local:AdminPageBase>

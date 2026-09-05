@@ -1,0 +1,237 @@
+<local:AdminPageBase x:Class="MarketPos.Views.Admin.SalesHistoryPage"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:local="clr-namespace:MarketPos.Views.Admin">
+
+    <local:AdminPageBase.Resources>
+        <Style x:Key="Divider.V" TargetType="Border">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Panel}"/>
+            <Setter Property="Margin" Value="0,16"/>
+        </Style>
+
+        <Style x:Key="Summary.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Eyebrow}">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="Summary.Value" TargetType="TextBlock" BasedOn="{StaticResource Text.Stat}">
+            <Setter Property="FontSize" Value="23"/>
+        </Style>
+
+        <Style x:Key="Summary.Note" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,5,0,0"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+    </local:AdminPageBase.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ==================== Summary of what is filtered ==================== -->
+        <Border Grid.Row="0" Background="{StaticResource Brush.Card}" CornerRadius="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="18,16">
+                    <TextBlock Text="SALES" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="CountValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="CountNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="1" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="2" Margin="18,16">
+                    <TextBlock Text="REVENUE" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="TakingsValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="TakingsNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="3" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="4" Margin="18,16">
+                    <TextBlock Text="PROFIT" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="ProfitValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="ProfitNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="5" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="6" Margin="18,16">
+                    <TextBlock Text="ITEMS SOLD" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="ItemsValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="ItemsNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="7" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="8" Margin="18,16">
+                    <TextBlock Text="REFUNDED" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="RefundValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="RefundNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== Filters ==================== -->
+        <Grid Grid.Row="1" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{StaticResource Brush.Card}" CornerRadius="10" Height="36">
+                <Grid>
+                    <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Search}"
+                          Width="13" Height="13" HorizontalAlignment="Left" Margin="13,0,0,0"
+                          Stroke="{StaticResource Brush.Muted}"/>
+                    <TextBox x:Name="SearchBox" Style="{StaticResource TextBox.Plain}" Height="36"
+                             Background="Transparent" BorderThickness="0" Margin="33,0,10,0"
+                             VerticalContentAlignment="Center" FontSize="13"
+                             CaretBrush="{StaticResource Brush.Text}" TextChanged="Filter_Changed"/>
+                    <TextBlock Text="Receipt number, product or cashier" Style="{StaticResource Text.Muted}"
+                               Margin="35,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                               Visibility="{Binding Text, ElementName=SearchBox,
+                                            Converter={StaticResource InvStrVis}}"/>
+                </Grid>
+            </Border>
+
+            <ComboBox x:Name="CashierFilter" Grid.Column="1" Style="{StaticResource ComboBox.Form}"
+                      Width="170" Height="36" Margin="10,0,0,0"
+                      ItemTemplate="{StaticResource Combo.Name}" SelectionChanged="Filter_Changed"/>
+
+            <Button Grid.Column="3" Style="{StaticResource Button.SmallMuted}" Height="36"
+                    Content="Export CSV" Click="Export_Click"/>
+        </Grid>
+
+        <!-- ==================== The receipts ==================== -->
+        <Border Grid.Row="2" Margin="0,14,0,0" Background="{StaticResource Brush.Card}"
+                CornerRadius="16" Padding="10,14,10,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="12,0,12,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.8*"/>
+                        <ColumnDefinition Width="1.4*"/>
+                        <ColumnDefinition Width="1.3*"/>
+                        <ColumnDefinition Width="0.6*"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="0.9*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="RECEIPT" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="1" Text="WHEN" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="2" Text="CASHIER" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="3" Text="ITEMS" Style="{StaticResource Text.ColumnHead}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="4" Text="TOTAL" Style="{StaticResource Text.ColumnHead}"
+                               TextAlignment="Right"/>
+                    <TextBlock x:Name="ProfitHead" Grid.Column="5" Text="PROFIT"
+                               Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+                    <TextBlock Grid.Column="6" Text="PAYMENT" Style="{StaticResource Text.ColumnHead}"
+                               Margin="16,0,0,0"/>
+                    <TextBlock Grid.Column="7" Text="STATUS" Style="{StaticResource Text.ColumnHead}"/>
+                </Grid>
+
+                <Border Grid.Row="1" Style="{StaticResource Rule}" Margin="12,0,12,4"
+                        Background="{StaticResource Brush.Panel}"/>
+
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <ItemsControl x:Name="Rows">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- The whole row opens the receipt: view it, reprint it,
+                                         refund part of it, or cancel it. -->
+                                    <Button Style="{StaticResource Button.Row}" Padding="12,0"
+                                            Click="Row_Click" Tag="{Binding InvoiceNumber}">
+                                        <Grid Height="38">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="0.8*"/>
+                                                <ColumnDefinition Width="1.4*"/>
+                                                <ColumnDefinition Width="1.3*"/>
+                                                <ColumnDefinition Width="0.6*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="0.9*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Grid.Column="0" Style="{StaticResource Text.Cell}"
+                                                       FontWeight="SemiBold"
+                                                       Text="{Binding InvoiceNumber, StringFormat='#{0}'}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Text.CellMuted}"
+                                                       Text="{Binding TimeLabel}"/>
+                                            <TextBlock Grid.Column="2" Style="{StaticResource Text.CellMuted}"
+                                                       Text="{Binding CashierLabel}"/>
+                                            <TextBlock Grid.Column="3" Style="{StaticResource Text.Money}"
+                                                       FontWeight="Normal"
+                                                       Foreground="{StaticResource Brush.Muted}"
+                                                       Text="{Binding LineCount}"/>
+                                            <TextBlock x:Name="total" Grid.Column="4"
+                                                       Style="{StaticResource Text.Money}"
+                                                       Text="{Binding NetTotal, Converter={StaticResource Money}}"/>
+                                            <TextBlock x:Name="profit" Grid.Column="5"
+                                                       Style="{StaticResource Text.Money}"
+                                                       FontWeight="Normal"
+                                                       Text="{Binding ProfitLabel}"/>
+                                            <TextBlock Grid.Column="6" Style="{StaticResource Text.CellMuted}"
+                                                       Margin="16,0,0,0" Text="{Binding PaymentMethod}"/>
+
+                                            <Border x:Name="badge" Grid.Column="7"
+                                                    Style="{StaticResource Badge.Neutral}">
+                                                <TextBlock x:Name="badgeText" Text="{Binding StatusLabel}"/>
+                                            </Border>
+                                        </Grid>
+                                    </Button>
+
+                                    <DataTemplate.Triggers>
+                                        <!-- A completed sale is the normal case and gets no
+                                             decoration at all; only the exceptions are marked. -->
+                                        <DataTrigger Binding="{Binding Status}" Value="Completed">
+                                            <Setter TargetName="badge" Property="Visibility" Value="Hidden"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsCancelled}" Value="True">
+                                            <Setter TargetName="total" Property="TextDecorations"
+                                                    Value="Strikethrough"/>
+                                            <Setter TargetName="total" Property="Foreground"
+                                                    Value="{StaticResource Brush.Muted}"/>
+                                            <Setter TargetName="profit" Property="Foreground"
+                                                    Value="{StaticResource Brush.Muted}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel x:Name="Empty" Style="{StaticResource Panel.Empty}" Visibility="Collapsed">
+                            <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Receipt}"
+                                  Width="30" Height="30" StrokeThickness="1.4"
+                                  Stroke="{StaticResource Brush.Muted}"/>
+                            <TextBlock x:Name="EmptyTitle" Style="{StaticResource Text.EmptyTitle}"/>
+                            <TextBlock x:Name="EmptyBody" Style="{StaticResource Text.EmptyBody}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</local:AdminPageBase>

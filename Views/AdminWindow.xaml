@@ -1,0 +1,279 @@
+<!-- Text is laid out in Ideal mode, not Display. Display uses GDI-compatible metrics
+     tuned for the fonts Windows ships with; it snaps an embedded face to whole pixels
+     and crops the result, which is why descenders looked cut off. -->
+<Window x:Class="MarketPos.Views.AdminWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="clr-namespace:MarketPos.Converters"
+        Title="Market — Back office"
+        WindowStyle="None"
+        WindowState="Maximized"
+        ResizeMode="CanResize"
+        Background="{StaticResource Brush.Page}"
+        FontFamily="{StaticResource Font.Base}"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="ClearType"
+        RenderOptions.ClearTypeHint="Enabled"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolVis"/>
+        <conv:InverseBooleanToVisibilityConverter x:Key="InvBoolVis"/>
+    </Window.Resources>
+
+    <!-- Same shell as the till: inset panel, 28px radius, hairline border instead of a
+         drop shadow (a full-screen blur re-renders on every descendant invalidation). -->
+    <Border Margin="18" CornerRadius="28" Background="{StaticResource Brush.Panel}"
+            BorderThickness="1" BorderBrush="#DFE5EA">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="222"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ============================ Sidebar ============================ -->
+            <Grid Grid.Column="0" Margin="14,18,6,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- The logo is a wordmark, so it carries the name on its own. Height alone
+                     fixes the footprint; the 3.77:1 ratio does the rest. -->
+                <Image Grid.Row="0" Source="pack://application:,,,/Assets/logo.png" Height="34"
+                       Stretch="Uniform" HorizontalAlignment="Left" Margin="12,6,0,26"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+                    <StackPanel x:Name="NavList">
+                        <TextBlock Text="DAILY" Style="{StaticResource Text.Eyebrow}" Margin="12,4,0,6"/>
+                        <RadioButton x:Name="NavDashboard" Style="{StaticResource Button.Nav}" GroupName="admin"
+                                     Checked="Nav_Checked" Tag="Dashboard">
+                            <StackPanel Orientation="Horizontal">
+                                <Grid>
+                                    <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Dashboard}"/>
+                                    <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Dashboard.Filled}"/>
+                                </Grid>
+                                <TextBlock Text="Dashboard" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
+                                     Checked="Nav_Checked" Tag="SalesHistory">
+                            <StackPanel Orientation="Horizontal">
+                                <Grid>
+                                    <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.SalesHistory}"/>
+                                    <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.SalesHistory.Filled}"/>
+                                </Grid>
+                                <TextBlock Text="Sales history" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <TextBlock Text="STOCK" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
+                                     Checked="Nav_Checked" Tag="AddProduct">
+                            <StackPanel Orientation="Horizontal">
+                                <Grid>
+                                    <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.AddProduct}"/>
+                                    <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.AddProduct.Filled}"/>
+                                </Grid>
+                                <TextBlock Text="Add product" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
+                                     Checked="Nav_Checked" Tag="Categories">
+                            <StackPanel Orientation="Horizontal">
+                                <Grid>
+                                    <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Categories}"/>
+                                    <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Categories.Filled}"/>
+                                </Grid>
+                                <TextBlock Text="Categories" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
+                                     Checked="Nav_Checked" Tag="Inventory">
+                            <StackPanel Orientation="Horizontal">
+                                <Grid>
+                                    <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Inventory}"/>
+                                    <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Inventory.Filled}"/>
+                                </Grid>
+                                <TextBlock Text="Inventory" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <TextBlock Text="MONEY" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
+                                     Checked="Nav_Checked" Tag="Suppliers">
+                            <StackPanel Orientation="Horizontal">
+                                <Grid>
+                                    <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Suppliers}"/>
+                                    <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Suppliers.Filled}"/>
+                                </Grid>
+                                <TextBlock Text="Suppliers" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
+                                     Checked="Nav_Checked" Tag="Expenses">
+                            <StackPanel Orientation="Horizontal">
+                                <Grid>
+                                    <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Expenses}"/>
+                                    <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Expenses.Filled}"/>
+                                </Grid>
+                                <TextBlock Text="Expenses" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <TextBlock Text="PEOPLE" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
+                                     Checked="Nav_Checked" Tag="Workers">
+                            <StackPanel Orientation="Horizontal">
+                                <Grid>
+                                    <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Workers}"/>
+                                    <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Workers.Filled}"/>
+                                </Grid>
+                                <TextBlock Text="Workers" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <TextBlock Text="INSIGHT" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <RadioButton x:Name="NavReports" Style="{StaticResource Button.Nav}" GroupName="admin"
+                                     Checked="Nav_Checked" Tag="Reports">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <Grid>
+                                    <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Reports}"/>
+                                    <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Reports.Filled}"/>
+                                </Grid>
+                                    <TextBlock Text="Reports" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Style="{StaticResource Badge.Bad}" HorizontalAlignment="Right"
+                                        Padding="7,1" CornerRadius="9"
+                                        Visibility="{Binding HasAlerts, Converter={StaticResource BoolVis}}">
+                                    <TextBlock Text="{Binding AlertCount}"/>
+                                </Border>
+                            </Grid>
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
+                                     Checked="Nav_Checked" Tag="Activity">
+                            <StackPanel Orientation="Horizontal">
+                                <Grid>
+                                    <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Activity}"/>
+                                    <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Activity.Filled}"/>
+                                </Grid>
+                                <TextBlock Text="Activity log" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <Border Height="14"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="2" Margin="0,12,0,0">
+                    <Border Style="{StaticResource Rule}" Margin="10,0,10,12"/>
+                    <Grid Margin="10,0,4,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding UserName}" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{StaticResource Brush.Text}" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding UserRole}" Style="{StaticResource Text.Muted}" FontSize="11"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Style="{StaticResource Button.RowAction}"
+                                    ToolTip="Shop settings" Click="Settings_Click">
+                                <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Settings}"/>
+                            </Button>
+                            <Button x:Name="PasswordButton" Style="{StaticResource Button.RowAction}"
+                                    Click="Password_Click">
+                                <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Lock}"/>
+                            </Button>
+                            <Button Style="{StaticResource Button.RowAction}"
+                                    ToolTip="Sign out" Click="SignOut_Click">
+                                <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Power}"/>
+                            </Button>
+                            <Button Style="{StaticResource Button.RowAction}"
+                                    ToolTip="Back to the till" Click="BackToTill_Click">
+                                <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Back}"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+
+            <!-- ============================ Content ============================ -->
+            <Grid Grid.Column="1" Margin="6,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>   <!-- title and window controls -->
+                    <RowDefinition Height="Auto"/>   <!-- date filter, when the page uses one -->
+                    <RowDefinition Height="*"/>      <!-- the page itself -->
+                </Grid.RowDefinitions>
+
+                <!-- Top bar. Doubles as the window's drag handle, since there is no title bar. -->
+                <Grid Grid.Row="0" Margin="14,22,20,10" MouseLeftButtonDown="TopBar_Drag">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- The page title is the largest thing on screen and it is set in the
+                         brand's own face, so the eye lands on it first and lands on something
+                         that looks like the logo above it. It had been a step above body text,
+                         which left every page reading as one flat surface. -->
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock x:Name="PageTitle" Text="Dashboard"
+                                   Style="{StaticResource Text.Title}"
+                                   FontSize="{StaticResource Size.Display}"/>
+                        <TextBlock x:Name="PageSubtitle" Style="{StaticResource Text.Muted}"
+                                   Margin="0,5,0,0"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource Button.RowAction}" ToolTip="Reload"
+                                Click="Refresh_Click" Margin="0,0,6,0">
+                            <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Refresh}"/>
+                        </Button>
+                        <Button Style="{StaticResource Button.WinControl}" ToolTip="Minimise" Click="Minimise_Click">
+                            <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Minimize}"/>
+                        </Button>
+                        <Button Style="{StaticResource Button.Close}" ToolTip="Close the back office"
+                                Click="Close_Click" Margin="6,0,0,0">
+                            <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Close}"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Date filter. Shown only on the pages where a period actually changes
+                     the numbers; a filter over a list of suppliers would just be noise. -->
+                <Border Grid.Row="1" x:Name="DateBar" Margin="14,4,20,14" Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="Today"
+                                      IsChecked="{Binding Dates.IsToday, Mode=OneWay}" Checked="Preset_Checked" Tag="Today"/>
+                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="Yesterday"
+                                      IsChecked="{Binding Dates.IsYesterday, Mode=OneWay}" Checked="Preset_Checked" Tag="Yesterday"/>
+                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="This week"
+                                      IsChecked="{Binding Dates.IsThisWeek, Mode=OneWay}" Checked="Preset_Checked" Tag="ThisWeek"/>
+                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="This month"
+                                      IsChecked="{Binding Dates.IsThisMonth, Mode=OneWay}" Checked="Preset_Checked" Tag="ThisMonth"/>
+                        <ToggleButton Style="{StaticResource Button.DateChip}" Content="This year"
+                                      IsChecked="{Binding Dates.IsThisYear, Mode=OneWay}" Checked="Preset_Checked" Tag="ThisYear"/>
+                        <ToggleButton x:Name="CustomChip" Style="{StaticResource Button.DateChip}" Content="Custom"
+                                      IsChecked="{Binding Dates.IsCustom, Mode=OneWay}" Checked="Preset_Checked" Tag="Custom"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="8,0,0,0"
+                                    Visibility="{Binding Dates.IsCustom, Converter={StaticResource BoolVis}}">
+                            <DatePicker Style="{StaticResource DatePicker.Field}" Width="128"
+                                        SelectedDate="{Binding Dates.CustomFrom, Mode=TwoWay}"/>
+                            <TextBlock Text="to" Style="{StaticResource Text.Muted}" Margin="8,0" VerticalAlignment="Center"/>
+                            <DatePicker Style="{StaticResource DatePicker.Field}" Width="128"
+                                        SelectedDate="{Binding Dates.CustomTo, Mode=TwoWay}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <ContentControl x:Name="PageHost" Grid.Row="2" Margin="14,6,20,16"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

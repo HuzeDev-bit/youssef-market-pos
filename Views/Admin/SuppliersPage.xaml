@@ -1,0 +1,435 @@
+<local:AdminPageBase x:Class="MarketPos.Views.Admin.SuppliersPage"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:local="clr-namespace:MarketPos.Views.Admin">
+
+    <local:AdminPageBase.Resources>
+        <Style x:Key="Divider.V" TargetType="Border">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Panel}"/>
+            <Setter Property="Margin" Value="0,16"/>
+        </Style>
+
+        <Style x:Key="Summary.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Eyebrow}">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="Summary.Value" TargetType="TextBlock" BasedOn="{StaticResource Text.Stat}">
+            <Setter Property="FontSize" Value="23"/>
+        </Style>
+
+        <Style x:Key="Summary.Note" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,5,0,0"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+    </local:AdminPageBase.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="14"/>
+            <ColumnDefinition Width="430"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ==================== Who is owed what ==================== -->
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                Background="{StaticResource Brush.Card}" CornerRadius="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="18,16">
+                    <TextBlock Text="STILL OWED" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="OwedValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="OwedNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="1" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="2" Margin="18,16">
+                    <TextBlock Text="BOUGHT" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="BoughtValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="BoughtNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="3" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="4" Margin="18,16">
+                    <TextBlock Text="PAID" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="PaidValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="PaidNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="5" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="6" Margin="18,16">
+                    <TextBlock Text="SUPPLIERS" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="CountValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="CountNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== Toolbar ==================== -->
+        <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{StaticResource Brush.Card}" CornerRadius="10" Height="36">
+                <Grid>
+                    <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Search}"
+                          Width="13" Height="13" HorizontalAlignment="Left" Margin="13,0,0,0"
+                          Stroke="{StaticResource Brush.Muted}"/>
+                    <TextBox x:Name="SearchBox" Style="{StaticResource TextBox.Plain}" Height="36"
+                             Background="Transparent" BorderThickness="0" Margin="33,0,10,0"
+                             VerticalContentAlignment="Center" FontSize="13"
+                             CaretBrush="{StaticResource Brush.Text}" TextChanged="Filter_Changed"/>
+                    <TextBlock Text="Supplier name or phone" Style="{StaticResource Text.Muted}"
+                               Margin="35,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                               Visibility="{Binding Text, ElementName=SearchBox,
+                                            Converter={StaticResource InvStrVis}}"/>
+                </Grid>
+            </Border>
+
+            <CheckBox x:Name="OwedOnly" Grid.Column="1" Style="{StaticResource Check.Field}"
+                      Content="Only ones I owe" VerticalAlignment="Center" Margin="16,0,0,0"
+                      Click="Filter_Changed"/>
+
+            <Button Grid.Column="3" Style="{StaticResource Button.SmallMuted}" Height="36"
+                    Content="Record a delivery" Click="Purchase_Click" Margin="0,0,10,0"/>
+            <Button Grid.Column="4" Style="{StaticResource Button.Small}" Height="36"
+                    Content="Add supplier" Click="Add_Click"/>
+        </Grid>
+
+        <!-- ==================== The suppliers ==================== -->
+        <Border Grid.Row="2" Grid.Column="0" Margin="0,14,0,0"
+                Background="{StaticResource Brush.Card}" CornerRadius="16" Padding="10,14,10,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="12,0,12,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="1.4*"/>
+                        <ColumnDefinition Width="1.1*"/>
+                        <ColumnDefinition Width="1.1*"/>
+                        <ColumnDefinition Width="1.1*"/>
+                        <ColumnDefinition Width="92"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="SUPPLIER" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="1" Text="PHONE" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="2" Text="BOUGHT" Style="{StaticResource Text.ColumnHead}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="3" Text="PAID" Style="{StaticResource Text.ColumnHead}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="4" Text="OWED" Style="{StaticResource Text.ColumnHead}"
+                               TextAlignment="Right"/>
+                </Grid>
+
+                <Border Grid.Row="1" Style="{StaticResource Rule}" Margin="12,0,12,4"
+                        Background="{StaticResource Brush.Panel}"/>
+
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <ItemsControl x:Name="Rows">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Button Style="{StaticResource Button.Row}" Padding="12,0"
+                                                Click="Row_Click" Tag="{Binding Id}"
+                                                ToolTip="See what was bought and what was paid">
+                                            <Grid Height="40">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="1.4*"/>
+                                                    <ColumnDefinition Width="1.1*"/>
+                                                    <ColumnDefinition Width="1.1*"/>
+                                                    <ColumnDefinition Width="1.1*"/>
+                                                    <ColumnDefinition Width="92"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}"
+                                                               Style="{StaticResource Text.Cell}"
+                                                               FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Contact}"
+                                                               Style="{StaticResource Text.Muted}"
+                                                               FontSize="11" Margin="0,2,0,0"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Visibility="{Binding Contact,
+                                                                            Converter={StaticResource StrVis}}"/>
+                                                </StackPanel>
+
+                                                <TextBlock Grid.Column="1" Style="{StaticResource Text.CellMuted}"
+                                                           Text="{Binding PhoneLabel}"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Text.Money}"
+                                                           FontWeight="Normal"
+                                                           Text="{Binding TotalPurchased, Converter={StaticResource Money}}"/>
+                                                <TextBlock Grid.Column="3" Style="{StaticResource Text.Money}"
+                                                           FontWeight="Normal"
+                                                           Text="{Binding TotalPaid, Converter={StaticResource Money}}"/>
+                                                <TextBlock x:Name="owed" Grid.Column="4"
+                                                           Style="{StaticResource Text.Money}"
+                                                           Text="{Binding Owed, Converter={StaticResource Money}}"/>
+                                            </Grid>
+                                        </Button>
+
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                    Margin="0,0,16,0" VerticalAlignment="Center">
+                                            <Button x:Name="payButton" Style="{StaticResource Button.RowAction}"
+                                                    ToolTip="Record a payment" Click="Pay_Click"
+                                                    Tag="{Binding Id}">
+                                                <Path Style="{StaticResource Icon.Small}"
+                                                      Data="{StaticResource Nav.Salaries}"/>
+                                            </Button>
+                                            <Button Style="{StaticResource Button.RowAction}"
+                                                    ToolTip="Edit their details" Click="Edit_Click"
+                                                    Tag="{Binding Id}">
+                                                <Path Style="{StaticResource Icon.Small}"
+                                                      Data="{StaticResource Icon.Edit}"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsOwed}" Value="True">
+                                            <Setter TargetName="owed" Property="Foreground"
+                                                    Value="{StaticResource Brush.Accent}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsOwed}" Value="False">
+                                            <Setter TargetName="owed" Property="Foreground"
+                                                    Value="{StaticResource Brush.Muted}"/>
+                                            <Setter TargetName="payButton" Property="Visibility"
+                                                    Value="Hidden"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                            <Setter TargetName="owed" Property="Opacity" Value="0.5"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel x:Name="Empty" Style="{StaticResource Panel.Empty}" Visibility="Collapsed">
+                            <Path Style="{StaticResource Icon}" Data="{StaticResource Nav.Suppliers}"
+                                  Width="30" Height="30" StrokeThickness="1.4"
+                                  Stroke="{StaticResource Brush.Muted}"/>
+                            <TextBlock x:Name="EmptyTitle" Style="{StaticResource Text.EmptyTitle}"/>
+                            <TextBlock x:Name="EmptyBody" Style="{StaticResource Text.EmptyBody}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- ==================== The one they picked ====================
+             Deliveries and payments side by side, because "what did I buy" and
+             "what have I paid" are the same conversation with a supplier. -->
+        <Border Grid.Row="2" Grid.Column="2" Margin="0,14,0,0"
+                Background="{StaticResource Brush.Card}" CornerRadius="16" Padding="18,16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel x:Name="PickedHead" Grid.Row="0">
+                    <TextBlock x:Name="PickedName" Style="{StaticResource Text.Section}"
+                               TextTrimming="CharacterEllipsis"/>
+                    <TextBlock x:Name="PickedNote" Style="{StaticResource Text.Muted}"
+                               Margin="0,4,0,0" TextWrapping="Wrap"/>
+
+                    <Border Style="{StaticResource Rule}" Margin="0,14,0,0"
+                            Background="{StaticResource Brush.Panel}"/>
+                </StackPanel>
+
+                <ScrollViewer x:Name="PickedBody" Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+                    <StackPanel>
+                        <!-- What the shop buys from them, rolled up. This is the list the
+                             owner argues about on the phone; the deliveries below are the
+                             evidence for it. -->
+                        <TextBlock Text="WHAT WE BUY" Style="{StaticResource Text.Eyebrow}"
+                                   Margin="0,0,0,8"/>
+                        <ItemsControl x:Name="Goods">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,11">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                            <TextBlock Text="{Binding Name}"
+                                                       Style="{StaticResource Text.Cell}"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                <TextBlock Text="{Binding QuantityLabel}"
+                                                           Style="{StaticResource Text.Muted}"
+                                                           FontSize="11"/>
+                                                <TextBlock Text=" bought &#183; "
+                                                           Style="{StaticResource Text.Muted}"
+                                                           FontSize="11"/>
+                                                <TextBlock Text="{Binding LastBoughtLabel}"
+                                                           Style="{StaticResource Text.Muted}"
+                                                           FontSize="11"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding TotalCost, Converter={StaticResource Money}}"
+                                                       Style="{StaticResource Text.Money}"
+                                                       TextAlignment="Right"/>
+                                            <TextBlock x:Name="unit" Text="{Binding LastCostLabel}"
+                                                       Style="{StaticResource Text.Muted}"
+                                                       FontSize="11" Margin="0,2,0,0"
+                                                       TextAlignment="Right"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <DataTemplate.Triggers>
+                                        <!-- Paying more than the average means the price moved.
+                                             Worth colouring; not worth a warning. -->
+                                        <DataTrigger Binding="{Binding PriceWentUp}" Value="True">
+                                            <Setter TargetName="unit" Property="Foreground"
+                                                    Value="{StaticResource Brush.Accent}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock x:Name="NoGoods" Style="{StaticResource Text.Muted}"
+                                   FontSize="12" Visibility="Collapsed"
+                                   Text="Nothing bought from them yet."/>
+
+                        <Border Style="{StaticResource Rule}" Margin="0,6,0,0"
+                                Background="{StaticResource Brush.Panel}"/>
+
+                        <TextBlock Text="DELIVERIES" Style="{StaticResource Text.Eyebrow}"
+                                   Margin="0,16,0,8"/>
+                        <ItemsControl x:Name="Deliveries">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource Brush.Panel}"
+                                            CornerRadius="11" Padding="12,10" Margin="0,0,0,9">
+                                        <StackPanel>
+                                            <Grid>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding When}"
+                                                               Style="{StaticResource Text.Cell}"
+                                                               FontWeight="SemiBold"/>
+                                                    <TextBlock x:Name="owing" Text="{Binding Owing}"
+                                                               Style="{StaticResource Text.Muted}"
+                                                               FontSize="11" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Cost}"
+                                                           Style="{StaticResource Text.Money}"
+                                                           HorizontalAlignment="Right"
+                                                           VerticalAlignment="Top"/>
+                                            </Grid>
+
+                                            <!-- Every line, because "what did that 400 DH
+                                                 actually buy" is the whole question. -->
+                                            <ItemsControl ItemsSource="{Binding Lines}"
+                                                          Margin="0,9,0,0">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,0,0,4">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0"
+                                                                       Style="{StaticResource Text.CellMuted}"
+                                                                       FontSize="12"
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       Text="{Binding What}"/>
+                                                            <TextBlock Grid.Column="1"
+                                                                       Style="{StaticResource Text.CellMuted}"
+                                                                       FontSize="12" Margin="10,0,0,0"
+                                                                       Text="{Binding Cost}"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding StillOwing}" Value="True">
+                                            <Setter TargetName="owing" Property="Foreground"
+                                                    Value="{StaticResource Brush.Accent}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock x:Name="NoDeliveries" Style="{StaticResource Text.Muted}"
+                                   FontSize="12" Visibility="Collapsed"
+                                   Text="Nothing recorded yet."/>
+
+                        <TextBlock Text="PAYMENTS" Style="{StaticResource Text.Eyebrow}"
+                                   Margin="0,18,0,8"/>
+                        <ItemsControl x:Name="Payments">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,9">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding PaidOn, StringFormat='d MMM yyyy'}"
+                                                       Style="{StaticResource Text.Cell}"/>
+                                            <TextBlock Text="{Binding Method}"
+                                                       Style="{StaticResource Text.Muted}"
+                                                       FontSize="11" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Amount, Converter={StaticResource Money}}"
+                                                   Style="{StaticResource Text.Money}"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock x:Name="NoPayments" Style="{StaticResource Text.Muted}"
+                                   FontSize="12" Visibility="Collapsed"
+                                   Text="Nothing paid yet."/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <StackPanel x:Name="NobodyPicked" Grid.Row="0" Grid.RowSpan="2"
+                            Style="{StaticResource Panel.Empty}">
+                    <Path Style="{StaticResource Icon}" Data="{StaticResource Nav.Purchases}"
+                          Width="28" Height="28" StrokeThickness="1.4"
+                          Stroke="{StaticResource Brush.Muted}"/>
+                    <TextBlock Text="Pick a supplier" Style="{StaticResource Text.EmptyTitle}"/>
+                    <TextBlock Style="{StaticResource Text.EmptyBody}"
+                               Text="Their deliveries and payments show up here."/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</local:AdminPageBase>

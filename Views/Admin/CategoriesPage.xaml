@@ -1,0 +1,192 @@
+<local:AdminPageBase x:Class="MarketPos.Views.Admin.CategoriesPage"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:local="clr-namespace:MarketPos.Views.Admin">
+
+    <local:AdminPageBase.Resources>
+        <Style x:Key="Divider.V" TargetType="Border">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Panel}"/>
+            <Setter Property="Margin" Value="0,16"/>
+        </Style>
+
+        <Style x:Key="Summary.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Eyebrow}">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="Summary.Value" TargetType="TextBlock" BasedOn="{StaticResource Text.Stat}">
+            <Setter Property="FontSize" Value="23"/>
+        </Style>
+
+        <Style x:Key="Summary.Note" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,5,0,0"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+    </local:AdminPageBase.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ==================== How the shop is grouped ==================== -->
+        <Border Grid.Row="0" Background="{StaticResource Brush.Card}" CornerRadius="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="18,16">
+                    <TextBlock Text="CATEGORIES" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="CountValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="CountNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="1" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="2" Margin="18,16">
+                    <TextBlock Text="PRODUCTS GROUPED" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="GroupedValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="GroupedNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="3" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="4" Margin="18,16">
+                    <TextBlock Text="NOT IN A CATEGORY" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="LooseValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="LooseNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="5" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="6" Margin="18,16">
+                    <TextBlock Text="STOCK IN THEM" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="ValueValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="ValueNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== Toolbar ==================== -->
+        <Grid Grid.Row="1" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <CheckBox x:Name="ShowInactive" Grid.Column="0" Style="{StaticResource Check.Field}"
+                      Content="Show hidden ones" VerticalAlignment="Center" Click="Filter_Changed"/>
+
+            <TextBlock x:Name="Hint" Grid.Column="1" Style="{StaticResource Text.Muted}"
+                       VerticalAlignment="Center" Margin="18,0,18,0"
+                       TextTrimming="CharacterEllipsis"/>
+
+            <Button Grid.Column="2" Style="{StaticResource Button.Small}" Height="36"
+                    Content="Add category" Click="Add_Click"/>
+        </Grid>
+
+        <!-- ==================== The categories ====================
+             Cards with a picture, because that is what the till shows and because a
+             shopkeeper recognises a shelf faster than they read its name. -->
+        <ScrollViewer Grid.Row="2" Margin="0,14,0,0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <ItemsControl x:Name="Rows">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button x:Name="card" Style="{StaticResource Button.Card}"
+                                    Width="230" Margin="0,0,14,14" Padding="0"
+                                    Click="Card_Click" Tag="{Binding Id}"
+                                    ToolTip="Rename it, change its picture, or hide it">
+                                <StackPanel>
+                                    <!-- The picture, or the icon on a plain ground when there
+                                         is none. Same footprint either way, so a shop that has
+                                         photographed half its shelves still has a tidy grid. -->
+                                    <Border Height="118" CornerRadius="13,13,0,0"
+                                            Background="{StaticResource Brush.Page}"
+                                            ClipToBounds="True">
+                                        <Grid>
+                                            <Image x:Name="photo" Stretch="UniformToFill"
+                                                   Source="{Binding ImagePath,
+                                                            Converter={StaticResource ProductImage}}"/>
+                                            <TextBlock x:Name="glyph" Text="{Binding IconLabel}"
+                                                       FontSize="34"
+                                                       Foreground="{StaticResource Brush.Muted}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                            <Border x:Name="hiddenTag" Style="{StaticResource Badge.Neutral}"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                    Margin="8" Visibility="Collapsed">
+                                                <TextBlock Text="Hidden"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+
+                                    <StackPanel Margin="14,11,14,13">
+                                        <TextBlock Text="{Binding Name}"
+                                                   Style="{StaticResource Text.Cell}"
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis"/>
+
+                                        <Grid Margin="0,7,0,0">
+                                            <TextBlock Text="{Binding CountLabel}"
+                                                       Style="{StaticResource Text.Muted}"
+                                                       FontSize="12"/>
+                                            <TextBlock Text="{Binding ValueLabel}"
+                                                       Style="{StaticResource Text.Muted}"
+                                                       FontSize="12" HorizontalAlignment="Right"/>
+                                        </Grid>
+
+                                        <!-- Only shown when there is something to say: a
+                                             category with nothing running low says nothing. -->
+                                        <TextBlock x:Name="lowNote" Text="{Binding LowLabel}"
+                                                   FontSize="11.5" Margin="0,6,0,0"
+                                                   Foreground="{StaticResource Brush.Accent}"
+                                                   Visibility="{Binding LowLabel,
+                                                                Converter={StaticResource StrVis}}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Button>
+
+                            <DataTemplate.Triggers>
+                                <!-- With a photo there is no glyph to draw underneath it. -->
+                                <DataTrigger Binding="{Binding HasPicture}" Value="True">
+                                    <Setter TargetName="glyph" Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+
+                                <!-- A hidden category is still listed, because it is still what
+                                     old products point at — just visibly retired. -->
+                                <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                    <Setter TargetName="card" Property="Opacity" Value="0.55"/>
+                                    <Setter TargetName="hiddenTag" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <StackPanel x:Name="Empty" Style="{StaticResource Panel.Empty}" Visibility="Collapsed">
+                    <Path Style="{StaticResource Icon}" Data="{StaticResource Nav.Categories}"
+                          Width="30" Height="30" StrokeThickness="1.4"
+                          Stroke="{StaticResource Brush.Muted}"/>
+                    <TextBlock Text="No categories yet" Style="{StaticResource Text.EmptyTitle}"/>
+                    <TextBlock Style="{StaticResource Text.EmptyBody}"
+                               Text="Categories are how a cashier finds something with no barcode. Add one for each kind of shelf."/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</local:AdminPageBase>

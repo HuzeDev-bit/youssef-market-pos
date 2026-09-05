@@ -1,0 +1,248 @@
+<local:AdminPageBase x:Class="MarketPos.Views.Admin.WorkersPage"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:local="clr-namespace:MarketPos.Views.Admin">
+
+    <local:AdminPageBase.Resources>
+        <Style x:Key="Divider.V" TargetType="Border">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Panel}"/>
+            <Setter Property="Margin" Value="0,16"/>
+        </Style>
+
+        <Style x:Key="Summary.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Eyebrow}">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="Summary.Value" TargetType="TextBlock" BasedOn="{StaticResource Text.Stat}">
+            <Setter Property="FontSize" Value="23"/>
+        </Style>
+
+        <Style x:Key="Summary.Note" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,5,0,0"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+    </local:AdminPageBase.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ==================== The payroll ==================== -->
+        <Border x:Name="MoneyBand" Grid.Row="0" Background="{StaticResource Brush.Card}" CornerRadius="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="18,16">
+                    <TextBlock Text="STAFF" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="CountValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="CountNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="1" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="2" Margin="18,16">
+                    <TextBlock Text="WAGES DUE" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="DueValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="DueNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="3" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="4" Margin="18,16">
+                    <TextBlock Text="PAID" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="PaidValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="PaidNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="5" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="6" Margin="18,16">
+                    <TextBlock Text="STILL OWED" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="OwedValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="OwedNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== Toolbar ==================== -->
+        <Grid Grid.Row="1" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <CheckBox x:Name="ShowInactive" Grid.Column="0" Style="{StaticResource Check.Field}"
+                      Content="Show past staff" VerticalAlignment="Center" Click="Filter_Changed"/>
+
+            <TextBlock x:Name="GateNote" Grid.Column="1" Style="{StaticResource Text.Muted}"
+                       VerticalAlignment="Center" Margin="18,0,18,0"
+                       TextTrimming="CharacterEllipsis"/>
+
+            <Button Grid.Column="2" Style="{StaticResource Button.Small}" Height="36"
+                    Content="Add worker" Click="Add_Click"/>
+        </Grid>
+
+        <!-- ==================== The staff ==================== -->
+        <Border Grid.Row="2" Margin="0,14,0,0" Background="{StaticResource Brush.Card}"
+                CornerRadius="16" Padding="10,14,10,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="12,0,12,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2.2*"/>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="1.1*"/>
+                        <ColumnDefinition Width="1.1*"/>
+                        <ColumnDefinition Width="1.1*"/>
+                        <ColumnDefinition Width="132"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="WORKER" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="1" Text="ROLE" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="2" Text="WAGE" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock x:Name="DueHead" Grid.Column="3" Text="DUE"
+                               Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+                    <TextBlock x:Name="PaidHead" Grid.Column="4" Text="PAID"
+                               Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+                    <TextBlock x:Name="OwedHead" Grid.Column="5" Text="OWED"
+                               Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+                </Grid>
+
+                <Border Grid.Row="1" Style="{StaticResource Rule}" Margin="12,0,12,4"
+                        Background="{StaticResource Brush.Panel}"/>
+
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <ItemsControl x:Name="Rows">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Button Style="{StaticResource Button.Row}" Padding="12,0"
+                                                Click="Row_Click" Tag="{Binding Id}"
+                                                ToolTip="Their details, role and wage">
+                                            <Grid Height="46">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2.2*"/>
+                                                    <ColumnDefinition Width="1.2*"/>
+                                                    <ColumnDefinition Width="1.2*"/>
+                                                    <ColumnDefinition Width="1.1*"/>
+                                                    <ColumnDefinition Width="1.1*"/>
+                                                    <ColumnDefinition Width="1.1*"/>
+                                                    <ColumnDefinition Width="132"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                                            VerticalAlignment="Center">
+                                                    <Border Width="30" Height="30" CornerRadius="10"
+                                                            Background="{StaticResource Brush.Panel}">
+                                                        <TextBlock Text="{Binding Initial}" FontSize="13"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{StaticResource Brush.Muted}"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+                                                        <TextBlock x:Name="name" Text="{Binding Name}"
+                                                                   Style="{StaticResource Text.Cell}"
+                                                                   FontWeight="SemiBold"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding Phone}"
+                                                                   Style="{StaticResource Text.Muted}"
+                                                                   FontSize="11" Margin="0,2,0,0"
+                                                                   Visibility="{Binding Phone,
+                                                                                Converter={StaticResource StrVis}}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <TextBlock Grid.Column="1" Style="{StaticResource Text.CellMuted}"
+                                                           Text="{Binding RoleLabel}"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Text.CellMuted}"
+                                                           Text="{Binding WageLabel}"/>
+                                                <TextBlock x:Name="due" Grid.Column="3"
+                                                           Style="{StaticResource Text.Money}"
+                                                           FontWeight="Normal"
+                                                           Foreground="{StaticResource Brush.Muted}"
+                                                           Text="{Binding DueLabel}"/>
+                                                <TextBlock x:Name="paid" Grid.Column="4"
+                                                           Style="{StaticResource Text.Money}"
+                                                           FontWeight="Normal"
+                                                           Text="{Binding PaidLabel}"/>
+                                                <TextBlock x:Name="owed" Grid.Column="5"
+                                                           Style="{StaticResource Text.Money}"
+                                                           Text="{Binding OwedLabel}"/>
+                                            </Grid>
+                                        </Button>
+
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                    Margin="0,0,16,0" VerticalAlignment="Center">
+                                            <Button x:Name="payButton" Style="{StaticResource Button.RowAction}"
+                                                    ToolTip="Pay wages" Click="Pay_Click"
+                                                    Tag="{Binding Id}">
+                                                <Path Style="{StaticResource Icon.Small}"
+                                                      Data="{StaticResource Nav.Salaries}"/>
+                                            </Button>
+                                            <Button Style="{StaticResource Button.RowAction}"
+                                                    ToolTip="Set their password" Click="Password_Click"
+                                                    Tag="{Binding Id}">
+                                                <Path Style="{StaticResource Icon.Small}"
+                                                      Data="{StaticResource Icon.Lock}"/>
+                                            </Button>
+                                            <Button Style="{StaticResource Button.RowAction}"
+                                                    ToolTip="Edit their details" Click="Edit_Click"
+                                                    Tag="{Binding Id}">
+                                                <Path Style="{StaticResource Icon.Small}"
+                                                      Data="{StaticResource Icon.Edit}"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsOwed}" Value="True">
+                                            <Setter TargetName="owed" Property="Foreground"
+                                                    Value="{StaticResource Brush.Accent}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsOwed}" Value="False">
+                                            <Setter TargetName="owed" Property="Foreground"
+                                                    Value="{StaticResource Brush.Muted}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                            <Setter TargetName="name" Property="Foreground"
+                                                    Value="{StaticResource Brush.Muted}"/>
+                                            <Setter TargetName="payButton" Property="Visibility"
+                                                    Value="Hidden"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel x:Name="Empty" Style="{StaticResource Panel.Empty}" Visibility="Collapsed">
+                            <Path Style="{StaticResource Icon}" Data="{StaticResource Nav.Workers}"
+                                  Width="30" Height="30" StrokeThickness="1.4"
+                                  Stroke="{StaticResource Brush.Muted}"/>
+                            <TextBlock Text="No staff yet" Style="{StaticResource Text.EmptyTitle}"/>
+                            <TextBlock Style="{StaticResource Text.EmptyBody}"
+                                       Text="Add the people who work here. Give one a password and they can open the back office as themselves."/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</local:AdminPageBase>

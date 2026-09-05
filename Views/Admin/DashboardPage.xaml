@@ -1,0 +1,447 @@
+<local:AdminPageBase x:Class="MarketPos.Views.Admin.DashboardPage"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:local="clr-namespace:MarketPos.Views.Admin"
+                     xmlns:ctl="clr-namespace:MarketPos.Controls">
+
+    <local:AdminPageBase.Resources>
+        <Style x:Key="Hero.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Eyebrow}">
+            <Setter Property="Margin" Value="0,0,0,7"/>
+        </Style>
+
+        <!-- The quiet row under the hero. Small, a weight lighter than a headline, and
+             deliberately not a card each: these are figures you check, not figures you watch. -->
+        <Style x:Key="Quiet.Value" TargetType="TextBlock" BasedOn="{StaticResource Text.Figure}">
+            <Setter Property="FontSize" Value="15.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,3"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <Style x:Key="Quiet.Note" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <!-- The column heads sit outside the scroller, so when the list grows a scrollbar the
+             rows step left by its 8px and the headings no longer stand over their columns.
+             This walks the heading in by the same amount, only when the bar is actually there. -->
+        <Style x:Key="Head.Row" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+
+        <Style x:Key="Quiet.Rule" TargetType="Border">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="Margin" Value="20,2"/>
+        </Style>
+
+        <!-- Share of units, drawn under the product name. The number tells you which sold most;
+             the bar tells you by how much, which is what you are actually asking when you are
+             deciding what to reorder. Brand green, because it carries no text. -->
+        <Style x:Key="Bar.Share" TargetType="ProgressBar">
+            <Setter Property="Height" Value="4"/>
+            <Setter Property="Minimum" Value="0"/>
+            <Setter Property="Maximum" Value="1"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.Brand}"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}" CornerRadius="2"/>
+                            <Border x:Name="PART_Track"/>
+                            <Border x:Name="PART_Indicator" CornerRadius="2"
+                                    HorizontalAlignment="Left"
+                                    Background="{TemplateBinding Foreground}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </local:AdminPageBase.Resources>
+
+    <!-- Three bands, in the order the morning asks its questions: how did we do, is anything
+         wrong with the figures, and then the two lists worth acting on. The page fills the
+         pane it is given rather than stopping halfway down it. -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ==================== 1. The hero ====================
+             One figure, large. Six figures at equal weight is six figures nobody reads; the
+             owner opens this screen to learn one thing, and takings is that thing. Profit sits
+             beside it because it is the only number that can contradict it. -->
+        <Border Grid.Row="0" Background="{StaticResource Brush.Card}"
+                CornerRadius="{StaticResource Radius.Panel}" Padding="28,24">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock x:Name="HeroLabel" Text="TAKINGS" Style="{StaticResource Hero.Label}"/>
+                        <TextBlock x:Name="RevenueValue" Style="{StaticResource Text.Stat}"
+                                   FontSize="44" LineHeight="52"/>
+                        <TextBlock x:Name="RevenueNote" Style="{StaticResource Text.Muted}"
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
+
+                    <Border Grid.Column="1" Width="1" Margin="36,4,36,4"
+                            Background="{StaticResource Brush.Border}"/>
+
+                    <StackPanel Grid.Column="2" VerticalAlignment="Bottom" Margin="0,0,0,3">
+                        <TextBlock Text="KEPT AS PROFIT" Style="{StaticResource Hero.Label}"/>
+                        <TextBlock x:Name="ProfitValue" Style="{StaticResource Text.Stat}"
+                                   FontSize="27"/>
+                        <TextBlock x:Name="ProfitNote" Style="{StaticResource Text.Muted}"
+                                   Margin="0,7,0,0"/>
+                    </StackPanel>
+
+                    <!-- The shape of trade, next to today's number, so the figure has
+                         something to be big or small against. No axis: at this size a scale
+                         would take half the room and be unreadable in the half it kept. -->
+                    <StackPanel x:Name="SparkPanel" Grid.Column="3" VerticalAlignment="Bottom"
+                                Margin="40,0,0,3" Visibility="Collapsed">
+                        <Grid Margin="0,0,0,10">
+                            <TextBlock x:Name="SparkLabel" Style="{StaticResource Hero.Label}"
+                                       Margin="0"/>
+                            <TextBlock x:Name="SparkNote" Style="{StaticResource Text.Muted}"
+                                       FontSize="11" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <ctl:TrendChart x:Name="Chart" Height="62" StyleKind="Area"
+                                        ShowScale="False"
+                                        Accent="{StaticResource Brush.Accent}"/>
+                    </StackPanel>
+                </Grid>
+
+                <Border Style="{StaticResource Rule}" Margin="0,22,0,18"/>
+
+                <!-- The other four, demoted on purpose. -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="COST OF WHAT SOLD" Style="{StaticResource Text.Eyebrow}"
+                                   Margin="0,0,0,6"/>
+                        <TextBlock x:Name="CostValue" Style="{StaticResource Quiet.Value}"/>
+                        <TextBlock x:Name="CostNote" Style="{StaticResource Quiet.Note}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource Quiet.Rule}"/>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="BILLS AND WAGES" Style="{StaticResource Text.Eyebrow}"
+                                   Margin="0,0,0,6"/>
+                        <TextBlock x:Name="ExpensesValue" Style="{StaticResource Quiet.Value}"/>
+                        <TextBlock x:Name="ExpensesNote" Style="{StaticResource Quiet.Note}"/>
+                    </StackPanel>
+                    <Border Grid.Column="3" Style="{StaticResource Quiet.Rule}"/>
+
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="OFF THE SHELF" Style="{StaticResource Text.Eyebrow}"
+                                   Margin="0,0,0,6"/>
+                        <TextBlock x:Name="SoldValue" Style="{StaticResource Quiet.Value}"/>
+                        <TextBlock x:Name="SoldNote" Style="{StaticResource Quiet.Note}"/>
+                    </StackPanel>
+                    <Border Grid.Column="5" Style="{StaticResource Quiet.Rule}"/>
+
+                    <StackPanel Grid.Column="6">
+                        <TextBlock Text="NEEDS REORDERING" Style="{StaticResource Text.Eyebrow}"
+                                   Margin="0,0,0,6"/>
+                        <TextBlock x:Name="RestockValue" Style="{StaticResource Quiet.Value}"/>
+                        <TextBlock x:Name="RestockNote" Style="{StaticResource Quiet.Note}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- A note, not an alarm. It is a setup task, so it sits in the same neutral grey as
+             every other secondary line on the page rather than colouring the whole screen. -->
+        <Border x:Name="CostWarning" Grid.Row="1" Margin="0,12,0,0" Visibility="Collapsed"
+                Background="{StaticResource Brush.Card}" CornerRadius="{StaticResource Radius.Field}"
+                Padding="16,10">
+            <StackPanel Orientation="Horizontal">
+                <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Alert}"
+                      Width="14" Height="14" Fill="{StaticResource Brush.Muted}"
+                      VerticalAlignment="Center"/>
+                <TextBlock x:Name="CostWarningText" Margin="10,0,0,0" VerticalAlignment="Center"
+                           Style="{StaticResource Text.Muted}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ==================== 2. What to do about it ====================
+             A wide column for the trade itself and a narrow rail for the shelves that need
+             attention. Two lists of unequal importance should not be two identical halves. -->
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="352"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+                <!-- ========= What is selling ========= -->
+                <Border x:Name="SellingCard" Background="{StaticResource Brush.Card}"
+                        CornerRadius="{StaticResource Radius.Card}" Padding="20,18">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="0,0,0,14">
+                            <TextBlock Text="What&#39;s selling" Style="{StaticResource Text.Section}"/>
+                            <TextBlock x:Name="SellingNote" Style="{StaticResource Text.Muted}"
+                                       FontSize="11" HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+                            <Grid.Style>
+                                <Style TargetType="Grid" BasedOn="{StaticResource Head.Row}">
+                                    <Style.Triggers>
+                                        <DataTrigger Value="Visible"
+                                                     Binding="{Binding ComputedVerticalScrollBarVisibility,
+                                                               ElementName=SellingScroll}">
+                                            <Setter Property="Margin" Value="0,0,8,6"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="62"/>
+                                <ColumnDefinition Width="96"/>
+                                <ColumnDefinition Width="104"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="PRODUCT" Style="{StaticResource Text.ColumnHead}"/>
+                            <TextBlock Grid.Column="1" Text="UNITS" Style="{StaticResource Text.ColumnHead}"
+                                       TextAlignment="Right"/>
+                            <TextBlock Grid.Column="2" Text="COST TO BUY" Style="{StaticResource Text.ColumnHead}"
+                                       TextAlignment="Right"/>
+                            <TextBlock Grid.Column="3" Text="TAKEN" Style="{StaticResource Text.ColumnHead}"
+                                       TextAlignment="Right"/>
+                        </Grid>
+
+                        <Grid Grid.Row="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0" Style="{StaticResource Rule}" Margin="0,0,0,4"/>
+
+                            <!-- Scrolls rather than clips. A fixed number of rows meant the
+                                 card quietly dropped whatever did not fit, while the line at
+                                 the bottom went on counting all of them. -->
+                            <ScrollViewer x:Name="SellingScroll" Grid.Row="1"
+                                          VerticalScrollBarVisibility="Auto">
+                              <StackPanel>
+                            <ItemsControl x:Name="MostSold">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Height="44">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="62"/>
+                                                <ColumnDefinition Width="96"/>
+                                                <ColumnDefinition Width="104"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center"
+                                                        Margin="0,0,16,0">
+                                                <TextBlock Text="{Binding Name}"
+                                                           Style="{StaticResource Text.Cell}"/>
+                                                <ProgressBar Style="{StaticResource Bar.Share}"
+                                                             Value="{Binding Share, Mode=OneWay}"
+                                                             HorizontalAlignment="Left"
+                                                             Width="190" Margin="0,7,0,0"/>
+                                            </StackPanel>
+
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Text.Money}"
+                                                       FontWeight="Normal"
+                                                       Text="{Binding Quantity, StringFormat={}{0:0.###}}"/>
+                                            <TextBlock Grid.Column="2" Style="{StaticResource Text.Money}"
+                                                       FontWeight="Normal"
+                                                       Foreground="{StaticResource Brush.Muted}"
+                                                       Text="{Binding CostLabel}"/>
+                                            <TextBlock Grid.Column="3" Style="{StaticResource Text.Money}"
+                                                       Text="{Binding Revenue, Converter={StaticResource Money}}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- An empty state that says what to do next, rather than repeating
+                                 back that the list is empty. -->
+                            <StackPanel x:Name="MostSoldEmpty" Style="{StaticResource Panel.Empty}"
+                                        Visibility="Collapsed">
+                                <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Cart}"
+                                      Width="28" Height="28" Fill="{StaticResource Brush.Muted}"/>
+                                <TextBlock x:Name="MostSoldEmptyTitle" Style="{StaticResource Text.EmptyTitle}"/>
+                                <TextBlock x:Name="MostSoldEmptyBody" Style="{StaticResource Text.EmptyBody}"
+                                           TextAlignment="Center" MaxWidth="330"/>
+                            </StackPanel>
+                              </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+
+                        <!-- A closing line, so a short list ends somewhere instead of trailing
+                             off into the bottom of the card. -->
+                        <StackPanel x:Name="SellingFooter" Grid.Row="3" Visibility="Collapsed">
+                            <Border Style="{StaticResource Rule}" Margin="0,10,0,10"/>
+                            <TextBlock x:Name="SellingFooterText" Style="{StaticResource Text.Muted}"
+                                       FontSize="11.5"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ========= Running out ========= -->
+            <Border x:Name="RestockCard" Grid.Column="2" Background="{StaticResource Brush.Card}"
+                    CornerRadius="{StaticResource Radius.Card}" Padding="20,18">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,14">
+                        <TextBlock Text="Running out" Style="{StaticResource Text.Section}"/>
+                        <TextBlock x:Name="RestockCount" Style="{StaticResource Text.Muted}" FontSize="11"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="8,0,8,6">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Style.Triggers>
+                                    <DataTrigger Value="Visible"
+                                                 Binding="{Binding ComputedVerticalScrollBarVisibility,
+                                                           ElementName=RestockScroll}">
+                                        <Setter Property="Margin" Value="8,0,16,6"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="46"/>
+                            <ColumnDefinition Width="46"/>
+                            <!-- Wide enough for the longest word any language puts here.
+                                 "Out" fits in 54; "Rupture" does not, and the French build
+                                 was cutting it in half. -->
+                            <ColumnDefinition Width="76"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="PRODUCT" Style="{StaticResource Text.ColumnHead}"/>
+                        <TextBlock Grid.Column="1" Text="LEFT" Style="{StaticResource Text.ColumnHead}"
+                                   TextAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Text="MIN" Style="{StaticResource Text.ColumnHead}"
+                                   TextAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Text="" />
+                    </Grid>
+
+                    <Grid Grid.Row="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Style="{StaticResource Rule}" Margin="0,0,0,4"/>
+
+                        <ScrollViewer x:Name="RestockScroll" Grid.Row="1"
+                                      VerticalScrollBarVisibility="Auto">
+                          <StackPanel>
+                        <ItemsControl x:Name="Restock">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- The whole row opens the product, so a shelf that needs
+                                         filling is one click from the thing that fills it. -->
+                                    <Button Style="{StaticResource Button.Row}" Padding="8,0"
+                                            Click="Restock_Click" Tag="{Binding Id}">
+                                    <Grid Height="38">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="46"/>
+                                            <ColumnDefinition Width="46"/>
+                                            <ColumnDefinition Width="76"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center"
+                                                    Margin="0,0,10,0">
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource Text.Cell}"/>
+                                            <TextBlock Text="{Binding Supplier}"
+                                                       Style="{StaticResource Text.CellMuted}" FontSize="10.5"
+                                                       Visibility="{Binding Supplier,
+                                                                    Converter={StaticResource StrVis}}"/>
+                                        </StackPanel>
+
+                                        <TextBlock x:Name="left" Grid.Column="1"
+                                                   Style="{StaticResource Text.Money}"
+                                                   Text="{Binding Left}"/>
+                                        <TextBlock Grid.Column="2" Style="{StaticResource Text.Money}"
+                                                   FontWeight="Normal"
+                                                   Foreground="{StaticResource Brush.Muted}"
+                                                   Text="{Binding Minimum}"/>
+
+                                        <Border Grid.Column="3" Style="{StaticResource Badge.Neutral}"
+                                                HorizontalAlignment="Right">
+                                            <TextBlock x:Name="badgeText" Text="{Binding Status}"/>
+                                        </Border>
+                                    </Grid>
+                                    </Button>
+
+                                    <DataTemplate.Triggers>
+                                        <!-- An empty shelf is set apart by weight and by the word
+                                             "Out", not by colour. Colouring six rows red made the
+                                             page look alarmed about its own setup data. -->
+                                        <DataTrigger Binding="{Binding IsOut}" Value="True">
+                                            <Setter TargetName="badgeText" Property="Foreground"
+                                                    Value="{StaticResource Brush.Text}"/>
+                                            <Setter TargetName="left" Property="Foreground"
+                                                    Value="{StaticResource Brush.Text}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel x:Name="RestockEmpty" Style="{StaticResource Panel.Empty}"
+                                    Visibility="Collapsed">
+                            <Path Style="{StaticResource Icon}" Data="{StaticResource Nav.Inventory}"
+                                  Width="28" Height="28" Fill="{StaticResource Brush.Muted}"/>
+                            <TextBlock x:Name="RestockEmptyTitle" Style="{StaticResource Text.EmptyTitle}"/>
+                            <TextBlock x:Name="RestockEmptyBody" Style="{StaticResource Text.EmptyBody}"
+                                       TextAlignment="Center" MaxWidth="250"/>
+                        </StackPanel>
+                          </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <Button x:Name="ViewAll" Grid.Row="3" Style="{StaticResource Button.SmallMuted}"
+                            HorizontalAlignment="Left" Margin="0,12,0,0" Visibility="Collapsed"
+                            Click="ViewAll_Click"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</local:AdminPageBase>

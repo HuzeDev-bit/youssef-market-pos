@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The shop's server.
+
+       Runs on the back-office machine, owns marketpos.db, and answers the tills over the
+       local network. Nothing here re-implements a rule: every endpoint calls the same
+       repository the back office calls, so there is one answer to "what did this cost" and
+       one place stock is decremented. -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>MarketPos.Server</RootNamespace>
+    <AssemblyName>MarketPos.Server</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\MarketPos.Core.csproj" />
+  </ItemGroup>
+
+</Project>

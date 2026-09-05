@@ -1,0 +1,234 @@
+<local:AdminPageBase x:Class="MarketPos.Views.Admin.ReportsPage"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:local="clr-namespace:MarketPos.Views.Admin">
+
+    <local:AdminPageBase.Resources>
+        <Style x:Key="Divider.V" TargetType="Border">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Panel}"/>
+            <Setter Property="Margin" Value="0,16"/>
+        </Style>
+
+        <Style x:Key="Summary.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Eyebrow}">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="Summary.Value" TargetType="TextBlock" BasedOn="{StaticResource Text.Stat}">
+            <Setter Property="FontSize" Value="23"/>
+        </Style>
+
+        <Style x:Key="Summary.Note" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,5,0,0"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <!-- One line of the profit statement. -->
+        <Style x:Key="Line.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Cell}">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="Line.Money" TargetType="TextBlock" BasedOn="{StaticResource Text.Money}">
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </local:AdminPageBase.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="14"/>
+            <ColumnDefinition Width="400"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ==================== How the period went ==================== -->
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                Background="{StaticResource Brush.Card}" CornerRadius="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="18,16">
+                    <TextBlock Text="REVENUE" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="RevenueValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="RevenueNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="1" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="2" Margin="18,16">
+                    <TextBlock Text="GROSS PROFIT" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="GrossValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="GrossNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="3" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="4" Margin="18,16">
+                    <TextBlock Text="NET PROFIT" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="NetValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="NetNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+                <Border Grid.Column="5" Style="{StaticResource Divider.V}"/>
+
+                <StackPanel Grid.Column="6" Margin="18,16">
+                    <TextBlock Text="SALES" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock x:Name="SalesValue" Style="{StaticResource Summary.Value}"/>
+                    <TextBlock x:Name="SalesNote" Style="{StaticResource Summary.Note}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== Toolbar ==================== -->
+        <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,14,0,0">
+            <TextBlock x:Name="PeriodNote" Style="{StaticResource Text.Muted}"
+                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+            <Button Style="{StaticResource Button.SmallMuted}" Height="36"
+                    HorizontalAlignment="Right" Content="Export CSV" Click="Export_Click"/>
+        </Grid>
+
+        <!-- ==================== The profit statement ==================== -->
+        <Border Grid.Row="2" Grid.Column="0" Margin="0,14,0,0"
+                Background="{StaticResource Brush.Card}" CornerRadius="16" Padding="20,18">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="WHERE THE MONEY WENT" Style="{StaticResource Text.Eyebrow}"/>
+                    <TextBlock Style="{StaticResource Text.Muted}" FontSize="11.5" Margin="0,6,0,14"
+                               TextWrapping="Wrap"
+                               Text="Read top to bottom. Each line takes something off the one above it, and the last line is what the shop actually kept."/>
+
+                    <ItemsControl x:Name="Statement">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Border x:Name="rule" Style="{StaticResource Rule}"
+                                            Margin="0,10,0,10" Visibility="Collapsed"
+                                            Background="{StaticResource Brush.Panel}"/>
+
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                            <TextBlock x:Name="label" Text="{Binding Label}"
+                                                       Style="{StaticResource Line.Label}"/>
+                                            <TextBlock Text="{Binding Detail}"
+                                                       Style="{StaticResource Text.Muted}"
+                                                       FontSize="11" Margin="0,3,0,0"
+                                                       TextWrapping="Wrap"
+                                                       Visibility="{Binding Detail,
+                                                                    Converter={StaticResource StrVis}}"/>
+                                        </StackPanel>
+
+                                        <TextBlock x:Name="money" Grid.Column="1" Text="{Binding Amount}"
+                                                   Style="{StaticResource Line.Money}"
+                                                   VerticalAlignment="Top"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsTotal}" Value="True">
+                                        <Setter TargetName="rule" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="label" Property="FontWeight" Value="SemiBold"/>
+                                        <Setter TargetName="money" Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Breaks}" Value="True">
+                                        <Setter TargetName="rule" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="rule" Property="Margin" Value="0,14,0,14"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ==================== What needs doing ==================== -->
+        <Border Grid.Row="2" Grid.Column="2" Margin="0,14,0,0"
+                Background="{StaticResource Brush.Card}" CornerRadius="16" Padding="18,16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="NEEDS ATTENTION" Style="{StaticResource Text.Eyebrow}"/>
+                    <TextBlock x:Name="AlertNote" Style="{StaticResource Text.Muted}" FontSize="11.5"
+                               Margin="0,6,0,0" TextWrapping="Wrap"/>
+                    <Border Style="{StaticResource Rule}" Margin="0,12,0,0"
+                            Background="{StaticResource Brush.Panel}"/>
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+                    <StackPanel>
+                        <ItemsControl x:Name="Alerts">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource Button.Card}" Margin="0,0,0,10"
+                                            Padding="14,12" HorizontalAlignment="Stretch"
+                                            Click="Alert_Click" Tag="{Binding Index}"
+                                            ToolTip="Go to where this is fixed">
+                                        <StackPanel>
+                                            <Grid>
+                                                <TextBlock Text="{Binding Title}"
+                                                           Style="{StaticResource Text.Cell}"
+                                                           FontWeight="SemiBold"
+                                                           TextWrapping="Wrap" Margin="0,0,10,0"/>
+                                                <Border x:Name="dot" Width="8" Height="8" CornerRadius="4"
+                                                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                        Margin="0,5,0,0"
+                                                        Background="{StaticResource Brush.Muted}"/>
+                                            </Grid>
+                                            <TextBlock Text="{Binding Detail}"
+                                                       Style="{StaticResource Text.Muted}"
+                                                       FontSize="11.5" Margin="0,5,0,0"
+                                                       TextWrapping="Wrap"
+                                                       Visibility="{Binding Detail,
+                                                                    Converter={StaticResource StrVis}}"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Level}" Value="Danger">
+                                            <Setter TargetName="dot" Property="Background"
+                                                    Value="{StaticResource Brush.Danger}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Level}" Value="Warning">
+                                            <Setter TargetName="dot" Property="Background"
+                                                    Value="{StaticResource Brush.Accent}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel x:Name="AllClear" Style="{StaticResource Panel.Empty}"
+                                    Visibility="Collapsed">
+                            <Path Style="{StaticResource Icon}" Data="{StaticResource Nav.Reports}"
+                                  Width="26" Height="26" StrokeThickness="1.4"
+                                  Stroke="{StaticResource Brush.Muted}"/>
+                            <TextBlock Text="Nothing needs you" Style="{StaticResource Text.EmptyTitle}"/>
+                            <TextBlock Style="{StaticResource Text.EmptyBody}"
+                                       Text="No overdue bills, no empty shelves, nothing about to go off."/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</local:AdminPageBase>

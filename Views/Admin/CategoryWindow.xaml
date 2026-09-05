@@ -1,0 +1,100 @@
+<Window x:Class="MarketPos.Views.Admin.CategoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Category" Width="420" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" FontFamily="{StaticResource Font.Base}"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Border CornerRadius="20" Background="{StaticResource Brush.Panel}" Padding="26">
+        <Border.Effect>
+            <DropShadowEffect Color="#1B2126" Opacity="0.22" BlurRadius="30" ShadowDepth="8" Direction="270"/>
+        </Border.Effect>
+
+        <StackPanel>
+            <TextBlock x:Name="HeadingText" Style="{StaticResource Text.Title}"/>
+            <TextBlock x:Name="SubText" Style="{StaticResource Text.Muted}" Margin="0,4,0,18"
+                       TextWrapping="Wrap"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- The picture doubles as the button that sets it: a photo you can see is
+                     easier to judge than a file name, and a card-shaped preview shows what
+                     the till will actually get. -->
+                <Button Grid.Column="0" Style="{StaticResource Button.RowAction}"
+                        Width="86" Height="86" Click="Picture_Click"
+                        VerticalAlignment="Top" ToolTip="Choose a picture">
+                    <Grid>
+                        <Border x:Name="PictureFrame" Width="86" Height="86" CornerRadius="18"
+                                Background="{StaticResource Brush.Card}" ClipToBounds="True">
+                            <Grid>
+                                <Image x:Name="PictureBox" Stretch="UniformToFill"/>
+                                <StackPanel x:Name="PicturePrompt" VerticalAlignment="Center">
+                                    <Path Style="{StaticResource Icon}"
+                                          Data="{StaticResource Icon.Plus}" Width="17" Height="17"
+                                          Stroke="{StaticResource Brush.Muted}"/>
+                                    <TextBlock Text="Picture" Style="{StaticResource Text.Muted}"
+                                               FontSize="11" HorizontalAlignment="Center"
+                                               Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Button>
+
+                <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                    <TextBlock Text="NAME" Style="{StaticResource Text.FieldLabel}" Margin="2,0,0,6"/>
+                    <TextBox x:Name="NameBox" Style="{StaticResource TextBox.Field}"/>
+
+                    <TextBlock Text="ICON" Style="{StaticResource Text.FieldLabel}" Margin="2,12,0,6"/>
+                    <TextBox x:Name="IconBox" Style="{StaticResource TextBox.Field}"
+                             ToolTip="A single emoji, used when there is no picture"/>
+                </StackPanel>
+            </Grid>
+
+            <TextBlock x:Name="PictureNote" Style="{StaticResource Text.Muted}" FontSize="11.5"
+                       Margin="2,10,2,0" TextWrapping="Wrap"/>
+
+            <Button x:Name="RemovePicture" Style="{StaticResource Button.SmallMuted}"
+                    Content="Remove picture" HorizontalAlignment="Left" Height="30"
+                    Margin="0,10,0,0" Click="RemovePicture_Click" Visibility="Collapsed"/>
+
+            <ItemsControl x:Name="Suggestions" Margin="0,10,0,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource Button.RowAction}" Width="34" Height="34"
+                                Click="Suggestion_Click" Tag="{Binding}">
+                            <TextBlock Text="{Binding}" FontSize="17"/>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock x:Name="ErrorText" Style="{StaticResource Text.Body}" FontSize="12.5"
+                       Foreground="{StaticResource Brush.Danger}" Margin="2,14,2,0" TextWrapping="Wrap"
+                       Visibility="{Binding Text, RelativeSource={RelativeSource Self},
+                                    Converter={StaticResource StrVis}}"/>
+
+            <Grid Margin="0,22,0,0">
+                <Button x:Name="DeactivateButton" Style="{StaticResource Button.PillMuted}"
+                        Content="Deactivate" HorizontalAlignment="Left" Width="118"
+                        Foreground="{StaticResource Brush.Danger}" Click="Deactivate_Click"
+                        Visibility="Collapsed"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource Button.PillMuted}" Content="Cancel" Width="100"
+                            Click="Cancel_Click" Margin="0,0,10,0"/>
+                    <Button Style="{StaticResource Button.Pill}" Content="Save" Width="120"
+                            Click="Save_Click"/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

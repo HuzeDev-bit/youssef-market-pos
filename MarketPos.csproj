@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>MarketPos</RootNamespace>
+    <AssemblyName>MarketPos</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- What the shop sees in Explorer, on the taskbar and in the title bar. Without
+         it the exe wears the generic .NET icon, which is the first thing a client
+         looks at. -->
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Compiled into the exe, so the app stays a single self-contained drop with no
+         loose image files for the client to accidentally move or delete. -->
+    <Resource Include="Assets\logo.png" />
+
+    <!-- The brand's own type, compiled in. A shop machine has whatever fonts Windows shipped
+         with and nothing else, so a family named but not embedded would silently fall back to
+         Segoe UI and the whole identity with it. -->
+    <Resource Include="Assets\Fonts\*.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The other projects live under this one on disk, and the SDK compiles everything
+         beneath a project folder by default - which pulled Core's sources into the app a
+         second time and produced duplicate-attribute errors nobody would guess the cause of. -->
+    <Compile Remove="src\**;server\**" />
+    <None Remove="src\**;server\**" />
+    <Page Remove="src\**;server\**" />
+    <EmbeddedResource Remove="src\**;server\**" />
+    <Resource Remove="src\**;server\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The shop's rules live in Core, with no screen attached, so the server can enforce the
+         same ones. SQLite comes in through it rather than being referenced twice. -->
+    <ProjectReference Include="src\MarketPos.Core.csproj" />
+  </ItemGroup>
+
+</Project>

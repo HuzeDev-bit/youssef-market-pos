@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketPos.Core", "src\MarketPos.Core.csproj", "{D8717B4A-2A37-4193-A73E-6941670E9FDF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketPos.Server", "server\MarketPos.Server.csproj", "{BE4E0DD9-58FD-4761-B5EA-8A0415E27EB9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketPos", "MarketPos.csproj", "{430B59FC-AE60-4004-ACA4-26366F88BD62}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D8717B4A-2A37-4193-A73E-6941670E9FDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8717B4A-2A37-4193-A73E-6941670E9FDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8717B4A-2A37-4193-A73E-6941670E9FDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8717B4A-2A37-4193-A73E-6941670E9FDF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE4E0DD9-58FD-4761-B5EA-8A0415E27EB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE4E0DD9-58FD-4761-B5EA-8A0415E27EB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE4E0DD9-58FD-4761-B5EA-8A0415E27EB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE4E0DD9-58FD-4761-B5EA-8A0415E27EB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{430B59FC-AE60-4004-ACA4-26366F88BD62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{430B59FC-AE60-4004-ACA4-26366F88BD62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{430B59FC-AE60-4004-ACA4-26366F88BD62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{430B59FC-AE60-4004-ACA4-26366F88BD62}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

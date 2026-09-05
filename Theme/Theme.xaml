@@ -1,0 +1,1123 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- ===================== Palette =====================
+         Built out from the logo, not chosen beside it.
+
+         #12B76A is the wordmark's own green, sampled from the file. Every neutral here
+         carries a trace of that same hue rather than the cool blue-grey it used to, so the
+         whole surface reads as one family instead of a green accent dropped onto stock grey.
+
+         Two greens, for one reason. The brand green is beautiful and fails contrast: white on
+         it measures 2.62:1, where readable text needs 4.5:1. Every Save, Pay and Add button in
+         the app was that pairing. So the brand green stays the identity — the logo, soft
+         washes, the badge on a nav item — and a deeper green on the identical hue carries
+         anything with text on it or in it. Same family, legible, and the deeper green reads
+         richer besides.
+
+         Every pairing below was measured, not eyeballed. The figures are what the app actually
+         puts together, against white, against a card, and against the page. -->
+
+    <!-- Grounds, palest first. -->
+    <SolidColorBrush x:Key="Brush.Page"        Color="#F0F2F1"/>
+    <SolidColorBrush x:Key="Brush.Panel"       Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Card"        Color="#F7F9F8"/>
+    <SolidColorBrush x:Key="Brush.CardHover"   Color="#EDF1EF"/>
+    <SolidColorBrush x:Key="Brush.Border"      Color="#E6EBE9"/>
+
+    <!-- Ink. Text 16.3:1 on white; Muted 5.1:1 on white, 4.9 on a card, 4.6 on the page -
+         it had been 2.2:1, which is every explanatory line in the app failing to be readable. -->
+    <SolidColorBrush x:Key="Brush.Text"        Color="#11241B"/>
+    <SolidColorBrush x:Key="Brush.Muted"       Color="#5F7269"/>
+
+    <!-- The brand green. Identity only: the logo, soft fills, decoration. Never text, and
+         never white text on it. -->
+    <SolidColorBrush x:Key="Brush.Brand"       Color="#12B76A"/>
+    <SolidColorBrush x:Key="Brush.BrandSoft"   Color="#E4F7ED"/>
+
+    <!-- The working green, same hue. White on it 4.9:1, and it reads 4.9:1 as text on white.
+         Primary buttons, prices, chart bars, the active icon in the rail. -->
+    <SolidColorBrush x:Key="Brush.Accent"      Color="#0D814B"/>
+    <SolidColorBrush x:Key="Brush.AccentDark"  Color="#0A6C3F"/>
+    <SolidColorBrush x:Key="Brush.AccentSoft"  Color="#E4F7ED"/>
+
+    <!-- 5.2:1 both ways. The old red was 3.9:1, which is large text only - and it was being
+         used on twelve-pixel warnings. -->
+    <SolidColorBrush x:Key="Brush.Danger"      Color="#C8353A"/>
+    <SolidColorBrush x:Key="Brush.DangerSoft"  Color="#FBECEC"/>
+
+    <!-- One tile behind every product photo, so the photography supplies all the colour. -->
+    <SolidColorBrush x:Key="Brush.ImageTile"   Color="#F5F7F6"/>
+
+    <!-- Raw colors, for the hover and press animations. -->
+    <Color x:Key="Color.Accent">#0D814B</Color>
+    <Color x:Key="Color.Brand">#12B76A</Color>
+    <Color x:Key="Color.Border">#E6EBE9</Color>
+    <Color x:Key="Color.Danger">#C8353A</Color>
+
+    <!-- ===================== Type =====================
+         Two faces, each doing the job it is best at.
+
+         Nunito carries the brand. Its rounded terminals and geometric bowls are the closest
+         well-made family to the wordmark, so a page title and the logo above it look related
+         rather than merely adjacent. Used large and sparingly: page titles and the headline
+         figures.
+
+         Inter does the work. It was drawn for screens at small sizes, which is most of this
+         app - table rows, field labels, the notes under every figure. Its numerals are
+         unambiguous, which matters more here than anywhere: this is a till.
+
+         Both are compiled into the exe. A shop machine has whatever Windows shipped with, so
+         a family named but not embedded falls back to Segoe UI and takes the identity with it. -->
+
+    <FontFamily x:Key="Font.Brand">pack://application:,,,/Assets/Fonts/#Nunito</FontFamily>
+    <FontFamily x:Key="Font.Base">pack://application:,,,/Assets/Fonts/#Inter</FontFamily>
+
+    <!-- One step per purpose, not per size. Anything that needs a size not on this list is
+         usually a sign the thing itself is in the wrong place. -->
+    <system:Double x:Key="Size.Display">27</system:Double>
+    <system:Double x:Key="Size.Stat">25</system:Double>
+    <system:Double x:Key="Size.Title">19</system:Double>
+    <system:Double x:Key="Size.Section">15</system:Double>
+    <system:Double x:Key="Size.Body">13.5</system:Double>
+    <system:Double x:Key="Size.Small">12.5</system:Double>
+    <system:Double x:Key="Size.Eyebrow">10.5</system:Double>
+
+    <!-- ===================== Measure =====================
+         A four-point grid. Every margin and pad in the app should be one of these, so the
+         rhythm holds without anyone having to remember what they used last time. -->
+    <system:Double x:Key="Space.1">4</system:Double>
+    <system:Double x:Key="Space.2">8</system:Double>
+    <system:Double x:Key="Space.3">12</system:Double>
+    <system:Double x:Key="Space.4">16</system:Double>
+    <system:Double x:Key="Space.5">20</system:Double>
+    <system:Double x:Key="Space.6">24</system:Double>
+    <system:Double x:Key="Space.8">32</system:Double>
+
+    <!-- Radii, tightest first. The wordmark is built from circles, so nothing here is sharp. -->
+    <CornerRadius x:Key="Radius.Field">10</CornerRadius>
+    <CornerRadius x:Key="Radius.Card">16</CornerRadius>
+    <CornerRadius x:Key="Radius.Panel">22</CornerRadius>
+
+    <!-- ===================== Motion ===================== -->
+    <Duration x:Key="Anim.Fast">0:0:0.15</Duration>
+    <CubicEase x:Key="Ease.Out" EasingMode="EaseOut"/>
+
+    <!-- ===================== Type ===================== -->
+
+    <!-- A title is the brand speaking, so it is set in the brand's face. Everything smaller
+         is the app speaking, and that is Inter's job. -->
+    <Style x:Key="Text.Title" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Brand}"/>
+        <Setter Property="FontSize" Value="{StaticResource Size.Title}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+    </Style>
+
+    <Style x:Key="Text.Body" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Base}"/>
+        <Setter Property="FontSize" Value="{StaticResource Size.Body}"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+    </Style>
+
+    <Style x:Key="Text.Muted" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+        <Setter Property="FontSize" Value="{StaticResource Size.Small}"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Muted}"/>
+    </Style>
+
+    <!-- Small, spaced and capital. The letter-spacing is what stops a 10.5px capital line
+         reading as a smudge; without it the label above a figure is harder work than the
+         figure. -->
+    <Style x:Key="Text.Eyebrow" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+        <Setter Property="FontSize" Value="{StaticResource Size.Eyebrow}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
+    </Style>
+
+    <!-- ===================== Money =====================
+         Every figure in this app lines up under another figure, so the digits have to be one
+         width. Proportional numerals make a column of prices ragged and, worse, make two
+         similar totals look different lengths - which is exactly the comparison a shopkeeper
+         is making when they read down a column.
+
+         Lining as well as tabular: old-style figures with descenders belong in prose, not in
+         a table of takings. -->
+    <Style x:Key="Text.Figure" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+        <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
+        <Setter Property="Typography.NumeralStyle" Value="Lining"/>
+    </Style>
+
+    <!-- ===================== Scrollbar (slim, unobtrusive) ===================== -->
+    <Style x:Key="Scroll.Thumb" TargetType="Thumb">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border Background="{StaticResource Brush.Muted}" CornerRadius="4" Opacity="0.5" Margin="2"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ScrollBar">
+        <Setter Property="Width" Value="8"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Track Name="PART_Track" IsDirectionReversed="true">
+                        <Track.Thumb>
+                            <Thumb Style="{StaticResource Scroll.Thumb}"/>
+                        </Track.Thumb>
+                    </Track>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===================== Buttons =====================
+         Hover / press use an opacity-animated overlay layer rather than swapping the
+         base brush, so the transitions are smooth and never fight a disabled-state setter.
+
+         Every button here is Focusable="False" ON PURPOSE. The barcode box must keep
+         keyboard focus at all times (the scanner is a keyboard). If a button took focus
+         on mouse-down, ButtonBase.OnLostKeyboardFocus would release mouse capture the
+         instant we pulled focus back — and the Click event would never fire at all.
+         Non-focusable buttons still handle clicks and never disturb the scanner. -->
+
+    <!-- Big, rounded, green — the Pay / primary action -->
+    <Style x:Key="Button.Primary" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontFamily" Value="{StaticResource Font.Base}"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="24,16"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="14" SnapsToDevicePixels="True"/>
+                        <Border x:Name="overlay" CornerRadius="14" Background="{StaticResource Brush.AccentDark}" Opacity="0"/>
+                        <ContentPresenter x:Name="cp" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="overlay" Property="Opacity" Value="1"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Brush.CardHover}"/>
+                            <Setter TargetName="overlay" Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Muted}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Fully-rounded pill, green — the reference's CTA shape -->
+    <Style x:Key="Button.Pill" TargetType="Button" BasedOn="{StaticResource Button.Primary}">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Padding" Value="22,11"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="20" SnapsToDevicePixels="True"/>
+                        <Border x:Name="overlay" CornerRadius="20" Background="{StaticResource Brush.AccentDark}" Opacity="0"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="overlay" Property="Opacity" Value="1"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Brush.CardHover}"/>
+                            <Setter TargetName="overlay" Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Muted}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Muted pill — Cancel / Hold. Border eases to the brand green on hover, never a filled
+         chip and never red; the confirm dialog is what guards the destructive action. -->
+    <Style x:Key="Button.PillMuted" TargetType="Button" BasedOn="{StaticResource Button.Pill}">
+        <Setter Property="Background" Value="{StaticResource Brush.Card}"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Muted}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="20"
+                            BorderThickness="1" SnapsToDevicePixels="True">
+                        <Border.BorderBrush>
+                            <SolidColorBrush x:Name="bb" Color="{StaticResource Color.Border}"/>
+                        </Border.BorderBrush>
+                        <ContentPresenter x:Name="cp" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="bb" Storyboard.TargetProperty="Color"
+                                                        To="{StaticResource Color.Accent}" Duration="{StaticResource Anim.Fast}"
+                                                        EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="bb" Storyboard.TargetProperty="Color"
+                                                        To="{StaticResource Color.Border}" Duration="{StaticResource Anim.Fast}"
+                                                        EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Plain secondary action on a card background — quick-cash buttons in the payment dialog -->
+    <Style x:Key="Button.Secondary" TargetType="Button" BasedOn="{StaticResource Button.Primary}">
+        <Setter Property="Background" Value="{StaticResource Brush.Card}"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="12"
+                                BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" SnapsToDevicePixels="True"/>
+                        <Border x:Name="overlay" CornerRadius="12" Background="{StaticResource Brush.AccentSoft}" Opacity="0"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Small toggle pill (Price check). Fills green while the mode is active so it is
+         impossible to leave it on by accident. -->
+    <Style x:Key="Button.TogglePill" TargetType="ToggleButton">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Muted}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid>
+                        <Border x:Name="bd" CornerRadius="18" Background="{StaticResource Brush.Card}"/>
+                        <Border x:Name="overlay" CornerRadius="18" Background="{StaticResource Brush.Accent}" Opacity="0"/>
+                        <ContentPresenter Margin="16,9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="Foreground" Value="White"/>
+                            <!-- The animation is the nice part; this is the true part. Without
+                                 it the green only exists once a clock has run, so the selected
+                                 chip was white text on grey until something ticked. -->
+                            <Setter TargetName="overlay" Property="Opacity" Value="1"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- A row on the Tickets page: full width, quiet, highlights on hover -->
+    <Style x:Key="Button.TicketRow" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="bd" Background="{StaticResource Brush.Card}" CornerRadius="14"/>
+                        <Border x:Name="overlay" Background="{StaticResource Brush.AccentSoft}" CornerRadius="14" Opacity="0"/>
+                        <ContentPresenter Margin="16,14"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Held-ticket chip: the clickable body of a parked sale, sitting above the product grid -->
+    <Style x:Key="Button.TicketChip" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="overlay" Background="{StaticResource Brush.AccentSoft}" CornerRadius="13" Opacity="0"/>
+                        <ContentPresenter Margin="14,9,10,9" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Small round icon button — qty +/- and row remove -->
+    <Style x:Key="Button.Round" TargetType="Button">
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Background" Value="{StaticResource Brush.Card}"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="16"/>
+                        <Border x:Name="overlay" CornerRadius="16" Background="{StaticResource Brush.AccentSoft}" Opacity="0"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Window controls (top-right): minimize + close. No native title bar. -->
+    <Style x:Key="Button.WinControl" TargetType="Button">
+        <Setter Property="Width" Value="34"/>
+        <Setter Property="Height" Value="34"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Muted}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="overlay" Background="{StaticResource Brush.AccentSoft}" CornerRadius="17" Opacity="0"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Close (✕) — same shape, eases to the brand green -->
+    <Style x:Key="Button.Close" TargetType="Button" BasedOn="{StaticResource Button.WinControl}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="overlay" Background="{StaticResource Brush.Accent}" CornerRadius="17" Opacity="0"/>
+                        <ContentPresenter x:Name="cp" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="White"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Circular icon button (rail logout) -->
+    <Style x:Key="Button.Circle" TargetType="Button" BasedOn="{StaticResource Button.Round}">
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="overlay" Background="{StaticResource Brush.AccentSoft}" CornerRadius="20" Opacity="0"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Left icon rail button — flat; icon eases to green when active -->
+    <Style x:Key="Button.Rail" TargetType="RadioButton">
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Margin" Value="0,10"/>
+        <Setter Property="FontSize" Value="17"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Muted}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid>
+                        <Border x:Name="overlay" CornerRadius="10" Background="{StaticResource Brush.AccentSoft}" Opacity="0"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===================== Inputs ===================== -->
+
+    <!-- The barcode box: primary input device (always focused), styled as a search pill —
+         border eases to green on focus. -->
+    <Style x:Key="TextBox.Barcode" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Base}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Height" Value="44"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+        <Setter Property="CaretBrush" Value="{StaticResource Brush.Accent}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <!-- This box holds keyboard focus permanently (the scanner needs it), so an
+                         IsFocused ring would simply be on forever. The accent is driven by content
+                         instead: calm while empty, green while a query is actually being typed. -->
+                    <Border x:Name="bd" Background="{StaticResource Brush.Panel}" BorderThickness="1.5" CornerRadius="22">
+                        <Border.BorderBrush>
+                            <SolidColorBrush x:Name="bb" Color="{StaticResource Color.Accent}"/>
+                        </Border.BorderBrush>
+                        <!-- Literal inset, NOT {TemplateBinding Padding}. The TextBox applies its
+                             own Padding to the content host as well, so binding it here applied it
+                             twice and pushed the caret ~22px to the right — landing it in the
+                             middle of the placeholder word instead of at the start. -->
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="18,0,40,0" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <!-- Empty is the resting state, and the one that applies at startup. -->
+                        <Trigger Property="Text" Value="">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Brush.Card}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="bb" Storyboard.TargetProperty="Color"
+                                                        To="#E8EDF1" Duration="{StaticResource Anim.Fast}"
+                                                        EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="bb" Storyboard.TargetProperty="Color"
+                                                        To="{StaticResource Color.Accent}" Duration="{StaticResource Anim.Fast}"
+                                                        EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Editable quantity in a cart row. Reads as plain text at rest so the row stays calm,
+         and only reveals itself as a field on hover/focus. -->
+    <Style x:Key="TextBox.Quantity" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Base}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+        <Setter Property="CaretBrush" Value="{StaticResource Brush.Accent}"/>
+        <Setter Property="SelectionBrush" Value="{StaticResource Brush.Accent}"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="IBeam"/>
+        <Setter Property="Width" Value="48"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Grid>
+                        <Border x:Name="bd" CornerRadius="8" Background="Transparent"
+                                BorderThickness="1.5" BorderBrush="Transparent"/>
+                        <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Brush.Card}"/>
+                        </Trigger>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Brush.Panel}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Brush.Accent}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TextBox.Plain" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Base}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="Background" Value="{StaticResource Brush.Panel}"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8">
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ComboBoxItem used inside the mini dropdown popups -->
+    <Style TargetType="ComboBoxItem">
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="FontSize" Value="13.5"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Border x:Name="bd" Background="Transparent" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Brush.Card}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- "Sort by / Category ▾" mini widget -->
+    <Style x:Key="ComboBox.Mini" TargetType="ComboBox">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton x:Name="Toggle" Focusable="False" ClickMode="Press"
+                                      IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border Background="Transparent">
+                                        <StackPanel>
+                                            <TextBlock Text="{TemplateBinding Tag}" Style="{StaticResource Text.Eyebrow}"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                <TextBlock Text="{Binding SelectionBoxItem, RelativeSource={RelativeSource TemplatedParent}}"
+                                                           FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource Brush.Text}"/>
+                                                <TextBlock Text="&#9662;" FontSize="9" Margin="6,2,0,0"
+                                                           Foreground="{StaticResource Brush.Muted}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <Popup x:Name="Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
+                               AllowsTransparency="True" PopupAnimation="Fade" Focusable="False" StaysOpen="False">
+                            <Border Background="{StaticResource Brush.Panel}" CornerRadius="10" Padding="4"
+                                    MinWidth="150" Margin="0,6,0,0">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#1B2126" Opacity="0.15" BlurRadius="18" ShadowDepth="4" Direction="270"/>
+                                </Border.Effect>
+                                <ItemsPresenter/>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Password field, same shape as the other inputs -->
+    <Style x:Key="PasswordBox.Field" TargetType="PasswordBox">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Base}"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="Height" Value="44"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+        <Setter Property="CaretBrush" Value="{StaticResource Brush.Accent}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="PasswordBox">
+                    <Border x:Name="bd" Background="{StaticResource Brush.Card}" CornerRadius="12"
+                            BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="14,0,14,0" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Brush.Panel}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Brush.Accent}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- A row of admin actions: label, description, and the control on the right -->
+    <Style x:Key="Card.AdminRow" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Brush.Card}"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Padding" Value="18,16"/>
+        <Setter Property="Margin" Value="0,0,0,10"/>
+    </Style>
+
+    <!-- A normal dropdown in the app's own language. The stock WPF ComboBox chrome is grey
+         system styling that clashed with everything around it. -->
+    <Style x:Key="ComboBox.Field" TargetType="ComboBox">
+        <Setter Property="Height" Value="44"/>
+        <Setter Property="FontFamily" Value="{StaticResource Font.Base}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <!-- Chrome and arrow only. The selected value is drawn on top instead,
+                             because a ToggleButton cannot host the editable text box an
+                             IsEditable combo needs, and the TextBlock that used to live here
+                             printed the item's ToString() rather than honouring
+                             DisplayMemberPath - which is how a supplier list ended up reading
+                             "MarketPos.Models.Worker". -->
+                        <ToggleButton Focusable="False" ClickMode="Press"
+                                      IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="bd" Background="{StaticResource Brush.Card}" CornerRadius="12"
+                                            BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
+                                        <TextBlock Text="&#9662;" FontSize="10" Margin="0,0,14,0"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource Brush.Muted}"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Brush.Accent}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+
+                        <!-- SelectionBoxItemTemplate is what carries DisplayMemberPath and
+                             ItemTemplate through to the closed box. -->
+                        <!-- ContentPresenter's own DisplayMemberPath fallback does not reach
+                             inside a re-templated ComboBox, so combos here set an explicit
+                             ItemTemplate instead; that populates SelectionBoxItemTemplate, which
+                             this binding carries to the closed box. Plain string items need
+                             neither and render as themselves. -->
+                        <ContentPresenter x:Name="Selection" Margin="14,0,34,0" VerticalAlignment="Center"
+                                          IsHitTestVisible="False"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          TextElement.FontSize="14"
+                                          TextElement.Foreground="{StaticResource Brush.Text}">
+                            <ContentPresenter.Resources>
+                                <!-- Scoped to this presenter, so the closed box trims without
+                                     touching any other text on the screen. -->
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+
+                        <!-- Typing surface for IsEditable combos: "type a category that does not
+                             exist yet", "find the product by name". Stops short of the arrow so
+                             the drop-down stays one click away. -->
+                        <TextBox x:Name="PART_EditableTextBox" Margin="1,1,34,1" Padding="13,0,0,0"
+                                 VerticalContentAlignment="Center" Visibility="Collapsed"
+                                 Background="Transparent" BorderThickness="0" FontSize="14"
+                                 Foreground="{StaticResource Brush.Text}"
+                                 CaretBrush="{StaticResource Brush.Text}"/>
+                        <!-- PART_Popup is a named part of the ComboBox contract. Without it OnApplyTemplate
+                             skips part of its setup, and SelectionBoxItem is never reduced to the
+                             DisplayMemberPath value - which is what made the closed box print
+                             "MarketPos.Models.Worker". -->
+                        <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
+                               AllowsTransparency="True" PopupAnimation="Fade" Focusable="False" StaysOpen="False"
+                               Width="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                            <Border Background="{StaticResource Brush.Panel}" CornerRadius="12" Padding="5" Margin="0,6,0,0"
+                                    BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#1B2126" Opacity="0.15" BlurRadius="18" ShadowDepth="4" Direction="270"/>
+                                </Border.Effect>
+                                <ScrollViewer MaxHeight="260" VerticalScrollBarVisibility="Hidden">
+                                    <ItemsPresenter/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEditable" Value="True">
+                            <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="Selection" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Small colored category badge, top-left of a product tile -->
+    <Style x:Key="Badge.Category" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Brush.AccentSoft}"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="8,3"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+
+    <!-- Round avatar placeholder used in the sidebar greeting -->
+    <Style x:Key="Avatar.Circle" TargetType="Border">
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="CornerRadius" Value="20"/>
+        <Setter Property="Background" Value="{StaticResource Brush.AccentSoft}"/>
+    </Style>
+
+    <!-- ===================== Cards ===================== -->
+
+    <!-- Product tile — a Button so the whole tile is one click target -->
+    <Style x:Key="Button.ProductCard" TargetType="Button">
+        <!-- No Width/Height/Margin: ProductGridPanel sizes and spaces the tiles so they
+             fill the screen instead of leaving the lower half of the till empty. -->
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Background" Value="{StaticResource Brush.Card}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="16"/>
+                        <Border x:Name="overlay" CornerRadius="16" Background="{StaticResource Brush.AccentSoft}" Opacity="0"/>
+                        <ContentPresenter Margin="14"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0.6" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="overlay" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource Anim.Fast}"
+                                                         EasingFunction="{StaticResource Ease.Out}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="overlay" Property="Opacity" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Generic rounded panel card -->
+    <Style x:Key="Card.Panel" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Brush.Panel}"/>
+        <Setter Property="CornerRadius" Value="18"/>
+        <Setter Property="Padding" Value="18"/>
+    </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,48 @@
+<Window x:Class="MarketPos.Views.Admin.PinWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Till PIN" Width="400" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" FontFamily="{StaticResource Font.Base}"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Border CornerRadius="20" Background="{StaticResource Brush.Panel}" Padding="26">
+        <Border.Effect>
+            <DropShadowEffect Color="#1B2126" Opacity="0.22" BlurRadius="30" ShadowDepth="8" Direction="270"/>
+        </Border.Effect>
+
+        <StackPanel>
+            <Border Width="48" Height="48" CornerRadius="15" Background="{StaticResource Brush.AccentSoft}"
+                    HorizontalAlignment="Left" TextElement.Foreground="{StaticResource Brush.Accent}">
+                <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Lock}" Width="22" Height="22"/>
+            </Border>
+
+            <TextBlock x:Name="HeadingText" Style="{StaticResource Text.Title}" FontSize="19" Margin="0,16,0,0"/>
+            <TextBlock x:Name="SubText" Style="{StaticResource Text.Muted}" Margin="0,4,0,18" TextWrapping="Wrap"/>
+
+            <TextBlock Text="PIN" Style="{StaticResource Text.FieldLabel}"/>
+            <PasswordBox x:Name="PinBox" Style="{StaticResource PasswordBox.Field}" MaxLength="12"/>
+
+            <TextBlock Text="CONFIRM PIN" Style="{StaticResource Text.FieldLabel}" Margin="2,14,0,6"/>
+            <PasswordBox x:Name="ConfirmBox" Style="{StaticResource PasswordBox.Field}" MaxLength="12"/>
+
+            <TextBlock x:Name="ErrorText" FontSize="12" Margin="2,12,2,0" TextWrapping="Wrap"
+                       Foreground="{StaticResource Brush.Danger}"
+                       Visibility="{Binding Text, RelativeSource={RelativeSource Self},
+                                    Converter={StaticResource StrVis}}"/>
+
+            <Grid Margin="0,20,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}" Content="Cancel"
+                        Click="Cancel_Click"/>
+                <Button Grid.Column="2" Style="{StaticResource Button.Pill}" Content="Set PIN"
+                        Click="Save_Click"/>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

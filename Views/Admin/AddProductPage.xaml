@@ -1,0 +1,314 @@
+<local:AdminPageBase x:Class="MarketPos.Views.Admin.AddProductPage"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:local="clr-namespace:MarketPos.Views.Admin">
+
+    <Grid>
+            <!-- The list -->
+            <Grid x:Name="AddListPanel">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,14">
+                    <TextBlock x:Name="AddListNote" Style="{StaticResource Text.Muted}"
+                               VerticalAlignment="Center"/>
+                    <Button Style="{StaticResource Button.Pill}" HorizontalAlignment="Right"
+                            VerticalAlignment="Center" Height="44" Width="200" FontSize="14"
+                            Click="AddNew_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Plus}"
+                                  Width="14" Height="14"/>
+                            <TextBlock Text="Add product" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <Border Grid.Row="1" Background="{StaticResource Brush.Card}" CornerRadius="16"
+                        Padding="10,14,10,10">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="12,0,12,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2.4*"/>
+                                <ColumnDefinition Width="1.2*"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="0.9*"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="PRODUCT" Style="{StaticResource Text.ColumnHead}"/>
+                            <TextBlock Grid.Column="1" Text="CATEGORY" Style="{StaticResource Text.ColumnHead}"/>
+                            <TextBlock Grid.Column="2" Text="BOUGHT FOR" Style="{StaticResource Text.ColumnHead}"
+                                       TextAlignment="Right"/>
+                            <TextBlock Grid.Column="3" Text="SELLING FOR" Style="{StaticResource Text.ColumnHead}"
+                                       TextAlignment="Right"/>
+                            <TextBlock Grid.Column="4" Text="IN STOCK" Style="{StaticResource Text.ColumnHead}"
+                                       TextAlignment="Right"/>
+                            <TextBlock Grid.Column="5" Text="ADDED" Style="{StaticResource Text.ColumnHead}"
+                                       Margin="16,0,0,0"/>
+                        </Grid>
+
+                        <Border Grid.Row="1" Style="{StaticResource Rule}" Margin="12,0,12,4"
+                                Background="{StaticResource Brush.Panel}"/>
+
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <ItemsControl x:Name="AddedList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Style="{StaticResource Button.Row}" Padding="12,0"
+                                                    Click="AddedRow_Click" Tag="{Binding Id}">
+                                                <Grid Height="42">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="2.4*"/>
+                                                        <ColumnDefinition Width="1.2*"/>
+                                                        <ColumnDefinition Width="1*"/>
+                                                        <ColumnDefinition Width="1*"/>
+                                                        <ColumnDefinition Width="0.9*"/>
+                                                        <ColumnDefinition Width="1*"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel Grid.Column="0" VerticalAlignment="Center"
+                                                                Margin="0,0,10,0">
+                                                        <TextBlock Text="{Binding Name}"
+                                                                   Style="{StaticResource Text.Cell}"
+                                                                   FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding Barcode}"
+                                                                   Style="{StaticResource Text.CellMuted}"
+                                                                   FontSize="11"/>
+                                                    </StackPanel>
+
+                                                    <TextBlock Grid.Column="1" Text="{Binding Category}"
+                                                               Style="{StaticResource Text.CellMuted}"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding CostLabel}"
+                                                               Style="{StaticResource Text.Money}"
+                                                               FontWeight="Normal"
+                                                               Foreground="{StaticResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="3" Text="{Binding PriceLabel}"
+                                                               Style="{StaticResource Text.Money}"/>
+                                                    <TextBlock Grid.Column="4" Text="{Binding StockLabel}"
+                                                               Style="{StaticResource Text.Money}"
+                                                               FontWeight="Normal"/>
+                                                    <TextBlock Grid.Column="5" Text="{Binding AddedLabel}"
+                                                               Style="{StaticResource Text.CellMuted}"
+                                                               Margin="16,0,0,0"/>
+                                                </Grid>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <StackPanel x:Name="AddedEmpty" Style="{StaticResource Panel.Empty}"
+                                            Visibility="Collapsed">
+                                    <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.Box}"
+                                          Width="30" Height="30" StrokeThickness="1.4"
+                                          Stroke="{StaticResource Brush.Muted}"/>
+                                    <TextBlock Text="Nothing added yet"
+                                               Style="{StaticResource Text.EmptyTitle}"/>
+                                    <TextBlock Style="{StaticResource Text.EmptyBody}"
+                                               Text="Press Add product, scan the box in your hand, and it appears here."/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- The form -->
+            <ScrollViewer x:Name="AddScroll" VerticalScrollBarVisibility="Auto"
+                          Visibility="Collapsed">
+                <!-- Held to the viewport height so the form sits in the middle of the
+                     screen rather than tucked under the search box, and still scrolls
+                     rather than clipping on a short one. -->
+                <Grid MinHeight="{Binding ViewportHeight, ElementName=AddScroll}">
+                    <StackPanel x:Name="AddForm" MaxWidth="620" Margin="0,10"
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                    <Grid Margin="0,0,0,16">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock x:Name="AddFormTitle" Text="New product"
+                                       Style="{StaticResource Text.Title}"/>
+                            <TextBlock x:Name="AddIntro" Style="{StaticResource Text.Muted}"
+                                       Margin="0,4,0,0" TextWrapping="Wrap" MaxWidth="440"
+                                       HorizontalAlignment="Left"/>
+                        </StackPanel>
+                        <Button Style="{StaticResource Button.RowAction}" HorizontalAlignment="Right"
+                                VerticalAlignment="Top" ToolTip="Back to the list"
+                                Click="AddBack_Click">
+                            <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Close}"/>
+                        </Button>
+                    </Grid>
+
+                    <TextBlock Text="BARCODE" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="290"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="AddBarcodeBox" Grid.Column="0" Height="40"
+                                 Style="{StaticResource TextBox.Field}" FontSize="14"
+                                 KeyDown="AddBarcode_KeyDown" TextChanged="AddBarcode_Changed"
+                                 PreviewMouseLeftButtonDown="AddBarcode_Click"/>
+                        <Button Grid.Column="2" Style="{StaticResource Button.PillMuted}" Height="40"
+                                Width="128" Content="No barcode" Click="AddNoBarcode_Click"
+                                ToolTip="Give it an in-store code instead"/>
+                    </Grid>
+
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="290"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="NAME" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                            <TextBox x:Name="AddNameBox" Style="{StaticResource TextBox.Field}" Height="40"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="CATEGORY" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                            <ComboBox x:Name="AddCategoryBox" Style="{StaticResource ComboBox.Form}"
+                                      Height="40" IsEditable="True"/>
+                        </StackPanel>
+
+                        <!-- The photo, beside the name it belongs to. It matters most for goods
+                             with nothing printed on them: those are the ones the cashier finds
+                             by looking rather than by scanning. -->
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="PHOTO" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                            <Button Style="{StaticResource Button.Card}" Width="86" Height="40"
+                                    Padding="0" Click="AddPicture_Click"
+                                    ToolTip="Choose a photo for this product">
+                                <Grid>
+                                    <Image x:Name="AddPictureBox" Stretch="UniformToFill" Margin="2"
+                                           RenderOptions.BitmapScalingMode="HighQuality">
+                                        <Image.Clip>
+                                            <RectangleGeometry Rect="0,0,82,36" RadiusX="8" RadiusY="8"/>
+                                        </Image.Clip>
+                                    </Image>
+                                    <StackPanel x:Name="AddPicturePrompt" Orientation="Horizontal"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Path Style="{StaticResource Icon.Small}"
+                                              Data="{StaticResource Icon.Plus}" Width="12" Height="12"
+                                              Fill="{StaticResource Brush.Muted}"/>
+                                        <TextBlock Text="Add" Style="{StaticResource Text.Muted}"
+                                                   FontSize="12" Margin="6,0,0,0"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock x:Name="AddPictureNote" Style="{StaticResource Text.Muted}"
+                               FontSize="11.5" Margin="2,8,0,0" TextWrapping="Wrap"/>
+
+                    <TextBlock Text="SOLD" Style="{StaticResource Text.Eyebrow}" Margin="2,16,0,7"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <RadioButton x:Name="AddPerUnit" Grid.Column="0" GroupName="addunit"
+                                     Style="{StaticResource Button.TogglePill}" Content="Per unit"
+                                     Margin="0" Height="40" HorizontalAlignment="Stretch"
+                                     HorizontalContentAlignment="Center" IsChecked="True"
+                                     Checked="AddUnit_Changed"/>
+                        <RadioButton x:Name="AddByWeight" Grid.Column="2" GroupName="addunit"
+                                     Style="{StaticResource Button.TogglePill}" Content="By weight (kg)"
+                                     Margin="0" Height="40" HorizontalAlignment="Stretch"
+                                     HorizontalContentAlignment="Center" Checked="AddUnit_Changed"/>
+                    </Grid>
+
+                    <!-- Narrow on purpose: these hold four or five characters, and a wide
+                         box invites a wrong number to hide in it. -->
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="118"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="118"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="98"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="AddCostLabel" Text="BOUGHT FOR"
+                                       Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                            <TextBox x:Name="AddCostBox" Style="{StaticResource TextBox.Field}" Height="40"
+                                     local:Numeric.Only="True" TextChanged="AddAmount_Changed"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock x:Name="AddPriceLabel" Text="SELLING FOR"
+                                       Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                            <TextBox x:Name="AddPriceBox" Style="{StaticResource TextBox.Field}" Height="40"
+                                     local:Numeric.Only="True" TextChanged="AddAmount_Changed"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <TextBlock x:Name="AddQuantityLabel" Text="QUANTITY"
+                                       Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                            <TextBox x:Name="AddQuantityBox" Style="{StaticResource TextBox.Field}" Height="40"
+                                     local:Numeric.Only="True" TextChanged="AddAmount_Changed"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="6">
+                            <TextBlock Text="EXPIRES ON" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                            <DatePicker x:Name="AddExpiryBox" Style="{StaticResource DatePicker.Field}"
+                                        Height="40"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Border Style="{StaticResource Card.Inner}" Margin="0,16,0,0" Padding="16,12"
+                            HorizontalAlignment="Left" Width="512">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="TOTAL COST" Style="{StaticResource Text.Eyebrow}"/>
+                                <TextBlock x:Name="AddTotalCost" Style="{StaticResource Text.Title}"
+                                           FontSize="17" Margin="0,5,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="PROFIT PER SALE" Style="{StaticResource Text.Eyebrow}"/>
+                                <TextBlock x:Name="AddMargin" Style="{StaticResource Text.Title}"
+                                           FontSize="17" Margin="0,5,0,0"
+                                           Foreground="{StaticResource Brush.Accent}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock x:Name="AddError" FontSize="12.5" Margin="2,12,2,0" TextWrapping="Wrap"
+                               MaxWidth="512" HorizontalAlignment="Left"
+                               Foreground="{StaticResource Brush.Danger}"
+                               Visibility="{Binding Text, RelativeSource={RelativeSource Self},
+                                            Converter={StaticResource StrVis}}"/>
+
+                    <Grid Margin="0,20,0,10" Width="512" HorizontalAlignment="Left">
+                        <Button Style="{StaticResource Button.PillMuted}" Content="Back"
+                                HorizontalAlignment="Left" Width="110" Height="42"
+                                Click="AddBack_Click"/>
+                        <Button x:Name="AddSaveButton" Style="{StaticResource Button.Pill}"
+                                Content="Save product" HorizontalAlignment="Right" Width="180"
+                                Height="42" FontSize="14" Click="AddSave_Click"/>
+                    </Grid>
+                </StackPanel>
+                </Grid>
+            </ScrollViewer>
+    </Grid>
+</local:AdminPageBase>

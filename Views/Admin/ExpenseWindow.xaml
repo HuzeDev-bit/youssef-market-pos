@@ -1,0 +1,90 @@
+<Window x:Class="MarketPos.Views.Admin.ExpenseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Expense" Width="520" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" FontFamily="{StaticResource Font.Base}"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Border CornerRadius="20" Background="{StaticResource Brush.Panel}" Padding="26">
+        <Border.Effect>
+            <DropShadowEffect Color="#1B2126" Opacity="0.22" BlurRadius="30" ShadowDepth="8" Direction="270"/>
+        </Border.Effect>
+
+        <StackPanel>
+            <TextBlock x:Name="HeadingText" Style="{StaticResource Text.Title}"/>
+            <TextBlock x:Name="SubText" Style="{StaticResource Text.Muted}" Margin="0,4,0,18" TextWrapping="Wrap"/>
+
+            <TextBlock Text="WHAT WAS IT FOR" Style="{StaticResource Text.FieldLabel}"/>
+            <TextBox x:Name="NameBox" Style="{StaticResource TextBox.Field}"/>
+
+            <Grid Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.4*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="CATEGORY" Style="{StaticResource Text.FieldLabel}"/>
+                    <ComboBox x:Name="CategoryBox" Style="{StaticResource ComboBox.Form}" IsEditable="True"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="AMOUNT" Style="{StaticResource Text.FieldLabel}"/>
+                    <TextBox x:Name="AmountBox" Style="{StaticResource TextBox.Field}"/>
+                </StackPanel>
+            </Grid>
+
+            <Grid Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="DATE" Style="{StaticResource Text.FieldLabel}"/>
+                    <DatePicker x:Name="DateBox" Style="{StaticResource DatePicker.Field}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="PAID BY" Style="{StaticResource Text.FieldLabel}"/>
+                    <ComboBox x:Name="MethodBox" Style="{StaticResource ComboBox.Form}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Text="REPEATS" Style="{StaticResource Text.FieldLabel}"/>
+                    <ComboBox x:Name="RepeatBox" Style="{StaticResource ComboBox.Form}"/>
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Text="NOTE (OPTIONAL)" Style="{StaticResource Text.FieldLabel}" Margin="2,16,0,6"/>
+            <TextBox x:Name="NoteBox" Style="{StaticResource TextBox.Multiline}"/>
+
+            <Grid Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="RECEIPT PHOTO" Style="{StaticResource Text.FieldLabel}"/>
+                    <TextBlock x:Name="ReceiptText" Style="{StaticResource Text.CellMuted}"
+                               Text="None attached" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+                <Button Grid.Column="1" Style="{StaticResource Button.SmallMuted}" Content="Attach"
+                        VerticalAlignment="Center" Click="Attach_Click"/>
+            </Grid>
+
+            <TextBlock x:Name="ErrorText" Style="{StaticResource Text.Body}" FontSize="12.5"
+                       Foreground="{StaticResource Brush.Danger}" Margin="2,14,2,0" TextWrapping="Wrap"
+                       Visibility="{Binding Text, RelativeSource={RelativeSource Self},
+                                    Converter={StaticResource StrVis}}"/>
+
+            <Grid Margin="0,22,0,0">
+                <Button Style="{StaticResource Button.PillMuted}" Content="Cancel"
+                        HorizontalAlignment="Left" Width="110" Click="Cancel_Click"/>
+                <Button x:Name="SaveButton" Style="{StaticResource Button.Pill}" Content="Save expense"
+                        HorizontalAlignment="Right" Width="160" Click="Save_Click"/>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

@@ -1,0 +1,136 @@
+<Window x:Class="MarketPos.Views.Admin.SaleDetailWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Sale" Width="640" SizeToContent="Height" MaxHeight="860"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" FontFamily="{StaticResource Font.Base}"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Border CornerRadius="22" Background="{StaticResource Brush.Panel}" Padding="26">
+        <Border.Effect>
+            <DropShadowEffect Color="#1B2126" Opacity="0.22" BlurRadius="34" ShadowDepth="10" Direction="270"/>
+        </Border.Effect>
+
+        <StackPanel>
+            <Grid Margin="0,0,0,18">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="HeadingText" Style="{StaticResource Text.Title}"/>
+                        <Border x:Name="StatusBadge" Style="{StaticResource Badge.Ok}" Margin="10,0,0,0">
+                            <TextBlock x:Name="StatusText"/>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock x:Name="SubText" Style="{StaticResource Text.Muted}" Margin="0,5,0,0"/>
+                </StackPanel>
+                <Button Style="{StaticResource Button.RowAction}" HorizontalAlignment="Right"
+                        VerticalAlignment="Top" Click="Close_Click">
+                    <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Close}"/>
+                </Button>
+            </Grid>
+
+            <!-- Lines. The checkbox column only appears when a refund is being prepared, so
+                 the normal case stays a plain receipt. -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="TickColumn" Width="0"/>
+                    <ColumnDefinition Width="2.6*"/>
+                    <ColumnDefinition Width="0.9*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="1" Text="ITEM" Style="{StaticResource Text.ColumnHead}"/>
+                <TextBlock Grid.Column="2" Text="QTY" Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+                <TextBlock Grid.Column="3" Text="PRICE" Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+                <TextBlock Grid.Column="4" Text="TOTAL" Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+            </Grid>
+            <Border Style="{StaticResource Rule}" Margin="0,0,0,6"/>
+
+            <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="Lines">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,7">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="{Binding TickWidth}"/>
+                                    <ColumnDefinition Width="2.6*"/>
+                                    <ColumnDefinition Width="0.9*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <CheckBox Grid.Column="0" Style="{StaticResource Check.Field}"
+                                          IsChecked="{Binding Selected, Mode=TwoWay}"
+                                          IsEnabled="{Binding CanReturn}"
+                                          Visibility="{Binding ShowTick, Converter={StaticResource BoolVis}}"
+                                          VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" Style="{StaticResource Text.Cell}"/>
+                                    <TextBlock Text="{Binding ReturnedNote}" Style="{StaticResource Text.CellMuted}"
+                                               FontSize="11" Margin="0,2,0,0"
+                                               Visibility="{Binding ReturnedNote, Converter={StaticResource StrVis}}"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="2" Style="{StaticResource Text.Money}" FontWeight="Normal"
+                                           Text="{Binding QuantityLabel}"/>
+                                <TextBlock Grid.Column="3" Style="{StaticResource Text.Money}" FontWeight="Normal"
+                                           Foreground="{StaticResource Brush.Muted}"
+                                           Text="{Binding UnitPrice, Converter={StaticResource Money}}"/>
+                                <TextBlock Grid.Column="4" Style="{StaticResource Text.Money}"
+                                           Text="{Binding LineTotal, Converter={StaticResource Money}}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Border Style="{StaticResource Rule}" Margin="0,10,0,14"/>
+
+            <!-- Totals -->
+            <StackPanel x:Name="Totals"/>
+
+            <!-- Refund controls, hidden until Refund is pressed -->
+            <StackPanel x:Name="RefundPanel" Visibility="Collapsed" Margin="0,16,0,0">
+                <Border Style="{StaticResource Card.Inner}">
+                    <StackPanel>
+                        <TextBlock Text="Tick what is coming back, then say why."
+                                   Style="{StaticResource Text.Cell}" FontWeight="SemiBold"/>
+
+                        <TextBlock Text="REASON" Style="{StaticResource Text.FieldLabel}" Margin="0,14,0,6"/>
+                        <ComboBox x:Name="ReasonBox" Style="{StaticResource ComboBox.Form}" IsEditable="True"/>
+
+                        <CheckBox x:Name="RestockBox" Style="{StaticResource Check.Field}" Margin="0,14,0,0"
+                                  IsChecked="True" Content="Put the items back on the shelf"/>
+                        <TextBlock Style="{StaticResource Text.Muted}" Margin="29,4,0,0" TextWrapping="Wrap"
+                                   Text="Leave this off when the goods came back damaged or opened — the stock is gone either way, and ticking it would put items back that cannot be sold."/>
+
+                        <TextBlock x:Name="RefundTotalText" Style="{StaticResource Text.StatSmall}"
+                                   Margin="0,14,0,0"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <TextBlock x:Name="ErrorText" Style="{StaticResource Text.Body}" FontSize="12.5"
+                       Foreground="{StaticResource Brush.Danger}" Margin="2,14,2,0" TextWrapping="Wrap"
+                       Visibility="{Binding Text, RelativeSource={RelativeSource Self},
+                                    Converter={StaticResource StrVis}}"/>
+
+            <Grid Margin="0,22,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="RefundButton" Style="{StaticResource Button.PillMuted}" Content="Refund"
+                            Width="110" Click="StartRefund_Click"/>
+                    <Button x:Name="CancelSaleButton" Style="{StaticResource Button.PillMuted}"
+                            Content="Cancel sale" Width="130" Margin="10,0,0,0"
+                            Foreground="{StaticResource Brush.Danger}" Click="CancelSale_Click"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="PrintButton" Style="{StaticResource Button.PillMuted}" Content="Reprint"
+                            Width="120" Margin="0,0,10,0" Click="Reprint_Click"/>
+                    <Button x:Name="PrimaryButton" Style="{StaticResource Button.Pill}" Content="Close"
+                            Width="150" Click="Primary_Click"/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

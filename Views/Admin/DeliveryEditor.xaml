@@ -1,0 +1,126 @@
+<UserControl x:Class="MarketPos.Views.Admin.DeliveryEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:MarketPos.Views.Admin">
+
+    <StackPanel>
+        <!-- Line entry -->
+        <Border Style="{StaticResource Card.Inner}" Margin="0,0,0,12">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2.2*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="PRODUCT" Style="{StaticResource Text.FieldLabel}"/>
+                        <ComboBox x:Name="ProductBox" Style="{StaticResource ComboBox.Form}" IsEditable="True"
+                                  IsTextSearchEnabled="True" TextSearch.TextPath="Name"
+                                  ItemTemplate="{StaticResource Combo.Name}"
+                                  SelectionChanged="Product_Changed"
+                                  TextBoxBase.TextChanged="Product_Typed"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="QUANTITY" Style="{StaticResource Text.FieldLabel}"/>
+                        <TextBox x:Name="QuantityBox" Style="{StaticResource TextBox.Field}"
+                                 local:Numeric.Only="True"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="COST EACH" Style="{StaticResource Text.FieldLabel}"/>
+                        <TextBox x:Name="CostBox" Style="{StaticResource TextBox.Field}"
+                                 local:Numeric.Only="True" TextChanged="Prices_Changed"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="6">
+                        <TextBlock Text="SELL FOR" Style="{StaticResource Text.FieldLabel}"/>
+                        <TextBox x:Name="SellBox" Style="{StaticResource TextBox.Field}"
+                                 local:Numeric.Only="True" TextChanged="Prices_Changed"
+                                 ToolTip="The new shelf price. Leave it as it is to keep the old one."/>
+                    </StackPanel>
+                    <Button Grid.Column="8" Style="{StaticResource Button.Small}" Content="Add line"
+                            VerticalAlignment="Bottom" Height="40" Width="100" Click="AddLine_Click"/>
+                </Grid>
+
+                <!-- What the shop would make on each one, while the prices are still being
+                     typed - which is when a wrong one can still be caught. -->
+                <TextBlock x:Name="MarginText" Style="{StaticResource Text.Muted}" FontSize="12"
+                           Margin="2,10,0,0"
+                           Visibility="{Binding Text, RelativeSource={RelativeSource Self},
+                                        Converter={StaticResource StrVis}}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Lines -->
+        <Grid Margin="4,0,4,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.6*"/>
+                <ColumnDefinition Width="0.7*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="PRODUCT" Style="{StaticResource Text.ColumnHead}"/>
+            <TextBlock Grid.Column="1" Text="QTY" Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+            <TextBlock Grid.Column="2" Text="COST" Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+            <TextBlock Grid.Column="3" Text="SELLS FOR" Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+            <TextBlock Grid.Column="4" Text="MARGIN" Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+            <TextBlock Grid.Column="5" Text="TOTAL" Style="{StaticResource Text.ColumnHead}" TextAlignment="Right"/>
+            <TextBlock Grid.Column="6" Text="" Width="34"/>
+        </Grid>
+        <Border Style="{StaticResource Rule}" Margin="0,0,0,4"/>
+
+        <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <ItemsControl x:Name="LineList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="4,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2.6*"/>
+                                    <ColumnDefinition Width="0.7*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="1.2*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Name}" Style="{StaticResource Text.Cell}"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="1" Style="{StaticResource Text.Money}" FontWeight="Normal"
+                                           Text="{Binding Quantity, StringFormat={}{0:0.###}}"/>
+                                <TextBlock Grid.Column="2" Style="{StaticResource Text.Money}" FontWeight="Normal"
+                                           Foreground="{StaticResource Brush.Muted}"
+                                           Text="{Binding UnitCost, Converter={StaticResource Money}}"/>
+                                <TextBlock Grid.Column="3" Style="{StaticResource Text.Money}" FontWeight="Normal"
+                                           Text="{Binding SellLabel}"/>
+                                <TextBlock Grid.Column="4" Style="{StaticResource Text.Money}" FontWeight="Normal"
+                                           Foreground="{StaticResource Brush.Accent}"
+                                           Text="{Binding MarginLabel}"/>
+                                <TextBlock Grid.Column="5" Style="{StaticResource Text.Money}"
+                                           Text="{Binding LineTotal, Converter={StaticResource Money}}"/>
+                                <Button Grid.Column="6" Style="{StaticResource Button.RowDanger}" Width="34"
+                                        ToolTip="Remove this line" Click="RemoveLine_Click" Tag="{Binding ProductId}">
+                                    <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Close}"
+                                          Width="12" Height="12"/>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock x:Name="LinesEmpty" Style="{StaticResource Text.CellMuted}" Margin="4,14"
+                           TextWrapping="Wrap"
+                           Text="No lines yet. Name what arrived - pick it from the list, or type a new one - then how many came, what each cost, and what it sells for."/>
+            </StackPanel>
+        </ScrollViewer>
+    </StackPanel>
+</UserControl>

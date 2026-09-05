@@ -1,0 +1,127 @@
+<Window x:Class="MarketPos.Views.Admin.SupplierWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:MarketPos.Views.Admin"
+        Title="Supplier" Width="520" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" FontFamily="{StaticResource Font.Base}"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Border CornerRadius="20" Background="{StaticResource Brush.Panel}" Padding="26">
+        <Border.Effect>
+            <DropShadowEffect Color="#1B2126" Opacity="0.22" BlurRadius="30" ShadowDepth="8" Direction="270"/>
+        </Border.Effect>
+
+        <StackPanel>
+            <TextBlock x:Name="HeadingText" Style="{StaticResource Text.Title}"/>
+            <TextBlock x:Name="SubText" Style="{StaticResource Text.Muted}" Margin="0,4,0,18" TextWrapping="Wrap"/>
+
+            <TextBlock Text="BUSINESS NAME" Style="{StaticResource Text.FieldLabel}"/>
+            <TextBox x:Name="NameBox" Style="{StaticResource TextBox.Field}"/>
+
+            <Grid Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="CONTACT PERSON" Style="{StaticResource Text.FieldLabel}"/>
+                    <TextBox x:Name="ContactBox" Style="{StaticResource TextBox.Field}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="PHONE" Style="{StaticResource Text.FieldLabel}"/>
+                    <TextBox x:Name="PhoneBox" Style="{StaticResource TextBox.Field}"/>
+                </StackPanel>
+            </Grid>
+
+            <Grid Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="EMAIL" Style="{StaticResource Text.FieldLabel}"/>
+                    <TextBox x:Name="EmailBox" Style="{StaticResource TextBox.Field}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="ADDRESS" Style="{StaticResource Text.FieldLabel}"/>
+                    <TextBox x:Name="AddressBox" Style="{StaticResource TextBox.Field}"/>
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Text="NOTES" Style="{StaticResource Text.FieldLabel}" Margin="2,16,0,6"/>
+            <TextBox x:Name="NoteBox" Style="{StaticResource TextBox.Multiline}"/>
+
+            <!-- What they brought. Shown only when adding, because a supplier is almost
+                 never written down for its own sake: there is a delivery on the counter and
+                 the name is being typed so the goods have somewhere to go. -->
+            <StackPanel x:Name="GoodsSection" Visibility="Collapsed" Margin="0,22,0,0">
+                <Border Style="{StaticResource Rule}" Margin="0,0,0,16"/>
+
+                <TextBlock Text="What did they bring?" Style="{StaticResource Text.Section}"/>
+                <TextBlock Style="{StaticResource Text.Muted}" Margin="0,4,0,14" TextWrapping="Wrap"
+                           Text="Optional. Stock goes up when you save, and whatever you do not pay becomes what you owe them."/>
+
+                <local:DeliveryEditor x:Name="Editor" Problem="Editor_Problem" Changed="Editor_Changed"/>
+
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="1.4*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="PAID NOW" Style="{StaticResource Text.FieldLabel}"/>
+                        <TextBox x:Name="PaidBox" Style="{StaticResource TextBox.Field}"
+                                 local:Numeric.Only="True" TextChanged="Paid_Changed"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="PAID BY" Style="{StaticResource Text.FieldLabel}"/>
+                        <ComboBox x:Name="MethodBox" Style="{StaticResource ComboBox.Form}"/>
+                    </StackPanel>
+                    <Border Grid.Column="4" Style="{StaticResource Card.Inner}" Padding="14,12">
+                        <StackPanel>
+                            <TextBlock Text="DELIVERY TOTAL" Style="{StaticResource Text.Eyebrow}"/>
+                            <TextBlock x:Name="TotalText" Style="{StaticResource Text.Stat}"
+                                       FontSize="20" Margin="0,5,0,0"/>
+                            <TextBlock x:Name="OwingText" Style="{StaticResource Text.Muted}"
+                                       FontSize="11.5" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </StackPanel>
+
+            <Border x:Name="BalanceCard" Style="{StaticResource Card.Inner}" Margin="0,18,0,0"
+                    Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock x:Name="BalanceText" Style="{StaticResource Text.Cell}" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="BalanceNote" Style="{StaticResource Text.CellMuted}" Margin="0,4,0,0"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock x:Name="ErrorText" Style="{StaticResource Text.Body}" FontSize="12.5"
+                       Foreground="{StaticResource Brush.Danger}" Margin="2,14,2,0" TextWrapping="Wrap"
+                       Visibility="{Binding Text, RelativeSource={RelativeSource Self},
+                                    Converter={StaticResource StrVis}}"/>
+
+            <Grid Margin="0,22,0,0">
+                <Button x:Name="DeactivateButton" Style="{StaticResource Button.PillMuted}"
+                        Content="Deactivate" HorizontalAlignment="Left" Width="118"
+                        Foreground="{StaticResource Brush.Danger}" Click="Deactivate_Click"
+                        Visibility="Collapsed"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource Button.PillMuted}" Content="Cancel" Width="100"
+                            Click="Cancel_Click" Margin="0,0,10,0"/>
+                    <Button Style="{StaticResource Button.Pill}" Content="Save" Width="130" Click="Save_Click"/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>
