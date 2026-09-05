@@ -36,8 +36,15 @@ left. Changed in Settings; the app restarts into it.
 
 ## Running it
 
-Download the latest release, unzip, run `MarketPos.exe`. Nothing to install: .NET is inside the
-file, and the shop's database is created on first start in `%AppData%\MarketPos`.
+**[Download MarketPos.exe](https://github.com/HuzeDev-bit/youssef-market-pos/releases/latest/download/MarketPos.exe)**
+and double-click it. One file, nothing to install, nothing to unzip — .NET is inside it.
+
+Windows warns that the publisher is unknown, because the file is not signed:
+**More info → Run anyway**.
+
+The shop's database is made on the first run in `%AppData%\MarketPos` and stays there when the
+app is replaced, so an update never costs the shop its takings. Back it up by copying that one
+folder.
 
 Two or more computers: see [SETUP.md](SETUP.md).
 
