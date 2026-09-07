@@ -224,6 +224,7 @@ public static class FlowTest
         ASaleHandedOverByATill();
         AnOrdinaryDayForACashier();
         SellingTheLastOne();
+        ThirtyOnTheShelf();
     }
 
     /// <summary>
@@ -600,6 +601,70 @@ public static class FlowTest
         catch (NotEnoughStockException) { lossRefused = true; }
 
         Check("writing off more than is there is refused too", lossRefused ? 1 : 0, 1);
+    }
+
+    /// <summary>
+    /// The shop's own report, scan by scan: thirty on the shelf, thirty sold one at a time,
+    /// and the thirty-first turned away.
+    ///
+    /// Driven through the till's own view model rather than through the repository, so what is
+    /// being tested is the thing a cashier actually touches — the scan, the basket, the sale.
+    /// </summary>
+    private static void ThirtyOnTheShelf()
+    {
+        Session.UnlockAsOwner();
+
+        var id = StockRepository.Create(new StockItem
+        {
+            Barcode = "6119999900030",
+            Name = "Thirty Tins",
+            Category = "Test",
+            Cost = 6m,
+            Price = 9m,
+            MinStock = 5m,
+        }, openingStock: 30m);
+
+        Catalog.Reload();
+        var till = new ViewModels.SaleViewModel();
+
+        // Thirty scans, one at a time, exactly as the counter would.
+        for (var i = 0; i < 30; i++)
+        {
+            till.SearchText = "6119999900030";
+            till.SubmitBarcodeCommand.Execute(null);
+        }
+
+        Check("thirty scans put thirty on the sale", till.Cart.FirstOrDefault()?.Quantity ?? 0m, 30m);
+
+        // The thirty-first, before the sale is even paid for.
+        till.SearchText = "6119999900030";
+        till.SubmitBarcodeCommand.Execute(null);
+
+        Check("the thirty-first is refused", till.Cart.FirstOrDefault()?.Quantity ?? 0m, 30m);
+        Check("and the cashier is told why", till.StatusIsError ? 1 : 0, 1);
+        Log.AppendLine($"      the till says: {till.StatusMessage}");
+
+        // Bank it.
+        till.CompleteSale(PaymentMethod.Cash, 270m);
+
+        Check("the shelf is empty afterwards", StockRepository.Find(id)!.Stock, 0m);
+        Check("the shop calls it out of stock",
+              StockRepository.Find(id)!.Status == StockStatus.OutOfStock ? 1 : 0, 1);
+
+        // And now a scan of something the shop has none of.
+        Catalog.Reload();
+        var after = new ViewModels.SaleViewModel();
+        after.SearchText = "6119999900030";
+        after.SubmitBarcodeCommand.Execute(null);
+
+        Check("scanning it again adds nothing at all", after.Cart.Count, 0);
+        Log.AppendLine($"      the till says: {after.StatusMessage}");
+
+        // A barcode the shop has never seen.
+        after.SearchText = "1234567890123";
+        after.SubmitBarcodeCommand.Execute(null);
+        Check("an unknown barcode adds nothing either", after.Cart.Count, 0);
+        Log.AppendLine($"      the till says: {after.StatusMessage}");
     }
 
     private static void Check(string what, decimal actual, decimal expected)
