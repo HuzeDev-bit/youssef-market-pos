@@ -17,6 +17,10 @@ public partial class WorkerWindow : Window
 {
     private readonly Worker? _existing;
 
+    /// <summary>
+    /// Read through the translator where they are used, not here: a static field is built once
+    /// when the type is first touched, which may be before the shop's language is even known.
+    /// </summary>
     private static readonly (string Label, WorkerRole Role, string What)[] Roles =
     [
         ("Cashier", WorkerRole.Cashier,
@@ -33,9 +37,11 @@ public partial class WorkerWindow : Window
     public WorkerWindow(Worker? existing)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
         _existing = existing;
 
-        RoleBox.ItemsSource = Roles.Select(r => r.Label).ToList();
+        RoleBox.ItemsSource = Roles.Select(r => Loc.T(r.Label)).ToList();
         PeriodBox.ItemsSource = new[] { "Monthly", "Weekly", "Daily" };
 
         // Salary is not shown at all to someone who may not see salaries; leaving an empty
@@ -45,8 +51,8 @@ public partial class WorkerWindow : Window
 
         if (existing is null)
         {
-            HeadingText.Text = "Add worker";
-            SubText.Text = "Give them a role now; a till PIN can be set afterwards.";
+            HeadingText.Text = Loc.T("Add worker");
+            SubText.Text = Loc.T("Give them a role now; a till PIN can be set afterwards.");
             RoleBox.SelectedIndex = 0;
             PeriodBox.SelectedIndex = 0;
             StartedBox.SelectedDate = DateTime.Today;
@@ -92,7 +98,7 @@ public partial class WorkerWindow : Window
     private void UpdateRoleNote()
     {
         if (RoleNoteText is null) return;
-        RoleNoteText.Text = Roles[Math.Max(0, RoleBox.SelectedIndex)].What;
+        RoleNoteText.Text = Loc.T(Roles[Math.Max(0, RoleBox.SelectedIndex)].What);
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)

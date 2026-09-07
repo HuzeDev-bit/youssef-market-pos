@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using MarketPos.Data;
 using MarketPos.Models;
+using MarketPos.Services;
 
 namespace MarketPos.Views.Admin;
 
@@ -21,29 +22,35 @@ public partial class ExpenseWindow : Window
     public ExpenseWindow(Expense? existing, Expense? template = null)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
         _existing = existing;
 
         CategoryBox.ItemsSource = ExpenseRepository.Categories().Select(c => c.Name).ToList();
-        MethodBox.ItemsSource = new[] { "Cash", "Bank transfer", "Cheque", "Card", "Other" };
+        MethodBox.ItemsSource = new[]
+        {
+            Loc.T("Cash"), Loc.T("Bank transfer"), Loc.T("Cheque"),
+            Loc.T("Card"), Loc.T("Other"),
+        };
         RepeatBox.ItemsSource = new[] { "Does not repeat", "Weekly", "Monthly", "Yearly" };
 
         var source = existing ?? template;
 
         if (existing is not null)
         {
-            HeadingText.Text = "Edit expense";
-            SubText.Text = "Changing the amount changes the profit figures for that period.";
+            HeadingText.Text = Loc.T("Edit expense");
+            SubText.Text = Loc.T("Changing the amount changes the profit figures for that period.");
         }
         else if (template is not null)
         {
             HeadingText.Text = $"{template.Name} — this month";
-            SubText.Text = "Copied from last month. Check the amount before saving: bills change.";
-            SaveButton.Content = "Add this one";
+            SubText.Text = Loc.T("Copied from last month. Check the amount before saving: bills change.");
+            SaveButton.Content = Loc.T("Add this one");
         }
         else
         {
-            HeadingText.Text = "Add expense";
-            SubText.Text = "Rent, electricity, water, repairs — anything that is not stock.";
+            HeadingText.Text = Loc.T("Add expense");
+            SubText.Text = Loc.T("Rent, electricity, water, repairs — anything that is not stock.");
         }
 
         if (source is not null)
@@ -86,7 +93,7 @@ public partial class ExpenseWindow : Window
 
     private void ShowReceipt() =>
         ReceiptText.Text = string.IsNullOrWhiteSpace(_receiptPath)
-            ? "None attached"
+            ? Loc.T("None attached")
             : System.IO.Path.GetFileName(_receiptPath);
 
     /// <summary>

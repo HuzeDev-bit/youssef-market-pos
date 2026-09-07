@@ -2,6 +2,8 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 
+using MarketPos.Services;
+
 namespace MarketPos.Views.Admin;
 
 /// <summary>What the caller wants asked.</summary>
@@ -41,6 +43,8 @@ public partial class AmountWindow : Window
     public AmountWindow(AmountRequest request)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
         _request = request;
 
         Title = request.Heading;
@@ -51,7 +55,11 @@ public partial class AmountWindow : Window
         ConfirmButton.Content = request.ConfirmText;
 
         DateBox.SelectedDate = DateTime.Today;
-        MethodBox.ItemsSource = new[] { "Cash", "Bank transfer", "Cheque", "Card", "Other" };
+        MethodBox.ItemsSource = new[]
+        {
+            Loc.T("Cash"), Loc.T("Bank transfer"), Loc.T("Cheque"),
+            Loc.T("Card"), Loc.T("Other"),
+        };
         MethodBox.SelectedIndex = 0;
         MethodSection.Visibility = request.AskMethod ? Visibility.Visible : Visibility.Collapsed;
 

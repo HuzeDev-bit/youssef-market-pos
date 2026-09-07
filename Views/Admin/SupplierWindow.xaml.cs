@@ -20,18 +20,24 @@ public partial class SupplierWindow : Window
     public SupplierWindow(Supplier? existing)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
         _existing = existing;
 
         if (existing is null)
         {
-            HeadingText.Text = "Add supplier";
-            SubText.Text = "Only the name is required. Put in what they brought below and it is "
-                         + "recorded with them.";
+            HeadingText.Text = Loc.T("Add supplier");
+            SubText.Text = Loc.T("Only the name is required. Put in what they brought below "
+                               + "and it is recorded with them.");
 
             // The goods editor needs the width; a contact form on its own does not.
             Width = 940;
             GoodsSection.Visibility = Visibility.Visible;
-            MethodBox.ItemsSource = new[] { "Cash", "Bank transfer", "Cheque", "Card", "Credit \u2014 pay later" };
+            MethodBox.ItemsSource = new[]
+            {
+                Loc.T("Cash"), Loc.T("Bank transfer"), Loc.T("Cheque"),
+                Loc.T("Card"), Loc.T("Credit — pay later"),
+            };
             MethodBox.SelectedIndex = 0;
             PaidBox.Text = "0";
             ShowTotal();
@@ -39,7 +45,7 @@ public partial class SupplierWindow : Window
         else
         {
             HeadingText.Text = existing.Name;
-            SubText.Text = "Editing a supplier does not change any invoice already recorded.";
+            SubText.Text = Loc.T("Editing a supplier does not change any invoice already recorded.");
             NameBox.Text = existing.Name;
             ContactBox.Text = existing.Contact;
             PhoneBox.Text = existing.Phone;
@@ -176,10 +182,10 @@ public partial class SupplierWindow : Window
         var remaining = total - paid;
 
         OwingText.Text = Editor.Lines.Count == 0
-            ? "Add what arrived, or leave it empty."
+            ? Loc.T("Add what arrived, or leave it empty.")
             : remaining <= 0m
-                ? "Paid in full \u2014 nothing will be owed."
-                : $"{remaining:N2} DH will be owed to them.";
+                ? Loc.T("Paid in full \u2014 nothing will be owed.")
+                : Loc.T("{0} will be owed to them.", Loc.Ltr($"{remaining:N2} DH"));
     }
 
     private void Deactivate_Click(object sender, RoutedEventArgs e)

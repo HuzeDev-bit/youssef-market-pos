@@ -18,6 +18,8 @@ public partial class PinWindow : Window
     public PinWindow(string workerName, bool hasPin)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
 
         HeadingText.Text = hasPin ? "Change till PIN" : "Set a till PIN";
         SubText.Text = $"{workerName} types this to sign in at the till, so their sales and shifts "

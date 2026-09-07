@@ -35,6 +35,8 @@ public partial class StaffSignInWindow : Window
     public StaffSignInWindow()
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
 
         _choices = WorkerRepository.List()
             .Where(w => w.HasPin)

@@ -31,6 +31,8 @@ public partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
 
         PrinterBox.Items.Add(UseDefault);
         foreach (var name in ReceiptPrinter.InstalledPrinters())
@@ -86,7 +88,7 @@ public partial class SettingsWindow : Window
         var name = ShopNameBox.Text.Trim();
         if (name.Length == 0)
         {
-            StatusText.Text = "Give the shop a name — it goes on every receipt.";
+            StatusText.Text = Loc.T("Give the shop a name — it goes on every receipt.");
             ShopNameBox.Focus();
             return;
         }
@@ -94,7 +96,7 @@ public partial class SettingsWindow : Window
         var currency = CurrencyBox.Text.Trim();
         if (currency.Length == 0)
         {
-            StatusText.Text = "Every amount needs a currency after it.";
+            StatusText.Text = Loc.T("Every amount needs a currency after it.");
             CurrencyBox.Focus();
             return;
         }
@@ -152,7 +154,7 @@ public partial class SettingsWindow : Window
         var typed = Address;
         if (typed.Length == 0)
         {
-            StatusText.Text = "With no address this machine works on its own — which is right "
+            StatusText.Text = Loc.T("With no address this machine works on its own — which is right ")
                             + "for a shop with one computer.";
             return;
         }

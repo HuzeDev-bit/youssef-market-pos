@@ -148,6 +148,9 @@ public static class Translations
             ["Back to the till"] =
                 ("Retour à la caisse",
                  "العودة إلى الصندوق"),
+            ["Bank transfer"] =
+                ("Virement",
+                 "تحويل بنكي"),
             ["By weight (kg)"] =
                 ("Au poids (kg)",
                  "بالوزن (كغ)"),
@@ -193,9 +196,15 @@ public static class Translations
             ["Cannot see profit, salaries, supplier debt or settings."] =
                 ("Ne voit ni le bénéfice, ni les salaires, ni la dette fournisseurs, ni les réglages.",
                  "لا يرى الأرباح ولا الرواتب ولا ديون الموردين ولا الإعدادات."),
+            ["Card"] =
+                ("Carte",
+                 "بطاقة"),
             ["Carte"] =
                 ("Carte",
                  "بطاقة"),
+            ["Cash"] =
+                ("Espèces",
+                 "نقداً"),
             ["Cashier"] =
                 ("Caissier",
                  "الكاشير"),
@@ -214,6 +223,9 @@ public static class Translations
             ["Change the period above, or ring something up at the till — the best sellers appear here."] =
                 ("Changez la période ci-dessus, ou encaissez quelque chose en caisse — les meilleures ventes apparaissent ici.",
                  "غيّر الفترة أعلاه، أو سجّل عملية بيع في الصندوق — وستظهر الأكثر مبيعاً هنا."),
+            ["Cheque"] =
+                ("Chèque",
+                 "شيك"),
             ["Choose a photo for this product"] =
                 ("Choisir une photo pour ce produit",
                  "اختر صورة لهذا المنتج"),
@@ -244,6 +256,9 @@ public static class Translations
             ["Could not save the sale: {0}"] =
                 ("Impossible d'enregistrer la vente : {0}",
                  "تعذّر حفظ عملية البيع: {0}"),
+            ["Credit — pay later"] =
+                ("Crédit — payer plus tard",
+                 "بالدين — الدفع لاحقاً"),
             ["Current Sale"] =
                 ("Vente en cours",
                  "البيع الحالي"),
@@ -661,6 +676,9 @@ public static class Translations
             ["Optional. Without one the card shows the icon, or the category's initial."] =
                 ("Facultatif. Sans image, la carte affiche l'icône, ou l'initiale de la catégorie.",
                  "اختياري. بدونها تعرض البطاقة الأيقونة أو الحرف الأول للفئة."),
+            ["Other"] =
+                ("Autre",
+                 "أخرى"),
             ["Out"] =
                 ("Rupture",
                  "نفد"),
@@ -1720,6 +1738,12 @@ public static class Translations
             ["{0} weeks ago"] =
                 ("il y a {0} semaines",
                  "قبل {0} أسابيع"),
+            ["{0} will be owed to them."] =
+                ("{0} leur seront dus.",
+                 "سيصبح {0} مستحقاً لهم."),
+            ["{0} will be owed to this supplier."] =
+                ("{0} seront dus à ce fournisseur.",
+                 "سيصبح {0} مستحقاً لهذا المورد."),
             ["{0} with a picture"] =
                 ("{0} avec une image",
                  "{0} بصورة"),

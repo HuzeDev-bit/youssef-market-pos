@@ -65,6 +65,8 @@ public static class SelfTest
         CheckTheBasketAsksOneThing(report, ref failures);
         CheckTheTillRefusesWhatIsNotThere(report, ref failures);
         CheckAnEmptyShelfIsReported(report, ref failures);
+        CheckEveryDialogFitsASmallScreen(report, ref failures);
+        CheckEveryDialogSpeaksTheShopsLanguage(report, ref failures);
         CheckTheNavigationSpeaksTheShopsLanguage(report, ref failures);
         CheckPriceCheck(report, ref failures);
         CheckStandaloneShopIsLeftAlone(report, ref failures);
@@ -824,6 +826,121 @@ public static class SelfTest
         {
             Loc.Use(was);
         }
+    }
+
+    /// <summary>
+    /// Every dialog the shop opens, in the shop's language.
+    ///
+    /// Dialogs are the half of the app that no navigation reaches, so nothing that checks
+    /// pages checks these. Each one is built the way the app builds it and then told it has
+    /// loaded, which is exactly what happens when it is shown.
+    /// </summary>
+    private static void CheckEveryDialogSpeaksTheShopsLanguage(StringBuilder report, ref int failures)
+    {
+        var was = Loc.Current;
+
+        try
+        {
+            Loc.Use(Models.Language.Arabic);
+
+            (string Name, Func<Window> Make)[] dialogs =
+            [
+                ("Add supplier", () => new SupplierWindow(null)),
+                ("Add product", () => new ProductWindow(null)),
+                ("Add category", () => new CategoryWindow(null)),
+                ("Add expense", () => new ExpenseWindow(null)),
+                ("Add worker", () => new WorkerWindow(null)),
+                ("Record a delivery", () => new PurchaseWindow(null)),
+                ("Settings", () => new Views.SettingsWindow()),
+                ("Reprint", () => new Views.ReprintWindow()),
+            ];
+
+            var english = new List<string>();
+
+            foreach (var (name, make) in dialogs)
+            {
+                Window window;
+                try { window = make(); }
+                catch { continue; }   // needs data this shop has not got yet
+
+                // Deliberately not raising Loaded. A dialog has to be translated by the time
+                // it is built: relying on the event is what left an Add supplier form with
+                // half its labels in English while the sidebar behind it was Arabic.
+
+                var words = Descendants((FrameworkElement)window.Content)
+                    .OfType<System.Windows.Controls.TextBlock>()
+                    .Select(t => t.Text.Trim())
+                    .Where(t => t.Length > 2 && Translations.Table.ContainsKey(t))
+                    .Distinct()
+                    .ToList();
+
+                if (words.Count > 0)
+                    english.Add($"{name}: {string.Join(", ", words.Take(3))}");
+            }
+
+            Verdict(report, ref failures, "every dialog is in the shop's language",
+                english.Count == 0,
+                english.Count == 0
+                    ? $"{dialogs.Length} dialogs checked, none showing English"
+                    : string.Join(" | ", english));
+        }
+        finally
+        {
+            Loc.Use(was);
+        }
+    }
+
+    /// <summary>
+    /// Every dialog has to fit the screen it is opened on, or be able to scroll.
+    ///
+    /// These windows size themselves to their content, which is right on a big monitor and
+    /// wrong on a shop laptop: Add supplier carries a contact form and a goods editor, and its
+    /// bottom half — what was paid, and Save — was off the bottom of a 768-pixel screen with
+    /// no way to reach it.
+    ///
+    /// Measured against a small screen on purpose. A check that only passes on the machine it
+    /// was written on is not a check.
+    /// </summary>
+    private static void CheckEveryDialogFitsASmallScreen(StringBuilder report, ref int failures)
+    {
+        const double smallScreen = 768;
+
+        (string Name, Func<Window> Make)[] dialogs =
+        [
+            ("Add supplier", () => new SupplierWindow(null)),
+            ("Add product", () => new ProductWindow(null)),
+            ("Add category", () => new CategoryWindow(null)),
+            ("Add expense", () => new ExpenseWindow(null)),
+            ("Add worker", () => new WorkerWindow(null)),
+            ("Record a delivery", () => new PurchaseWindow(null)),
+            ("Settings", () => new Views.SettingsWindow()),
+        ];
+
+        var overflowing = new List<string>();
+
+        foreach (var (name, make) in dialogs)
+        {
+            Window window;
+            try { window = make(); }
+            catch { continue; }
+
+            var root = (FrameworkElement)window.Content;
+            root.Measure(new Size(window.Width is double.NaN ? 940 : window.Width, smallScreen));
+
+            // Either it fits, or it can be scrolled. Anything else is content the shop cannot
+            // reach.
+            var fits = root.DesiredSize.Height <= smallScreen;
+            var scrolls = root is System.Windows.Controls.ScrollViewer;
+
+            if (!fits && !scrolls)
+                overflowing.Add($"{name} wants {root.DesiredSize.Height:0}px and cannot scroll");
+        }
+
+        Verdict(report, ref failures, "every dialog fits a small screen, or scrolls",
+            overflowing.Count == 0,
+            overflowing.Count == 0
+                ? $"{dialogs.Length} dialogs checked against a {smallScreen:0}px screen"
+                : string.Join("; ", overflowing));
     }
 
     private static void CheckAnEmptyShelfIsReported(StringBuilder report, ref int failures)

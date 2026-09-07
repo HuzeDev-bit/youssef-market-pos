@@ -24,6 +24,8 @@ public partial class ReprintWindow : Window
     public ReprintWindow()
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
         LoadRecent();
         Loaded += (_, _) => NumberBox.Focus();
     }

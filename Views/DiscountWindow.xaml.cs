@@ -27,6 +27,8 @@ public partial class DiscountWindow : Window
     public DiscountWindow(decimal gross, DiscountKind currentKind, decimal currentValue)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
         _gross = gross;
 
         if (currentKind == DiscountKind.Fixed)

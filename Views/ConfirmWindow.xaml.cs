@@ -12,6 +12,8 @@ public partial class ConfirmWindow : Window
     public ConfirmWindow(string heading, string? body = null)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
 
         HeadingText.Text = heading;
         BodyText.Text = body ?? string.Empty;

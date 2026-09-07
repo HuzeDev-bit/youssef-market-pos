@@ -21,6 +21,8 @@ public partial class AdminLoginWindow : Window
     public AdminLoginWindow(bool changePassword = false)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
 
         _isChangingPassword = changePassword;
         _isOpen = !changePassword && !AdminAccount.IsConfigured;
@@ -39,17 +41,17 @@ public partial class AdminLoginWindow : Window
         }
         else if (_isOpen)
         {
-            HeadingText.Text = "Back office";
-            SubText.Text = "No admin password is set, so anyone at this machine can open the "
+            HeadingText.Text = Loc.T("Back office");
+            SubText.Text = Loc.T("No admin password is set, so anyone at this machine can open the ")
                          + "back office. You can set one under Settings → Access.";
             PasswordSection.Visibility = Visibility.Collapsed;
-            SubmitButton.Content = "Unlock";
+            SubmitButton.Content = Loc.T("Unlock");
         }
         else
         {
-            HeadingText.Text = "Admin";
-            SubText.Text = "Enter the admin password to continue.";
-            SubmitButton.Content = "Unlock";
+            HeadingText.Text = Loc.T("Admin");
+            SubText.Text = Loc.T("Enter the admin password to continue.");
+            SubmitButton.Content = Loc.T("Unlock");
         }
 
         Loaded += (_, _) =>

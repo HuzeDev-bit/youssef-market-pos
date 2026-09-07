@@ -38,6 +38,8 @@ public partial class ProductWindow : Window
     public ProductWindow(StockItem? existing)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
         _existing = existing;
 
         UnitBox.ItemsSource = new[] { "Each / piece", "Kilogram" };
@@ -69,8 +71,8 @@ public partial class ProductWindow : Window
 
     private void FillForNew()
     {
-        HeadingText.Text = "Add product";
-        SubText.Text = "It goes on the till as soon as you save.";
+        HeadingText.Text = Loc.T("Add product");
+        SubText.Text = Loc.T("It goes on the till as soon as you save.");
         Title = "Add product";
 
         UnitBox.SelectedIndex = 0;

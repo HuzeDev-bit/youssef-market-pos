@@ -66,6 +66,8 @@ public partial class SaleDetailWindow : Window
     public SaleDetailWindow(int invoiceNumber)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
 
         _sale = SalesHistoryRepository.Find(invoiceNumber)
                 ?? throw new InvalidOperationException($"No sale with receipt number {invoiceNumber}.");

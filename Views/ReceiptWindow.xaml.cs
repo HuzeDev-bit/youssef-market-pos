@@ -21,6 +21,8 @@ public partial class ReceiptWindow : Window
     public ReceiptWindow(Receipt receipt, bool allowReprint = false)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
         _receipt = receipt;
         _asDuplicate = allowReprint;
 

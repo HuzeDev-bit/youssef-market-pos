@@ -34,6 +34,8 @@ public partial class StockAdjustWindow : Window
     public StockAdjustWindow(StockItem item)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
         _item = item;
 
         HeadingText.Text = item.Name;

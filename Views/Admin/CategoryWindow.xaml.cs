@@ -29,19 +29,21 @@ public partial class CategoryWindow : Window
     public CategoryWindow(CategoryRow? existing)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
         _existing = existing;
 
         Suggestions.ItemsSource = IconChoices;
 
         if (existing is null)
         {
-            HeadingText.Text = "Add category";
-            SubText.Text = "Cashiers browse these to find products that have no barcode.";
+            HeadingText.Text = Loc.T("Add category");
+            SubText.Text = Loc.T("Cashiers browse these to find products that have no barcode.");
             IconBox.Text = "🛒";
         }
         else
         {
-            HeadingText.Text = "Edit category";
+            HeadingText.Text = Loc.T("Edit category");
             SubText.Text = $"{existing.ProductCount} product{(existing.ProductCount == 1 ? string.Empty : "s")} in this category.";
             NameBox.Text = existing.Name;
             IconBox.Text = existing.Icon;
@@ -119,9 +121,9 @@ public partial class CategoryWindow : Window
         PicturePrompt.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
         RemovePicture.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
 
-        PictureNote.Text = has
+        PictureNote.Text = Loc.T(has
             ? "Shown on the card instead of the icon. The icon is the fallback."
-            : "Optional. Without one the card shows the icon, or the category's initial.";
+            : "Optional. Without one the card shows the icon, or the category's initial.");
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)

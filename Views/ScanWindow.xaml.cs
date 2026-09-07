@@ -19,6 +19,8 @@ public partial class ScanWindow : Window
     public ScanWindow()
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
         Loaded += (_, _) => { CodeBox.Focus(); Keyboard.Focus(CodeBox); };
     }
 

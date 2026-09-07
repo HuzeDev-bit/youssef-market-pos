@@ -19,12 +19,18 @@ public partial class PurchaseWindow : Window
     public PurchaseWindow(int? supplierId)
     {
         InitializeComponent();
+        Services.Localizer.Apply(this);
+        Services.Responsive.Fit(this);
 
         var suppliers = SupplierRepository.List();
         SupplierBox.ItemsSource = suppliers;
         SupplierBox.SelectedItem = suppliers.FirstOrDefault(s => s.Id == supplierId) ?? suppliers.FirstOrDefault();
 
-        MethodBox.ItemsSource = new[] { "Cash", "Bank transfer", "Cheque", "Card", "Credit — pay later" };
+        MethodBox.ItemsSource = new[]
+        {
+            Loc.T("Cash"), Loc.T("Bank transfer"), Loc.T("Cheque"),
+            Loc.T("Card"), Loc.T("Credit — pay later"),
+        };
         MethodBox.SelectedIndex = 0;
 
         DateBox.SelectedDate = DateTime.Today;
@@ -80,10 +86,10 @@ public partial class PurchaseWindow : Window
         var remaining = total - paid;
 
         OwingText.Text = Editor.Lines.Count == 0
-            ? "Add the products that arrived."
+            ? Loc.T("Add the products that arrived.")
             : remaining <= 0m
-                ? "Paid in full — nothing will be owed."
-                : $"{remaining:N2} DH will be owed to this supplier.";
+                ? Loc.T("Paid in full — nothing will be owed.")
+                : Loc.T("{0} will be owed to this supplier.", Loc.Ltr($"{remaining:N2} DH"));
 
         OwingText.Foreground = (System.Windows.Media.Brush)FindResource(
             remaining > 0m && Editor.Lines.Count > 0 ? "Brush.Danger" : "Brush.Muted");
