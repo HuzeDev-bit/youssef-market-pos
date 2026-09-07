@@ -34,6 +34,11 @@ public partial class AdminWindow : Window
         Services.Responsive.Fit(this);
         DataContext = Vm;
 
+        // Opens filling the screen, because that is what a back office is for — and can now
+        // be pulled off it again. See Chrome for why this is not WindowState.Maximized.
+        Chrome.Fill(this);
+        ShowWindowSize();
+
         Vm.Dates.RangeChanged += (_, _) =>
         {
             UpdateSubtitle();
@@ -207,14 +212,28 @@ public partial class AdminWindow : Window
 
     private void TopBar_Drag(object sender, MouseButtonEventArgs e)
     {
-        if (e.ClickCount == 2)
-        {
-            WindowState = WindowState == WindowState.Maximized
-                ? WindowState.Normal : WindowState.Maximized;
-            return;
-        }
-        if (e.ButtonState == MouseButtonState.Pressed && WindowState != WindowState.Maximized)
-            DragMove();
+        Chrome.Drag(this, e);
+        ShowWindowSize();
+    }
+
+    /// <summary>The middle window control: fill the screen, or come back off it.</summary>
+    private void Size_Click(object sender, RoutedEventArgs e)
+    {
+        Chrome.Toggle(this);
+        ShowWindowSize();
+    }
+
+    /// <summary>
+    /// The button says what pressing it will do, which means it changes with the window.
+    /// A control whose icon never moves reads as one that does not work.
+    /// </summary>
+    private void ShowWindowSize()
+    {
+        var filled = Chrome.FillsTheScreen(this);
+
+        SizeGlyph.Data = (System.Windows.Media.Geometry)FindResource(
+            filled ? "Icon.Restore" : "Icon.Maximize");
+        SizeButton.ToolTip = Loc.T(filled ? "Make the window smaller" : "Fill the screen");
     }
 
     private void Minimise_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;

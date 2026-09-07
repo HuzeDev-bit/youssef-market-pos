@@ -1,4 +1,4 @@
-<!-- Text is laid out in Ideal mode, not Display. Display uses GDI-compatible metrics
+﻿<!-- Text is laid out in Ideal mode, not Display. Display uses GDI-compatible metrics
      tuned for the fonts Windows ships with; it snaps an embedded face to whole pixels
      and crops the result, which is why descenders looked cut off. -->
 <Window x:Class="MarketPos.Views.AdminWindow"
@@ -8,7 +8,6 @@
         Title="السوق — المكتب الخلفي"
         FlowDirection="RightToLeft"
         WindowStyle="None"
-        WindowState="Maximized"
         ResizeMode="CanResize"
         Background="{StaticResource Brush.Page}"
         FontFamily="{StaticResource Font.Base}"
@@ -237,6 +236,11 @@
                         </Button>
                         <Button Style="{StaticResource Button.WinControl}" ToolTip="تصغير" Click="Minimise_Click">
                             <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Minimize}"/>
+                        </Button>
+                        <Button x:Name="SizeButton" Style="{StaticResource Button.WinControl}"
+                                Click="Size_Click" Margin="6,0,0,0">
+                            <Path x:Name="SizeGlyph" Style="{StaticResource Icon.Small}" Width="13" Height="13"
+                                  Data="{StaticResource Icon.Restore}"/>
                         </Button>
                         <Button Style="{StaticResource Button.Close}" ToolTip="إغلاق المكتب الخلفي"
                                 Click="Close_Click" Margin="6,0,0,0">

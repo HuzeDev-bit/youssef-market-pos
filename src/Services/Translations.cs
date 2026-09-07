@@ -385,6 +385,9 @@ public static class Translations
             ["Export CSV"] =
                 ("Exporter en CSV",
                  "تصدير CSV"),
+            ["Fill the screen"] =
+                ("Plein écran",
+                 "ملء الشاشة"),
             ["Find"] =
                 ("Chercher",
                  "بحث"),
@@ -505,6 +508,9 @@ public static class Translations
             ["Make an in-store code for a product with no printed barcode"] =
                 ("Créer un code interne pour un produit sans code-barres imprimé",
                  "إنشاء رمز داخلي لمنتج بدون باركود مطبوع"),
+            ["Make the window smaller"] =
+                ("Réduire la fenêtre",
+                 "تصغير النافذة"),
             ["Manager"] =
                 ("Gérant",
                  "المسؤول"),

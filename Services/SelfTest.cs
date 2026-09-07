@@ -67,6 +67,7 @@ public static class SelfTest
         CheckAnEmptyShelfIsReported(report, ref failures);
         CheckExpiryDatesReadTrue(report, ref failures);
         CheckTheStockListNarrows(report, ref failures);
+        CheckTheWindowsCanBeMoved(report, ref failures);
         CheckEveryDialogFitsASmallScreen(report, ref failures);
         CheckEveryDialogSpeaksTheShopsLanguage(report, ref failures);
         CheckTheNavigationSpeaksTheShopsLanguage(report, ref failures);
@@ -1106,6 +1107,73 @@ public static class SelfTest
         Verdict(report, ref failures, "clearing the range brings the whole shop back",
             back.Count == all.Count,
             $"{back.Count} of {all.Count} products");
+    }
+
+    /// <summary>
+    /// Both windows draw their own frame, and both shipped without the middle window control.
+    ///
+    /// They opened filling the screen with nothing to press to make them smaller, and the one
+    /// drag handler there was refused to move a window that was filling the screen. The result
+    /// was an app that looked seized: it would not budge and it would not let go of the
+    /// monitor. So this asks of each window what a title bar would give it for free — a
+    /// control that changes the size, and a size that actually changes.
+    /// </summary>
+    private static void CheckTheWindowsCanBeMoved(StringBuilder report, ref int failures)
+    {
+        var area = System.Windows.SystemParameters.WorkArea;
+
+        foreach (var (name, window) in new (string, Window)[]
+                 { ("the till", new MainWindow()), ("the back office", new AdminWindow()) })
+        {
+            Verdict(report, ref failures, $"{name} opens filling the screen",
+                Chrome.FillsTheScreen(window),
+                $"{window.Width:0}x{window.Height:0} against a {area.Width:0}x{area.Height:0} desktop");
+
+            // The control itself, not just the code behind it: a handler nothing calls is
+            // exactly what the old double-click-only restore was.
+            var button = window.FindName("SizeButton") as System.Windows.Controls.Button;
+            var glyph = window.FindName("SizeGlyph") as System.Windows.Shapes.Path;
+
+            Verdict(report, ref failures, $"{name} has a control that changes its size",
+                button is not null && glyph is not null,
+                button is null ? "no SizeButton in the top bar" : "SizeButton is there");
+
+            Verdict(report, ref failures, $"{name} says what that control will do",
+                button?.ToolTip is string tip && tip.Length > 0,
+                $"tooltip: {button?.ToolTip}");
+
+            var wide = glyph?.Data;
+
+            Chrome.Toggle(window);
+
+            Verdict(report, ref failures, $"{name} comes off the screen when asked",
+                !Chrome.FillsTheScreen(window)
+                    && window.Width < area.Width - 1 && window.Height < area.Height - 1,
+                $"now {window.Width:0}x{window.Height:0}");
+
+            Verdict(report, ref failures, $"{name} stays on the desktop when it does",
+                window.Left >= area.Left - 1 && window.Top >= area.Top - 1
+                    && window.Left + window.Width <= area.Right + 1
+                    && window.Top + window.Height <= area.Bottom + 1,
+                $"at {window.Left:0},{window.Top:0}");
+
+            Chrome.Toggle(window);
+
+            Verdict(report, ref failures, $"{name} goes back to filling it",
+                Chrome.FillsTheScreen(window),
+                $"{window.Width:0}x{window.Height:0}");
+
+            // Both glyphs have to exist and differ, or the button never looks like it worked.
+            var tall = window.TryFindResource("Icon.Maximize") as System.Windows.Media.Geometry;
+            var small = window.TryFindResource("Icon.Restore") as System.Windows.Media.Geometry;
+
+            Verdict(report, ref failures, $"{name} has both size glyphs, and they differ",
+                tall is not null && small is not null
+                    && tall.ToString() != small.ToString() && wide is not null,
+                tall is null || small is null ? "a glyph is missing" : "two distinct glyphs");
+
+            window.Close();
+        }
     }
 
     private static void CheckTheTillRefusesWhatIsNotThere(StringBuilder report, ref int failures)

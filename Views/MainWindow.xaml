@@ -12,7 +12,9 @@
         Title="Market POS"
         WindowStyle="None"
         FlowDirection="RightToLeft"
-        ResizeMode="NoResize"
+        ResizeMode="CanResize"
+        MinWidth="1024"
+        MinHeight="700"
         ShowInTaskbar="True"
         Background="{StaticResource Brush.Page}"
         FontFamily="{StaticResource Font.Base}"
@@ -108,8 +110,10 @@
                 </Border>
             </Grid>
 
-            <!-- ===================== Top bar ===================== -->
-            <Grid Grid.Row="0" Margin="32,26,32,30">
+            <!-- ===================== Top bar =====================
+                 Also the window's drag handle: there is no title bar to grab. -->
+            <Grid Grid.Row="0" Margin="32,26,32,30" Background="Transparent"
+                  MouseLeftButtonDown="TopBar_Drag">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -195,6 +199,11 @@
 
                     <Button Style="{StaticResource Button.WinControl}" ToolTip="تصغير" Click="Minimize_Click">
                         <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Minimize}"/>
+                    </Button>
+                    <Button x:Name="SizeButton" Style="{StaticResource Button.WinControl}"
+                            Click="Size_Click" Margin="4,0,0,0">
+                        <Path x:Name="SizeGlyph" Style="{StaticResource Icon.Small}" Width="13" Height="13"
+                              Data="{StaticResource Icon.Restore}"/>
                     </Button>
                     <Button Style="{StaticResource Button.Close}" ToolTip="إغلاق" Click="Close_Click" Margin="4,0,0,0">
                         <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Close}"/>

@@ -30,15 +30,11 @@ public partial class MainWindow : Window
         Services.Localizer.Apply(this);
         Services.Responsive.Fit(this);
 
-        // A borderless window with WindowState=Maximized overhangs the screen by the
-        // invisible resize border (~8px per side), which pushed the top-right window
-        // controls partly off-screen and swallowed their clicks. Size to the work area
-        // by hand instead — fills the screen, stays clear of the taskbar, nothing clipped.
-        var work = SystemParameters.WorkArea;
-        Left = work.Left;
-        Top = work.Top;
-        Width = work.Width;
-        Height = work.Height;
+        // Opens filling the screen, which is right for a till and was wrong as the only
+        // thing it could ever do: there was no way to move it and no way to make it smaller.
+        // See Chrome for why this is not WindowState.Maximized.
+        Chrome.Fill(this);
+        ShowWindowSize();
 
         // Session is static, so the handler outlives the window unless it is taken off again.
         EventHandler sessionChanged = (_, _) => UpdateSignInUi();
@@ -477,6 +473,29 @@ public partial class MainWindow : Window
 
     // Custom window controls (top-right) — the window has no native title bar.
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void TopBar_Drag(object sender, MouseButtonEventArgs e)
+    {
+        Chrome.Drag(this, e);
+        ShowWindowSize();
+    }
+
+    /// <summary>The middle window control: fill the screen, or come back off it.</summary>
+    private void Size_Click(object sender, RoutedEventArgs e)
+    {
+        Chrome.Toggle(this);
+        ShowWindowSize();
+    }
+
+    /// <summary>The button says what pressing it will do, so it changes with the window.</summary>
+    private void ShowWindowSize()
+    {
+        var filled = Chrome.FillsTheScreen(this);
+
+        SizeGlyph.Data = (System.Windows.Media.Geometry)FindResource(
+            filled ? "Icon.Restore" : "Icon.Maximize");
+        SizeButton.ToolTip = Loc.T(filled ? "Make the window smaller" : "Fill the screen");
+    }
 
     private void Close_Click(object sender, RoutedEventArgs e) => CloseApp("Close the app?");
 
