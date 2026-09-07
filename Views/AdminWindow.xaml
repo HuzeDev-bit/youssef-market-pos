@@ -1,6 +1,11 @@
 ﻿<!-- Text is laid out in Ideal mode, not Display. Display uses GDI-compatible metrics
      tuned for the fonts Windows ships with; it snaps an embedded face to whole pixels
      and crops the result, which is why descenders looked cut off. -->
+
+<!-- MinWidth/MinHeight sit well under the 1340x770 the back office is drawn against: below
+     that size it is scaled rather than squeezed, so it stays readable at a fraction of the
+     size. There were none at all before, which let the window be dragged down to a title bar
+     with the whole back office folded up inside it. See Services.Responsive. -->
 <Window x:Class="MarketPos.Views.AdminWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -9,6 +14,8 @@
         FlowDirection="RightToLeft"
         WindowStyle="None"
         ResizeMode="CanResize"
+        MinWidth="860"
+        MinHeight="560"
         Background="{StaticResource Brush.Page}"
         FontFamily="{StaticResource Font.Base}"
         UseLayoutRounding="True"

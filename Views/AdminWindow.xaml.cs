@@ -31,7 +31,19 @@ public partial class AdminWindow : Window
         // Translated here as well as on load. Waiting for an event is what left the sidebar in
         // English while every other part of this same window was Arabic.
         Services.Localizer.Apply(this);
-        Services.Responsive.Fit(this);
+
+        // The whole back office scales to the screen it is on: sidebar, header, date filter
+        // and page together.
+        //
+        // The two numbers are the shell's own furniture plus the room a page is promised.
+        // Width: 222 of sidebar, 36 of window margin and 36 of page margin around the 1010
+        // the widest page - the suppliers table - needs before its figures collapse into
+        // ellipses, with a little over for the scrollbar. Height: 202 of logo, title, window
+        // buttons and date chips above the 560 a page is given.
+        //
+        // Set either any smaller and PageHost's own minimums start a scrollbar inside a
+        // window that has just been scaled precisely so that nothing needs to scroll.
+        Services.Responsive.Shell(this, 1340, 770);
         DataContext = Vm;
 
         // Opens filling the screen, because that is what a back office is for — and can now

@@ -69,6 +69,8 @@ public static class SelfTest
         CheckTheStockListNarrows(report, ref failures);
         CheckTheWindowsCanBeMoved(report, ref failures);
         CheckEveryDialogFitsASmallScreen(report, ref failures);
+        CheckADialogFitsTheWindowItOpensOver(report, ref failures);
+        CheckTheShellsFitASmallScreen(report, ref failures);
         CheckEveryDialogSpeaksTheShopsLanguage(report, ref failures);
         CheckTheNavigationSpeaksTheShopsLanguage(report, ref failures);
         CheckPriceCheck(report, ref failures);
@@ -569,10 +571,16 @@ public static class SelfTest
     /// </summary>
     private static void CheckScanningPutsItOnTheSale(StringBuilder report, ref int failures)
     {
-        var scanned = Catalog.Products.FirstOrDefault(p => p.IsScannable);
+        // Barcoded is not enough: it also has to be something the till will actually sell. An
+        // empty shelf is refused at the scanner by design, and picking the first barcode in
+        // the catalogue regardless landed on one — so this read as "scanning is broken" and
+        // then took the whole diagnostic run down with it on the next line.
+        var scanned = Catalog.Products.FirstOrDefault(
+            p => p.IsScannable && p.SoldAtTheTill && !p.IsOutOfStock);
+
         if (scanned is null)
         {
-            report.AppendLine("ok    scanning (nothing in the shop has a printed barcode)");
+            report.AppendLine("ok    scanning (nothing in the shop is both barcoded and on the shelf)");
             return;
         }
 
@@ -590,9 +598,14 @@ public static class SelfTest
             line is not null && line.Product.Name.Length > 0 && line.Product.Price > 0m,
             line is null ? "no line" : $"\"{line.Product.Name}\", {line.LineTotal:N2} DH");
 
+        // Nothing landed, so there is nothing left to ask. Reported above and stopped here:
+        // every check below reads Cart[0], and a diagnostic that crashes on the first fault
+        // it finds reports one fault and hides all the others.
+        if (line is null) return;
+
         // The same item again: one line, two of them. A second line for the same product is
         // how a receipt ends up unreadable and a cashier ends up recounting by hand.
-        var wasQuantity = line?.Quantity ?? 0m;
+        var wasQuantity = line.Quantity;
         till.Vm.SearchText = scanned.Barcode;
         till.Vm.SubmitBarcodeCommand.Execute(null);
 
@@ -907,10 +920,11 @@ public static class SelfTest
     private static void CheckEveryDialogFitsASmallScreen(StringBuilder report, ref int failures)
     {
         // 1366x768 is the shop laptop, and Windows ships those at 125% scaling, which leaves
-        // WPF 614 device-independent pixels to lay a dialog out in. Testing against 768 was
-        // testing against a machine nobody has: the Add supplier dialog passed here and still
-        // ran off the bottom of the screen in the shop, with Save out of reach.
+        // WPF 1093x614 device-independent pixels to lay a dialog out in. Testing against 768
+        // was testing against a machine nobody has: the Add supplier dialog passed here and
+        // still ran off the bottom of the screen in the shop, with Save out of reach.
         const double smallScreen = 614;
+        const double smallScreenWidth = 1093;
 
         (string Name, Func<Window> Make)[] dialogs =
         [
@@ -924,6 +938,8 @@ public static class SelfTest
         ];
 
         var overflowing = new List<string>();
+        var outOfReach = new List<string>();
+        var scrolled = new List<string>();
 
         foreach (var (name, make) in dialogs)
         {
@@ -931,23 +947,174 @@ public static class SelfTest
             try { window = make(); }
             catch { continue; }
 
-            var root = (FrameworkElement)window.Content;
-            root.Measure(new Size(window.Width is double.NaN ? 940 : window.Width, smallScreen));
+            // Put on a screen this machine does not have, through exactly the code the shop's
+            // machine runs — not through a re-implementation of it that can drift.
+            var fitted = Responsive.FitTo(window, new Size(smallScreenWidth, smallScreen));
 
-            // Either it fits, or it can be scrolled. Anything else is content the shop cannot
-            // reach.
-            var fits = root.DesiredSize.Height <= smallScreen;
-            var scrolls = root is System.Windows.Controls.ScrollViewer;
+            if (fitted.Width > smallScreenWidth + 1 || fitted.Height > smallScreen + 1)
+                overflowing.Add($"{name} still wants {fitted.Width:0}x{fitted.Height:0}px");
 
-            if (!fits && !scrolls)
-                overflowing.Add($"{name} wants {root.DesiredSize.Height:0}px and cannot scroll");
+            // And then the question the shop actually cares about: laid out at the size it
+            // ended up, is all of it on the screen? Shrunk content is not lost content, so
+            // this asks the fitted dialog how much room it needs — which for one that was
+            // scaled is its scaled height, and for one that was left long is the scroller's.
+            //
+            // This is the half that failed in the shop. Add supplier fitted the screen by
+            // being cut off at the Save button, and every check here called that a pass.
+            var content = (FrameworkElement)window.Content;
+            content.Measure(new Size(fitted.Width, smallScreen));
+
+            if (window.Content is System.Windows.Controls.ScrollViewer) scrolled.Add(name);
+
+            if (content.DesiredSize.Height > smallScreen + 1)
+                outOfReach.Add($"{name} needs {content.DesiredSize.Height:0}px "
+                             + $"of a {smallScreen:0}px screen and cannot be scrolled");
         }
 
-        Verdict(report, ref failures, "every dialog fits a small screen, or scrolls",
+        Verdict(report, ref failures, "every dialog fits a small screen",
             overflowing.Count == 0,
             overflowing.Count == 0
-                ? $"{dialogs.Length} dialogs checked against a {smallScreen:0}px screen"
+                ? $"{dialogs.Length} dialogs checked against a {smallScreenWidth:0}x{smallScreen:0} screen"
                 : string.Join("; ", overflowing));
+
+        Verdict(report, ref failures, "and nothing on one is out of reach",
+            outOfReach.Count == 0,
+            outOfReach.Count == 0
+                ? scrolled.Count == 0
+                    ? "all of them fit whole, none had to scroll"
+                    : $"scrolled rather than shrunk past reading size: {string.Join(", ", scrolled)}"
+                : string.Join("; ", outOfReach));
+    }
+
+    /// <summary>
+    /// A dialog belongs to a window, not to a monitor.
+    ///
+    /// Every check above puts dialogs on a small screen, and every one of them passed while
+    /// the shop was still seeing the fault: pull the back office off full screen on a large
+    /// monitor and Settings went on opening at its full 500x1042 over a 900px window, hanging
+    /// off both ends of the thing it belongs to, because the screen behind it had room to
+    /// spare. The screen was never the right question.
+    /// </summary>
+    private static void CheckADialogFitsTheWindowItOpensOver(StringBuilder report, ref int failures)
+    {
+        try
+        {
+            // A back office pulled down to well under the monitor it is running on.
+            const double width = 900, height = 620;
+
+            var shell = new AdminWindow
+            {
+                Width = width,
+                Height = height,
+
+                // Shown, because WPF refuses to make a window an Owner until it has been —
+                // and shown far off the side of every monitor, because a diagnostic run has
+                // no business flashing windows at whoever started it.
+                WindowStartupLocation = WindowStartupLocation.Manual,
+                Left = -30000,
+                Top = -30000,
+                ShowInTaskbar = false,
+            };
+            shell.ShowWhatThisPersonMaySee();
+            shell.Show();
+
+            var tooBig = new List<string>();
+
+            (string Name, Func<Window> Make)[] dialogs =
+            [
+                ("Settings", () => new Views.SettingsWindow()),
+                ("Add supplier", () => new SupplierWindow(null)),
+                ("Add product", () => new ProductWindow(null)),
+                ("Record a delivery", () => new PurchaseWindow(null)),
+            ];
+
+            foreach (var (name, make) in dialogs)
+            {
+                Window dialog;
+                try { dialog = make(); }
+                catch { continue; }
+
+                dialog.Owner = shell;
+
+                var fitted = Responsive.FitTo(dialog, Responsive.RoomFor(dialog));
+
+                if (fitted.Width > width + 1 || fitted.Height > height + 1)
+                    tooBig.Add($"{name} opens at {fitted.Width:0}x{fitted.Height:0} "
+                             + $"over a {width:0}x{height:0} window");
+            }
+
+            shell.Close();
+
+            Verdict(report, ref failures, "a dialog fits the window it opens over, not the screen",
+                tooBig.Count == 0,
+                tooBig.Count == 0
+                    ? $"{dialogs.Length} dialogs over a {width:0}x{height:0} back office "
+                    + $"on a {SystemParameters.WorkArea.Width:0}x{SystemParameters.WorkArea.Height:0} screen"
+                    : string.Join("; ", tooBig));
+        }
+        catch (Exception error)
+        {
+            failures++;
+            report.AppendLine($"FAIL  dialog fits its window: {error.GetType().Name}: {error.Message}");
+        }
+    }
+
+    /// <summary>
+    /// The two windows that fill the screen, on a screen that is not this one.
+    ///
+    /// The till and the back office were laid out on a 1920x1080 monitor, and every number in
+    /// them was typed against it. Handed to a shop with a 1366x768 laptop they kept every one
+    /// of those numbers and simply ran off the bottom: the back office lost the last panel of
+    /// the dashboard, and the till lost the Pay button under the fold.
+    ///
+    /// Both are wrapped in a ScaleHost that draws them at whatever size the screen actually
+    /// is, so this asks the only question that matters — laid out on the shop's screen, does
+    /// any of it end up outside the screen.
+    /// </summary>
+    private static void CheckTheShellsFitASmallScreen(StringBuilder report, ref int failures)
+    {
+        const double width = 1093, height = 614;
+
+        (string Name, Func<Window> Make)[] shells =
+        [
+            ("till", () => new MainWindow()),
+            ("back office", () => new AdminWindow()),
+        ];
+
+        var faults = new List<string>();
+        var scales = new List<string>();
+
+        foreach (var (name, make) in shells)
+        {
+            Window window;
+            try { window = make(); }
+            catch (Exception error) { faults.Add($"{name} would not build: {error.Message}"); continue; }
+
+            var root = (FrameworkElement)window.Content;
+
+            if (root is not Controls.ScaleHost host)
+            {
+                faults.Add($"{name} is not scaled to the screen at all");
+                continue;
+            }
+
+            root.Measure(new Size(width, height));
+            root.Arrange(new Rect(0, 0, width, height));
+            root.UpdateLayout();
+
+            scales.Add($"{name} {host.Scale:0.00}");
+
+            if (root.DesiredSize.Width > width + 1 || root.DesiredSize.Height > height + 1)
+                faults.Add($"{name} overflows by "
+                         + $"{Math.Max(0, root.DesiredSize.Width - width):0}x"
+                         + $"{Math.Max(0, root.DesiredSize.Height - height):0}px");
+        }
+
+        Verdict(report, ref failures, "the till and the back office fit a small screen",
+            faults.Count == 0,
+            faults.Count == 0
+                ? $"laid out at {width:0}x{height:0} — {string.Join(", ", scales)}"
+                : string.Join("; ", faults));
     }
 
     private static void CheckAnEmptyShelfIsReported(StringBuilder report, ref int failures)

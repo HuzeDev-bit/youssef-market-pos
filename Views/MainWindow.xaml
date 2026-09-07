@@ -1,6 +1,11 @@
 ﻿<!-- Text is laid out in Ideal mode, not Display. Display uses GDI-compatible metrics
      tuned for the fonts Windows ships with; it snaps an embedded face to whole pixels
      and crops the result, which is why descenders looked cut off. -->
+
+<!-- MinWidth/MinHeight sit well under the 1100x700 the till is drawn against, because below
+     that size it is scaled rather than squeezed and stays perfectly usable. They were 1024x700
+     — the drawn size, treated as a floor — which is why a shop with a small screen was handed
+     a window it could not make small enough to fit on it. See Services.Responsive. -->
 <Window x:Class="MarketPos.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -13,8 +18,8 @@
         WindowStyle="None"
         FlowDirection="RightToLeft"
         ResizeMode="CanResize"
-        MinWidth="1024"
-        MinHeight="700"
+        MinWidth="760"
+        MinHeight="520"
         ShowInTaskbar="True"
         Background="{StaticResource Brush.Page}"
         FontFamily="{StaticResource Font.Base}"

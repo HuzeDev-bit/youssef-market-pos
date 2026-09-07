@@ -350,14 +350,40 @@ public static class IconSheet
         root.FlowDirection = Services.Loc.IsRightToLeft
             ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 
-        // Measured against a tall box first: a window that sizes to its content reports the
-        // height it wants, and one that fills the screen reports far less than it uses.
-        root.Measure(new Size(width, 2000));
-        var height = Math.Max(root.DesiredSize.Height, window is Views.MainWindow ? 900 : 0);
+        // Photographed on the shop's screen, not on this one — and through the same code that
+        // fits the app to it, so what comes out is what the shop sees rather than a picture of
+        // the developer's monitor with a different number written under it.
+        var (screenWidth, screenHeight) = ShotSize();
+
+        double height;
+
+        if (window is Views.MainWindow)
+        {
+            // The till fills the screen, so the screen is its size. Its contents scale to fit.
+            width = screenWidth;
+            height = screenHeight;
+        }
+        else
+        {
+            // Everything else sizes to its content and is scaled down if that will not fit.
+            var fitted = Responsive.FitTo(window, new Size(screenWidth, screenHeight));
+            width = (int)Math.Round(Math.Min(width, fitted.Width));
+
+            // Measured against a tall box: a window that sizes to its content reports the
+            // height it wants, which is the height worth photographing.
+            root.Measure(new Size(width, screenHeight));
+            height = Math.Min(root.DesiredSize.Height, screenHeight);
+        }
+
+        root.Measure(new Size(width, height));
         root.Arrange(new Rect(0, 0, width, height));
         root.UpdateLayout();
 
-        var bitmap = new RenderTargetBitmap(width, (int)root.ActualHeight, 96, 96,
+        // The arranged height, not ActualHeight. A scaled-down dialog carries a LayoutTransform,
+        // and ActualHeight is measured inside that transform — it reports the height the dialog
+        // would have had at full size, which drew a small dialog on a canvas half of which was
+        // empty and made a dialog that fits look like one that does not.
+        var bitmap = new RenderTargetBitmap(width, (int)Math.Round(height), 96, 96,
                                             PixelFormats.Pbgra32);
         bitmap.Render(root);
 

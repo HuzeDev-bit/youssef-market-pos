@@ -28,7 +28,11 @@ public partial class MainWindow : Window
         // Translated here as well as on load. Waiting for an event is what left the sidebar in
         // English while every other part of this same window was Arabic.
         Services.Localizer.Apply(this);
-        Services.Responsive.Fit(this);
+
+        // The whole till scales to the screen it is on: rail, header, product grid and cart
+        // together, as one piece. 1100x700 is the smallest it is genuinely usable at - three
+        // product tiles beside a full cart - and above that size nothing happens at all.
+        Services.Responsive.Shell(this, 1100, 700);
 
         // Opens filling the screen, which is right for a till and was wrong as the only
         // thing it could ever do: there was no way to move it and no way to make it smaller.
