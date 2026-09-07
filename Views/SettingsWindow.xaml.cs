@@ -15,8 +15,15 @@ namespace MarketPos.Views;
 /// </summary>
 public partial class SettingsWindow : Window
 {
-    /// <summary>One row of the language list: the enum, and what that language calls itself.</summary>
-    private sealed record LanguageChoice(Language Language, string Label);
+    /// <summary>
+    /// The languages, in the order they are offered. Held as a plain list so the drop-down can
+    /// be filled with strings: a themed ComboBox in this app ignores DisplayMemberPath and asks
+    /// each item for a Name, so a box handed objects printed its own type declaration into
+    /// itself — which is what the language list was doing, in the one screen a shop opens to
+    /// change the language.
+    /// </summary>
+    private static readonly Models.Language[] Languages =
+        [Models.Language.Arabic, Models.Language.French, Models.Language.English];
 
     private const string UseDefault = "(Windows default printer)";
     private const string FileSuffix = "   — saves a file, not a receipt";
@@ -56,12 +63,8 @@ public partial class SettingsWindow : Window
 
         // Each language is offered in its own words: a list of languages is read by somebody
         // who does not yet have the app in theirs.
-        LanguageBox.ItemsSource = Enum.GetValues<Language>()
-            .Select(l => new LanguageChoice(l, Loc.NativeName(l)))
-            .ToList();
-        LanguageBox.DisplayMemberPath = nameof(LanguageChoice.Label);
-        LanguageBox.SelectedItem = (LanguageBox.ItemsSource as List<LanguageChoice>)!
-            .First(c => c.Language == Loc.Current);
+        LanguageBox.ItemsSource = Languages.Select(Loc.NativeName).ToList();
+        LanguageBox.SelectedIndex = Math.Max(0, Array.IndexOf(Languages, Loc.Current));
 
         ServerBox.Text = AppSettings.Current.ServerAddress;
         TillNameBox.Text = AppSettings.Current.TillLabel;
@@ -108,7 +111,9 @@ public partial class SettingsWindow : Window
         AppSettings.Current.ServerAddress = Address;
         AppSettings.Current.TillName = TillNameBox.Text.Trim();
 
-        var chosen = (LanguageBox.SelectedItem as LanguageChoice)?.Language ?? Loc.Current;
+        var chosen = LanguageBox.SelectedIndex >= 0
+            ? Languages[LanguageBox.SelectedIndex]
+            : Loc.Current;
         var languageChanged = chosen != Loc.Current;
         AppSettings.Current.Language = Loc.Code(chosen);
 

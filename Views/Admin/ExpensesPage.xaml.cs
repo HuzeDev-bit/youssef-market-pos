@@ -222,8 +222,9 @@ public partial class ExpensesPage : AdminPageBase
         EmptyTitle.Text = filtered ? "Nothing matches" : "No bills recorded";
         EmptyBody.Text = filtered
             ? "Try a different search, or another kind."
-            : "Put in the rent, the light, the water and the internet. Mark the ones that come "
-            + "back every month and the shop will know what it has to take before it makes anything.";
+            : Loc.T("Put in the rent, the light, the water and the internet. Mark the ones "
+                  + "that come back every month and the shop will know what it has to take "
+                  + "before it makes anything.");
     }
 
     // ============================== Actions ==============================

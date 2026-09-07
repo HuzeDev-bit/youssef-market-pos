@@ -179,7 +179,7 @@ public sealed class SupplierGoods
     /// </summary>
     public bool PriceWentUp => LastUnitCost > AverageUnitCost && AverageUnitCost > 0m;
 
-    public string QuantityLabel => $"{Quantity:0.###}";
+    public string QuantityLabel => Services.Loc.Ltr($"{Quantity:0.###}");
     public string LastCostLabel =>
         Services.Loc.T("{0} each", Services.Loc.Ltr($"{LastUnitCost:N2}"));
 
@@ -486,9 +486,9 @@ public sealed class StockItem
     /// How much is on the shelf, with the unit when it matters. "3" and "3 kg" are different
     /// facts, and a stock list that shows both as "3" is one a shopkeeper cannot count against.
     /// </summary>
-    public string StockLabel => Unit == Unit.Kg
+    public string StockLabel => Services.Loc.Ltr(Unit == Unit.Kg
         ? $"{Stock:0.###} kg"
-        : Stock.ToString("0.###");
+        : Stock.ToString("0.###"));
 
     /// <summary>
     /// When it goes off, said the way it would be said out loud. A date alone makes the reader
@@ -497,7 +497,7 @@ public sealed class StockItem
     public string ExpiryLabel => DaysToExpiry switch
     {
         null => "—",
-        < 0 and var d => $"{-d}d ago",
+        < 0 and var d => Services.Loc.Ltr($"{-d}d") + " " + Services.Loc.T("ago"),
         0 => "Today",
         1 => "Tomorrow",
         <= 60 and var d => $"in {d}d",

@@ -150,7 +150,8 @@ public partial class ActivityPage : AdminPageBase
         EmptyTitle.Text = filtered ? "Nothing matches" : "Nothing happened";
         EmptyBody.Text = filtered
             ? "Try a different search, or another kind."
-            : $"No changes and no stock moved {Dates.RangeLabel.ToLowerInvariant()}.";
+            : Loc.T("No changes and no stock moved {0}.",
+                    Loc.T(Dates.RangeLabel).ToLowerInvariant());
     }
 
     private void Filter_Changed(object sender, RoutedEventArgs e)

@@ -358,6 +358,9 @@ public static class Translations
             ["Find"] =
                 ("Chercher",
                  "بحث"),
+            ["GOODS"] =
+                ("MARCHANDISE",
+                 "البضاعة"),
             ["GROSS PROFIT"] =
                 ("BÉNÉFICE BRUT",
                  "الربح الإجمالي"),
@@ -529,6 +532,9 @@ public static class Translations
             ["No categories yet"] =
                 ("Aucune catégorie",
                  "لا توجد فئات بعد"),
+            ["No changes and no stock moved {0}."] =
+                ("Aucune modification et aucun mouvement de stock {0}.",
+                 "لا تغييرات ولا حركات مخزون {0}."),
             ["No items listed"] =
                 ("Aucun article listé",
                  "لا توجد منتجات مدرجة"),
@@ -802,6 +808,9 @@ public static class Translations
             ["Put goods into the shop"] =
                 ("Faire entrer la marchandise",
                  "إدخال البضاعة إلى المتجر"),
+            ["Put in the rent, the light, the water and the internet. Mark the ones that come back every month and the shop will know what it has to take before it makes anything."] =
+                ("Saisissez le loyer, l'électricité, l'eau et internet. Cochez celles qui reviennent chaque mois et la boutique saura ce qu'elle doit encaisser avant de gagner quoi que ce soit.",
+                 "أدخل الكراء والكهرباء والماء والإنترنت. حدّد ما يتكرر كل شهر ليعرف المتجر كم عليه أن يحصّل قبل أن يربح شيئاً."),
             ["Put the items back on the shelf"] =
                 ("Remettre les articles en rayon",
                  "إعادة المنتجات إلى الرف"),
@@ -1354,6 +1363,9 @@ public static class Translations
             ["after {0} refunded"] =
                 ("après {0} remboursés",
                  "بعد استرجاع {0}"),
+            ["ago"] =
+                ("passés",
+                 "مضت"),
             ["all with pictures"] =
                 ("toutes avec une image",
                  "كلها بصور"),
@@ -1534,6 +1546,9 @@ public static class Translations
             ["to {0} workers"] =
                 ("à {0} employés",
                  "لـ {0} موظفين"),
+            ["today"] =
+                ("aujourd'hui",
+                 "اليوم"),
             ["what actually went to staff in this period"] =
                 ("ce qui est réellement allé au personnel sur cette période",
                  "ما ذهب فعلاً إلى الموظفين في هذه الفترة"),
@@ -1546,6 +1561,9 @@ public static class Translations
             ["working here"] =
                 ("travaillent ici",
                  "يعملون هنا"),
+            ["yesterday"] =
+                ("hier",
+                 "أمس"),
             ["{0} ({1} left)"] =
                 ("{0} ({1} restants)",
                  "{0} (بقي {1})"),
@@ -1564,6 +1582,9 @@ public static class Translations
             ["{0} changes · {1} stock movements · {2}"] =
                 ("{0} modifications · {1} mouvements de stock · {2}",
                  "{0} تغييرات · {1} حركات مخزون · {2}"),
+            ["{0} days ago"] =
+                ("il y a {0} jours",
+                 "قبل {0} أيام"),
             ["{0} each"] =
                 ("{0} l'unité",
                  "{0} للوحدة"),
@@ -1693,6 +1714,12 @@ public static class Translations
             ["{0} unpaid on this delivery"] =
                 ("{0} impayés sur cette livraison",
                  "{0} غير مدفوعة على هذا التوصيل"),
+            ["{0} week ago"] =
+                ("il y a {0} semaine",
+                 "قبل أسبوع"),
+            ["{0} weeks ago"] =
+                ("il y a {0} semaines",
+                 "قبل {0} أسابيع"),
             ["{0} with a picture"] =
                 ("{0} avec une image",
                  "{0} بصورة"),

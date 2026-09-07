@@ -109,10 +109,11 @@ public partial class AddProductPage : AdminPageBase
         var days = (DateTime.Today - product.CreatedAt.Date).Days;
         return days switch
         {
-            0 => "today",
-            1 => "yesterday",
-            < 7 => $"{days} days ago",
-            < 30 => $"{days / 7} week{(days / 7 == 1 ? string.Empty : "s")} ago",
+            0 => Loc.T("today"),
+            1 => Loc.T("yesterday"),
+            < 7 => Loc.T("{0} days ago", days),
+            < 14 => Loc.T("{0} week ago", 1),
+            < 30 => Loc.T("{0} weeks ago", days / 7),
             _ => product.CreatedAt.ToString("d MMM yyyy"),
         };
     }

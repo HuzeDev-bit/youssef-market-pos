@@ -48,6 +48,7 @@ public static class SelfTest
 
         CheckTopBarLayout(report, ref failures, shell);
         CheckComboDisplay(report, ref failures);
+        CheckEveryDropDownReads(report, ref failures);
         CheckScannerRule(report, ref failures);
         CheckAddProductFields(report, ref failures, shell);
         CheckDashboardLayout(report, ref failures, shell);
@@ -63,6 +64,7 @@ public static class SelfTest
         CheckScanningPutsItOnTheSale(report, ref failures);
         CheckTheBasketAsksOneThing(report, ref failures);
         CheckTheTillRefusesWhatIsNotThere(report, ref failures);
+        CheckAnEmptyShelfIsReported(report, ref failures);
         CheckPriceCheck(report, ref failures);
         CheckStandaloneShopIsLeftAlone(report, ref failures);
         CheckTillAsCashier(report, ref failures);
@@ -164,6 +166,44 @@ public static class SelfTest
     /// Every other check passed while it did, because the control constructed, bound and laid
     /// out perfectly well. Only reading the rendered text catches it.
     /// </summary>
+    /// <summary>
+    /// Every drop-down the shop actually opens, checked for the one failure this app's themed
+    /// ComboBox has: a re-templated box ignores DisplayMemberPath and asks the item for its
+    /// Name, so a row that does not have one prints its own type declaration into the box.
+    ///
+    /// The general check below proves the template works. This proves each real list feeds it
+    /// something it can read — which is the half that broke, on the language list, in a screen
+    /// nobody looks at twice.
+    /// </summary>
+    private static void CheckEveryDropDownReads(StringBuilder report, ref int failures)
+    {
+        var settings = new Views.SettingsWindow();
+        FrameworkElement root = (FrameworkElement)settings.Content;
+        root.Measure(new Size(500, 1200));
+        root.Arrange(new Rect(0, 0, 500, 1200));
+        root.UpdateLayout();
+
+        var unreadable = new List<string>();
+        foreach (var box in Descendants(root).OfType<System.Windows.Controls.ComboBox>())
+        {
+            if (box.SelectedItem is null) continue;
+
+            var shown = string.Concat(Descendants(box)
+                .OfType<System.Windows.Controls.TextBlock>()
+                .Select(t => t.Text));
+
+            // A record or class printed raw always carries its own type name and braces.
+            if (shown.Contains('{') || shown.Contains("= "))
+                unreadable.Add($"{box.Name}: {shown}");
+        }
+
+        Verdict(report, ref failures, "every drop-down shows a word, not an object",
+            unreadable.Count == 0,
+            unreadable.Count == 0
+                ? "settings drop-downs all read as text"
+                : string.Join("; ", unreadable));
+    }
+
     private static void CheckComboDisplay(StringBuilder report, ref int failures)
     {
         try
@@ -716,6 +756,41 @@ public static class SelfTest
     /// and both of them name the product: "error" on its own tells the person at the counter
     /// nothing they can act on.
     /// </summary>
+    /// <summary>
+    /// An empty shelf has to reach the owner, not just the cashier who met it.
+    ///
+    /// The till says no at the counter, which stops the sale but tells nobody to reorder. The
+    /// alert is the other half: it carries the product's name onto the Reports page and into
+    /// the count on the sidebar, so a shop that ran out this morning knows by this evening.
+    /// </summary>
+    private static void CheckAnEmptyShelfIsReported(StringBuilder report, ref int failures)
+    {
+        var empty = StockRepository.OutOfStock();
+        var alerts = Notifications.Build();
+
+        if (empty.Count == 0)
+        {
+            var clear = alerts.All(a => !a.Title.Contains("out of stock", StringComparison.OrdinalIgnoreCase));
+            Verdict(report, ref failures, "nothing is called out of stock when nothing is",
+                clear, "no empty shelves, and no alert claiming otherwise");
+            return;
+        }
+
+        // The alert names the products, so the owner can act without opening another page.
+        var told = alerts.FirstOrDefault(a => a.GoTo == AdminPage.Inventory
+                                           && a.Detail.Contains(empty[0].Name));
+
+        Verdict(report, ref failures, "an empty shelf raises an alert that names the product",
+            told is not null,
+            told is not null
+                ? $"{told.Title} — {told.Detail}"
+                : $"{empty.Count} product(s) at zero and no alert mentions {empty[0].Name}");
+
+        Verdict(report, ref failures, "and it is urgent, not a note",
+            told is null || told.Level == AlertLevel.Danger,
+            $"level is {told?.Level}");
+    }
+
     private static void CheckTheTillRefusesWhatIsNotThere(StringBuilder report, ref int failures)
     {
         var empty = Catalog.Products.FirstOrDefault(p => p.IsOutOfStock && p.Barcode.Length > 0);

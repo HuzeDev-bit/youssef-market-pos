@@ -49,7 +49,7 @@
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
                     <StackPanel x:Name="NavList">
-                        <TextBlock Text="اليومي" Style="{StaticResource Text.Eyebrow}" Margin="12,4,0,6"/>
+                        <TextBlock Text="DAILY" Style="{StaticResource Text.Eyebrow}" Margin="12,4,0,6"/>
                         <RadioButton x:Name="NavDashboard" Style="{StaticResource Button.Nav}" GroupName="admin"
                                      Checked="Nav_Checked" Tag="Dashboard">
                             <StackPanel Orientation="Horizontal">
@@ -57,7 +57,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Dashboard}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Dashboard.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="لوحة التحكم" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Dashboard" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
@@ -67,11 +67,11 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.SalesHistory}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.SalesHistory.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="سجل المبيعات" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Sales history" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
 
-                        <TextBlock Text="المخزون" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <TextBlock Text="GOODS" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
                                      Checked="Nav_Checked" Tag="AddProduct">
                             <StackPanel Orientation="Horizontal">
@@ -79,7 +79,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.AddProduct}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.AddProduct.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="إضافة منتج" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Add product" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
@@ -89,7 +89,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Categories}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Categories.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="الفئات" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Categories" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
@@ -99,11 +99,11 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Inventory}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Inventory.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="الجرد" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Inventory" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
 
-                        <TextBlock Text="المالية" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <TextBlock Text="MONEY" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
                                      Checked="Nav_Checked" Tag="Suppliers">
                             <StackPanel Orientation="Horizontal">
@@ -111,7 +111,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Suppliers}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Suppliers.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="الموردون" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Suppliers" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
@@ -121,11 +121,11 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Expenses}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Expenses.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="المصاريف" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Expenses" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
 
-                        <TextBlock Text="الأشخاص" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <TextBlock Text="PEOPLE" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
                         <RadioButton Style="{StaticResource Button.Nav}" GroupName="admin"
                                      Checked="Nav_Checked" Tag="Workers">
                             <StackPanel Orientation="Horizontal">
@@ -133,11 +133,11 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Workers}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Workers.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="الموظفون" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Workers" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
 
-                        <TextBlock Text="التحليلات" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
+                        <TextBlock Text="INSIGHT" Style="{StaticResource Text.Eyebrow}" Margin="12,16,0,6"/>
                         <RadioButton x:Name="NavReports" Style="{StaticResource Button.Nav}" GroupName="admin"
                                      Checked="Nav_Checked" Tag="Reports">
                             <Grid>
@@ -146,7 +146,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Reports}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Reports.Filled}"/>
                                 </Grid>
-                                    <TextBlock Text="التقارير" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Reports" Margin="11,0,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Border Style="{StaticResource Badge.Bad}" HorizontalAlignment="Right"
                                         Padding="7,1" CornerRadius="9"
@@ -162,7 +162,7 @@
                                     <Path Style="{StaticResource Icon.NavOutline}" Data="{StaticResource Nav.Activity}"/>
                                     <Path Style="{StaticResource Icon.NavSolid}" Data="{StaticResource Nav.Activity.Filled}"/>
                                 </Grid>
-                                <TextBlock Text="سجل النشاط" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Activity log" Margin="11,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                         <Border Height="14"/>
@@ -223,7 +223,7 @@
                          that looks like the logo above it. It had been a step above body text,
                          which left every page reading as one flat surface. -->
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock x:Name="PageTitle" Text="لوحة التحكم"
+                        <TextBlock x:Name="PageTitle" Text="Dashboard"
                                    Style="{StaticResource Text.Title}"
                                    FontSize="{StaticResource Size.Display}"/>
                         <TextBlock x:Name="PageSubtitle" Style="{StaticResource Text.Muted}"
@@ -266,7 +266,7 @@
                                     Visibility="{Binding Dates.IsCustom, Converter={StaticResource BoolVis}}">
                             <DatePicker Style="{StaticResource DatePicker.Field}" Width="128"
                                         SelectedDate="{Binding Dates.CustomFrom, Mode=TwoWay}"/>
-                            <TextBlock Text="إلى" Style="{StaticResource Text.Muted}" Margin="8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="to" Style="{StaticResource Text.Muted}" Margin="8,0" VerticalAlignment="Center"/>
                             <DatePicker Style="{StaticResource DatePicker.Field}" Width="128"
                                         SelectedDate="{Binding Dates.CustomTo, Mode=TwoWay}"/>
                         </StackPanel>
