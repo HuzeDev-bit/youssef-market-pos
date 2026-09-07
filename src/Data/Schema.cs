@@ -355,7 +355,23 @@ internal static class Schema
             ("returned_qty",  "TEXT    NOT NULL DEFAULT '0'"),
         });
 
+        BlankDatesBecomeNull(connection);
         SeedExpenseCategories(connection);
+    }
+
+    /// <summary>
+    /// Turns an empty expiry string into a real NULL.
+    ///
+    /// Nothing is lost: an empty string and NULL both mean the product has no expiry date.
+    /// But the two are not the same to read back — an empty string parses to year one, and
+    /// the products list showed sound stock as long expired. <see cref="Db.DateOrNull"/> now
+    /// refuses to be fooled either way; this simply stops the shop carrying the confusion.
+    /// </summary>
+    private static void BlankDatesBecomeNull(SqliteConnection connection)
+    {
+        using var tidy = connection.CreateCommand();
+        tidy.CommandText = "UPDATE products SET expires_on = NULL WHERE TRIM(COALESCE(expires_on, '')) = '';";
+        tidy.ExecuteNonQuery();
     }
 
     private static void AddColumns(SqliteConnection connection, string table,

@@ -28,8 +28,26 @@ internal static class Db
     public static int Int(this SqliteDataReader r, int i) => r.IsDBNull(i) ? 0 : r.GetInt32(i);
     public static bool Bool(this SqliteDataReader r, int i) => !r.IsDBNull(i) && r.GetInt32(i) != 0;
     public static DateTime Date(this SqliteDataReader r, int i) => r.IsDBNull(i) ? DateTime.MinValue : ParseStamp(r.GetString(i));
-    public static DateTime? DateOrNull(this SqliteDataReader r, int i) =>
-        r.IsDBNull(i) ? null : ParseStamp(r.GetString(i));
+    /// <summary>
+    /// A date that may not be there.
+    ///
+    /// NULL is the honest way to say "no date", but a column can also hold an empty string:
+    /// a row written by an older build, or one where the field was simply left blank. Parsing
+    /// that gives year one, and the products list then reported perfectly good stock as having
+    /// expired 739,865 days ago, in red. Anything that is not a date is no date.
+    /// </summary>
+    public static DateTime? DateOrNull(this SqliteDataReader r, int i)
+    {
+        if (r.IsDBNull(i)) return null;
+
+        var text = r.GetString(i);
+        if (string.IsNullOrWhiteSpace(text)) return null;
+
+        return DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind,
+                                 out var when)
+            ? when
+            : null;
+    }
 
     /// <summary>Adds a parameter, mapping null to DBNull so callers need not.</summary>
     public static SqliteCommand With(this SqliteCommand command, string name, object? value)

@@ -9,10 +9,22 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ==================== Search ==================== -->
+        <!-- ==================== Search and filters ====================
+             Controls on one line, and the sentence describing what they produced on the
+             next. The summary used to share the line with the search box and was the first
+             thing squeezed out of existence when anything else was added to it. -->
         <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
@@ -25,15 +37,51 @@
                              Background="Transparent" BorderThickness="0" Margin="33,0,10,0"
                              VerticalContentAlignment="Center" FontSize="13"
                              CaretBrush="{StaticResource Brush.Text}" TextChanged="Filter_Changed"/>
-                    <TextBlock Text="اسم المنتج أو الباركود" Style="{StaticResource Text.Muted}"
+                    <TextBlock Text="Product name or barcode" Style="{StaticResource Text.Muted}"
                                Margin="35,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
                                Visibility="{Binding Text, ElementName=SearchBox,
                                             Converter={StaticResource InvStrVis}}"/>
                 </Grid>
             </Border>
 
-            <TextBlock x:Name="Summary" Grid.Column="1" Style="{StaticResource Text.Muted}"
-                       VerticalAlignment="Center" Margin="16,0,0,0"
+            <!-- Only the categories the shop actually made, plus a way back out of the filter. -->
+            <ComboBox x:Name="CategoryFilter" Grid.Column="1" Style="{StaticResource ComboBox.Form}"
+                      Width="170" Height="36" Margin="10,0,0,0"
+                      ItemTemplate="{StaticResource Combo.Name}" SelectionChanged="Filter_Changed"/>
+
+            <!-- The range reads the expiry date, not the date the product was added: on a
+                 stocktake the question is always what goes off between now and then. -->
+            <TextBlock Grid.Column="2" Text="EXPIRES BETWEEN" Style="{StaticResource Text.Eyebrow}"
+                       VerticalAlignment="Center" Margin="16,0,10,0"/>
+
+            <DatePicker x:Name="FromDate" Grid.Column="3" Style="{StaticResource DatePicker.Field}"
+                        Width="146" Height="36" SelectedDateChanged="Dates_Changed"/>
+
+            <!-- An empty date box is a blank rectangle with a calendar on it, and says
+                 nothing about which end of the range it is. The hint steps aside the
+                 moment a date is picked. -->
+            <TextBlock Grid.Column="3" Text="Start date" IsHitTestVisible="False"
+                       VerticalAlignment="Center" Margin="12,0,0,0"
+                       Style="{StaticResource Hint.Date}"
+                       Tag="{Binding SelectedDate, ElementName=FromDate}"/>
+
+            <TextBlock Grid.Column="4" Text="&#x2014;" Style="{StaticResource Text.Muted}"
+                       VerticalAlignment="Center" Margin="8,0,8,0"/>
+
+            <DatePicker x:Name="ToDate" Grid.Column="5" Style="{StaticResource DatePicker.Field}"
+                        Width="146" Height="36" SelectedDateChanged="Dates_Changed"/>
+
+            <TextBlock Grid.Column="5" Text="End date" IsHitTestVisible="False"
+                       VerticalAlignment="Center" Margin="12,0,0,0"
+                       Style="{StaticResource Hint.Date}"
+                       Tag="{Binding SelectedDate, ElementName=ToDate}"/>
+
+            <Button x:Name="ClearFilters" Grid.Column="6" Style="{StaticResource Button.SmallMuted}"
+                    Height="36" Margin="10,0,0,0" HorizontalAlignment="Left"
+                    Content="Clear filters" Click="Clear_Click" Visibility="Collapsed"/>
+
+            <TextBlock x:Name="Summary" Grid.Row="1" Grid.ColumnSpan="7"
+                       Style="{StaticResource Text.Muted}" Margin="2,10,0,0"
                        TextTrimming="CharacterEllipsis"/>
         </Grid>
 
@@ -50,16 +98,18 @@
                 <Grid Grid.Row="0" Margin="12,0,12,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="180"/>
-                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="170"/>
+                        <ColumnDefinition Width="170"/>
                         <ColumnDefinition Width="44"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="المنتج" Style="{StaticResource Text.ColumnHead}"/>
-                    <TextBlock Grid.Column="1" Text="QUANTITY" Style="{StaticResource Text.ColumnHead}"
+                    <TextBlock Grid.Column="0" Text="PRODUCT" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="1" Text="EXPIRES" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="2" Text="QUANTITY" Style="{StaticResource Text.ColumnHead}"
                                TextAlignment="Right"/>
-                    <TextBlock Grid.Column="2" Text="COST EACH" Style="{StaticResource Text.ColumnHead}"
+                    <TextBlock Grid.Column="3" Text="COST EACH" Style="{StaticResource Text.ColumnHead}"
                                TextAlignment="Right"/>
-                    <TextBlock Grid.Column="3" Text=""/>
+                    <TextBlock Grid.Column="4" Text=""/>
                 </Grid>
 
                 <Border Grid.Row="1" Style="{StaticResource Rule}" Margin="12,0,12,4"
@@ -76,18 +126,26 @@
                                         <Grid Height="38">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="180"/>
-                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="170"/>
+                                                <ColumnDefinition Width="170"/>
                                                 <ColumnDefinition Width="44"/>
                                             </Grid.ColumnDefinitions>
 
                                             <TextBlock Grid.Column="0" Style="{StaticResource Text.Cell}"
                                                        FontWeight="SemiBold" Text="{Binding Name}"
                                                        TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock x:Name="onHand" Grid.Column="1"
+
+                                            <!-- Quiet until the week it matters, then the one
+                                                 thing on the row worth reading. -->
+                                            <TextBlock x:Name="expiry" Grid.Column="1"
+                                                       Style="{StaticResource Text.CellMuted}"
+                                                       Text="{Binding ExpiryLabel}"/>
+
+                                            <TextBlock x:Name="onHand" Grid.Column="2"
                                                        Style="{StaticResource Text.Money}"
                                                        Text="{Binding StockLabel}"/>
-                                            <TextBlock Grid.Column="2" Style="{StaticResource Text.Money}"
+                                            <TextBlock Grid.Column="3" Style="{StaticResource Text.Money}"
                                                        FontWeight="Normal"
                                                        Text="{Binding Cost, Converter={StaticResource Money}}"/>
 
@@ -97,7 +155,7 @@
                                                  press away, because until now the only way to
                                                  reach it was to wait for the thing to run low
                                                  and open it from the dashboard. -->
-                                            <Button Grid.Column="3" Style="{StaticResource Button.RowAction}"
+                                            <Button Grid.Column="4" Style="{StaticResource Button.RowAction}"
                                                     HorizontalAlignment="Right"
                                                     Click="Edit_Click" Tag="{Binding Id}"
                                                     ToolTip="Edit this product — price, photo, barcode">
@@ -113,6 +171,13 @@
                                         <DataTrigger Binding="{Binding Status}" Value="OutOfStock">
                                             <Setter TargetName="onHand" Property="Foreground"
                                                     Value="{StaticResource Brush.Muted}"/>
+                                        </DataTrigger>
+
+                                        <DataTrigger Binding="{Binding ExpiryNeedsAttention}" Value="True">
+                                            <Setter TargetName="expiry" Property="Foreground"
+                                                    Value="{StaticResource Brush.Danger}"/>
+                                            <Setter TargetName="expiry" Property="FontWeight"
+                                                    Value="SemiBold"/>
                                         </DataTrigger>
                                     </DataTemplate.Triggers>
                                 </DataTemplate>

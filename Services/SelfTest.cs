@@ -65,6 +65,8 @@ public static class SelfTest
         CheckTheBasketAsksOneThing(report, ref failures);
         CheckTheTillRefusesWhatIsNotThere(report, ref failures);
         CheckAnEmptyShelfIsReported(report, ref failures);
+        CheckExpiryDatesReadTrue(report, ref failures);
+        CheckTheStockListNarrows(report, ref failures);
         CheckEveryDialogFitsASmallScreen(report, ref failures);
         CheckEveryDialogSpeaksTheShopsLanguage(report, ref failures);
         CheckTheNavigationSpeaksTheShopsLanguage(report, ref failures);
@@ -969,6 +971,141 @@ public static class SelfTest
         Verdict(report, ref failures, "and it is urgent, not a note",
             told is null || told.Level == AlertLevel.Danger,
             $"level is {told?.Level}");
+    }
+
+    /// <summary>
+    /// The expiry column on the products list.
+    ///
+    /// Most stock has no expiry date, and that has to read as nothing at all. It once read as
+    /// "739,865 days ago", in red, on every row — a blank column parsed as year one. So this
+    /// asks the two questions that matter: does no date say nothing, and does a real date say
+    /// something a shopkeeper would recognise.
+    /// </summary>
+    private static void CheckExpiryDatesReadTrue(StringBuilder report, ref int failures)
+    {
+        var stock = StockRepository.List();
+
+        var undated = stock.Where(p => p.ExpiresOn is null).ToList();
+        var wrong = undated.FirstOrDefault(p => p.ExpiryLabel != "—" || p.ExpiryNeedsAttention);
+
+        Verdict(report, ref failures, "stock with no expiry date shows none",
+            wrong is null,
+            wrong is null
+                ? $"{undated.Count} product(s) with no date, all showing a dash"
+                : $"{wrong.Name} has no expiry date but reads \"{wrong.ExpiryLabel}\"");
+
+        // A date the shop really set, said the way it would be said out loud.
+        var dated = stock.FirstOrDefault(p => p.ExpiresOn is not null);
+        if (dated is null)
+        {
+            report.AppendLine("  --  no dated stock to read (nothing has an expiry date)");
+            return;
+        }
+
+        var days = dated.DaysToExpiry!.Value;
+        Verdict(report, ref failures, "a real expiry date reads as a plain phrase",
+            dated.ExpiryLabel.Length > 0 && dated.ExpiryLabel != "—"
+                && Math.Abs(days) < 40000,
+            $"{dated.Name}: {dated.ExpiryLabel} ({days} days)");
+
+        // Red is for the week ahead, not for everything with a date on it.
+        Verdict(report, ref failures, "only the next seven days are marked urgent",
+            stock.Where(p => p.ExpiryNeedsAttention).All(p => p.DaysToExpiry <= 7),
+            $"{stock.Count(p => p.ExpiryNeedsAttention)} product(s) marked");
+    }
+
+    /// <summary>
+    /// The two filters on the stock list, driven the way the owner drives them.
+    ///
+    /// A filter that quietly does nothing looks exactly like a shop where everything matches,
+    /// which is why this sets the controls and reads the rows back rather than checking that
+    /// the handlers exist. The date range reads the expiry date, so stock with no date has to
+    /// drop out of it \u2014 otherwise "what goes off this week" answers with the whole shop.
+    /// </summary>
+    private static void CheckTheStockListNarrows(StringBuilder report, ref int failures)
+    {
+        var shell = new AdminWindow();
+        var page = new InventoryPage();
+        page.Attach(new ViewModels.AdminContext(), shell);
+        page.Refresh();
+
+        var all = ((IEnumerable<StockItem>?)page.Rows.ItemsSource)?.ToList() ?? new List<StockItem>();
+        if (all.Count == 0)
+        {
+            report.AppendLine("  --  nothing in the shop, so no stock list to narrow");
+            return;
+        }
+
+        // ---- By aisle ----
+        var aisle = all.Where(i => i.CategoryId > 0)
+                       .GroupBy(i => i.CategoryId)
+                       .FirstOrDefault(g => g.Count() < all.Count);
+
+        if (aisle is null)
+        {
+            report.AppendLine("  --  every product is in the same category, so the filter has nothing to cut");
+        }
+        else
+        {
+            var choice = page.CategoryFilter.ItemsSource?.Cast<CategoryRow>()
+                             .FirstOrDefault(c => c.Id == aisle.Key);
+
+            page.CategoryFilter.SelectedItem = choice;
+            page.Refresh();
+
+            var shown = ((IEnumerable<StockItem>?)page.Rows.ItemsSource)?.ToList() ?? new List<StockItem>();
+            var strays = shown.Where(i => i.CategoryId != aisle.Key).ToList();
+
+            Verdict(report, ref failures, "the category filter shows that category and nothing else",
+                strays.Count == 0 && shown.Count == aisle.Count(),
+                strays.Count > 0
+                    ? $"{strays[0].Name} is not in {choice?.Name}"
+                    : $"{shown.Count} of {all.Count} products in {choice?.Name}");
+
+            page.CategoryFilter.SelectedIndex = 0;
+            page.Refresh();
+        }
+
+        // ---- By what goes off, and when ----
+        var dated = all.Where(i => i.ExpiresOn is not null).OrderBy(i => i.ExpiresOn).ToList();
+        if (dated.Count == 0)
+        {
+            report.AppendLine("  --  nothing has an expiry date, so the range has nothing to sit on");
+            return;
+        }
+
+        var from = dated[0].ExpiresOn!.Value.Date;
+        var to = from.AddDays(7);
+
+        page.FromDate.SelectedDate = from;
+        page.ToDate.SelectedDate = to;
+        page.Refresh();
+
+        var inWindow = ((IEnumerable<StockItem>?)page.Rows.ItemsSource)?.ToList() ?? new List<StockItem>();
+        var expected = all.Count(i => i.ExpiresOn is { } w && w.Date >= from && w.Date <= to);
+
+        Verdict(report, ref failures, "the date range keeps only what goes off inside it",
+            inWindow.All(i => i.ExpiresOn is { } w && w.Date >= from && w.Date <= to)
+                && inWindow.Count == expected,
+            $"{inWindow.Count} product(s) between {from:d MMM} and {to:d MMM}, expected {expected}");
+
+        Verdict(report, ref failures, "and stock with no expiry date drops out of it",
+            inWindow.All(i => i.ExpiresOn is not null),
+            $"{inWindow.Count(i => i.ExpiresOn is null)} undated product(s) still on screen");
+
+        Verdict(report, ref failures, "a filtered list offers the way back out",
+            page.ClearFilters.Visibility == System.Windows.Visibility.Visible,
+            $"Clear filters is {page.ClearFilters.Visibility}");
+
+        // ---- And back to the whole shop ----
+        page.FromDate.SelectedDate = null;
+        page.ToDate.SelectedDate = null;
+        page.Refresh();
+
+        var back = ((IEnumerable<StockItem>?)page.Rows.ItemsSource)?.ToList() ?? new List<StockItem>();
+        Verdict(report, ref failures, "clearing the range brings the whole shop back",
+            back.Count == all.Count,
+            $"{back.Count} of {all.Count} products");
     }
 
     private static void CheckTheTillRefusesWhatIsNotThere(StringBuilder report, ref int failures)

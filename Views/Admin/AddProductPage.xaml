@@ -36,22 +36,25 @@
 
                         <Grid Grid.Row="0" Margin="12,0,12,8">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2.4*"/>
-                                <ColumnDefinition Width="1.2*"/>
+                                <ColumnDefinition Width="2.1*"/>
+                                <ColumnDefinition Width="1.1*"/>
                                 <ColumnDefinition Width="1*"/>
                                 <ColumnDefinition Width="1*"/>
                                 <ColumnDefinition Width="0.9*"/>
                                 <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="1*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="PRODUCT" Style="{StaticResource Text.ColumnHead}"/>
-                            <TextBlock Grid.Column="1" Text="الفئة" Style="{StaticResource Text.ColumnHead}"/>
+                            <TextBlock Grid.Column="1" Text="CATEGORY" Style="{StaticResource Text.ColumnHead}"/>
                             <TextBlock Grid.Column="2" Text="BOUGHT FOR" Style="{StaticResource Text.ColumnHead}"
                                        TextAlignment="Right"/>
                             <TextBlock Grid.Column="3" Text="SELLING FOR" Style="{StaticResource Text.ColumnHead}"
                                        TextAlignment="Right"/>
                             <TextBlock Grid.Column="4" Text="IN STOCK" Style="{StaticResource Text.ColumnHead}"
                                        TextAlignment="Right"/>
-                            <TextBlock Grid.Column="5" Text="ADDED" Style="{StaticResource Text.ColumnHead}"
+                            <TextBlock Grid.Column="5" Text="EXPIRES" Style="{StaticResource Text.ColumnHead}"
+                                       Margin="16,0,0,0"/>
+                            <TextBlock Grid.Column="6" Text="ADDED" Style="{StaticResource Text.ColumnHead}"
                                        Margin="16,0,0,0"/>
                         </Grid>
 
@@ -67,11 +70,12 @@
                                                     Click="AddedRow_Click" Tag="{Binding Id}">
                                                 <Grid Height="42">
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="2.4*"/>
-                                                        <ColumnDefinition Width="1.2*"/>
+                                                        <ColumnDefinition Width="2.1*"/>
+                                                        <ColumnDefinition Width="1.1*"/>
                                                         <ColumnDefinition Width="1*"/>
                                                         <ColumnDefinition Width="1*"/>
                                                         <ColumnDefinition Width="0.9*"/>
+                                                        <ColumnDefinition Width="1*"/>
                                                         <ColumnDefinition Width="1*"/>
                                                     </Grid.ColumnDefinitions>
 
@@ -96,11 +100,28 @@
                                                     <TextBlock Grid.Column="4" Text="{Binding StockLabel}"
                                                                Style="{StaticResource Text.Money}"
                                                                FontWeight="Normal"/>
-                                                    <TextBlock Grid.Column="5" Text="{Binding AddedLabel}"
+                                                    <!-- Expiry. Quiet like every other secondary
+                                                         line until it is close, and then it is
+                                                         the one thing on the row worth reading. -->
+                                                    <TextBlock x:Name="expiry" Grid.Column="5"
+                                                               Text="{Binding ExpiryLabel}"
+                                                               Style="{StaticResource Text.CellMuted}"
+                                                               Margin="16,0,0,0"/>
+
+                                                    <TextBlock Grid.Column="6" Text="{Binding AddedLabel}"
                                                                Style="{StaticResource Text.CellMuted}"
                                                                Margin="16,0,0,0"/>
                                                 </Grid>
                                             </Button>
+
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding ExpiryNeedsAttention}" Value="True">
+                                                    <Setter TargetName="expiry" Property="Foreground"
+                                                            Value="{StaticResource Brush.Danger}"/>
+                                                    <Setter TargetName="expiry" Property="FontWeight"
+                                                            Value="SemiBold"/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>

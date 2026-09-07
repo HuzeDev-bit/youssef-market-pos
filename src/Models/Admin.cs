@@ -497,12 +497,20 @@ public sealed class StockItem
     public string ExpiryLabel => DaysToExpiry switch
     {
         null => "—",
-        < 0 and var d => Services.Loc.Ltr($"{-d}d") + " " + Services.Loc.T("ago"),
-        0 => "Today",
-        1 => "Tomorrow",
-        <= 60 and var d => $"in {d}d",
+        < 0 and var d => Services.Loc.T("{0} days ago", Services.Loc.Ltr($"{-d}")),
+        0 => Services.Loc.T("Today"),
+        1 => Services.Loc.T("Tomorrow"),
+        <= 60 and var d => Services.Loc.T("in {0} days", Services.Loc.Ltr($"{d}")),
         _ => ExpiresOn!.Value.ToString("d MMM yyyy"),
     };
+
+    /// <summary>
+    /// Gone off, or close enough that somebody has to decide today.
+    ///
+    /// Seven days because that is the horizon a shopkeeper can actually act on: mark it down,
+    /// move it to the front, or take the loss. Anything further out is a date, not a decision.
+    /// </summary>
+    public bool ExpiryNeedsAttention => DaysToExpiry is { } days && days <= 7;
 }
 
 public sealed class CategoryRow

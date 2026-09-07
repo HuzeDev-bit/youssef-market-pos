@@ -36,6 +36,17 @@ public static class FlowTest
         Session.UnlockAsOwner();
         Database.Initialize();
 
+        // A database this test has already been through still holds its fixtures, and creating
+        // them a second time trips the unique barcode. That surfaced as WPF's error dialog on a
+        // headless run: no output, no exit, just a process sitting there looking busy until the
+        // timeout killed it. Say so instead.
+        if (StockRepository.FindByBarcode("9990000000001") is not null)
+        {
+            Console.WriteLine("REFUSED: this database has already been through --flowtest.");
+            Console.WriteLine("Delete it, or point MARKETPOS_DB at a path that does not exist yet.");
+            return 2;
+        }
+
         var supplierId = SupplierRepository.Create(new Supplier { Name = "Test Wholesaler" });
         var workerId = WorkerRepository.Create(new Worker
         {

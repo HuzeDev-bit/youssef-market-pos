@@ -416,6 +416,18 @@
         </Setter>
     </Style>
 
+    <!-- The word inside an empty date box. Bind its Tag to the picker's SelectedDate and it
+         shows while that is null, then gets out of the way. Kept here rather than in the page
+         because a second date range anywhere else needs the same thing. -->
+    <Style x:Key="Hint.Date" TargetType="TextBlock" BasedOn="{StaticResource Text.Muted}">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="{x:Null}">
+                <Setter Property="Visibility" Value="Visible"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- The inner text box: no watermark, no border, our padding. -->
     <Style TargetType="DatePickerTextBox">
         <Setter Property="Template">

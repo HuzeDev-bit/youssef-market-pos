@@ -65,6 +65,15 @@ public partial class AddProductPage : AdminPageBase
         public required string PriceLabel { get; init; }
         public required string StockLabel { get; init; }
         public required string AddedLabel { get; init; }
+
+        /// <summary>When it goes off, or a dash for the things that never do.</summary>
+        public required string ExpiryLabel { get; init; }
+
+        /// <summary>
+        /// Gone off, or about to. Carried separately from the words so the row can be marked
+        /// without the list having to parse its own text back.
+        /// </summary>
+        public required bool ExpiryNeedsAttention { get; init; }
     }
 
     // ============================== List and form ==============================
@@ -89,6 +98,8 @@ public partial class AddProductPage : AdminPageBase
             PriceLabel = Loc.Ltr($"{p.Price:N2} DH"),
             StockLabel = p.Unit == Unit.Kg ? $"{p.Stock:0.###} kg" : $"{p.Stock:0.###}",
             AddedLabel = Ago(p),
+            ExpiryLabel = p.ExpiryLabel,
+            ExpiryNeedsAttention = p.ExpiryNeedsAttention,
         }).ToList();
 
         AddedEmpty.Visibility = products.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

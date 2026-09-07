@@ -162,6 +162,17 @@ public static class Loc
         IsRightToLeft ? "‎" + run + "‎" : run;
 
     /// <summary>
+    /// Strings the shop within a line, using a separator the reader will not misread.
+    ///
+    /// The middle dot is right in Latin script and wrong in Arabic: laid out right to left it
+    /// lands hard against the next segment's leading digit, and "· 1" reads as "10" at the size
+    /// this actually gets read at. Arabic gets its own comma, which is what a list of clauses
+    /// is separated by in Arabic anyway.
+    /// </summary>
+    public static string Join(IEnumerable<string> parts) =>
+        string.Join(IsRightToLeft ? "، " : " · ", parts.Where(p => p.Length > 0));
+
+    /// <summary>
     /// A translated line with something of the shop's own in it — a name, a number, a total.
     /// The placeholders stay in the translated text, so a French line can put them in a
     /// different order from the English one.

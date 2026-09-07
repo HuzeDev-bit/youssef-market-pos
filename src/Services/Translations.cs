@@ -91,6 +91,9 @@ public static class Translations
             ["Adjust or count this stock"] =
                 ("Ajuster ou compter ce stock",
                  "تعديل أو جرد هذا المخزون"),
+            ["All categories"] =
+                ("Toutes les catégories",
+                 "كل الفئات"),
             ["Amount  DH"] =
                 ("Montant  DH",
                  "المبلغ  درهم"),
@@ -235,6 +238,9 @@ public static class Translations
             ["Choose or type a category."] =
                 ("Choisissez ou saisissez une catégorie.",
                  "اختر فئة أو اكتبها."),
+            ["Clear filters"] =
+                ("Effacer les filtres",
+                 "مسح عوامل التصفية"),
             ["Clear search"] =
                 ("Effacer la recherche",
                  "مسح البحث"),
@@ -307,6 +313,12 @@ public static class Translations
             ["EVERY MONTH"] =
                 ("CHAQUE MOIS",
                  "كل شهر"),
+            ["EXPIRES"] =
+                ("EXPIRE LE",
+                 "ينتهي في"),
+            ["EXPIRES BETWEEN"] =
+                ("EXPIRE ENTRE",
+                 "ينتهي بين"),
             ["EXPIRES ON"] =
                 ("EXPIRE LE",
                  "ينتهي في"),
@@ -316,6 +328,9 @@ public static class Translations
             ["Edit this product — price, photo, barcode"] =
                 ("Modifier ce produit — prix, photo, code-barres",
                  "تعديل هذا المنتج — السعر والصورة والباركود"),
+            ["End date"] =
+                ("Date de fin",
+                 "تاريخ النهاية"),
             ["Enter a barcode, or press Generate for an in-store code."] =
                 ("Saisissez un code-barres, ou appuyez sur Générer pour un code interne.",
                  "أدخل باركود، أو اضغط توليد للحصول على رمز داخلي."),
@@ -610,6 +625,9 @@ public static class Translations
             ["Nothing in the shop yet"] =
                 ("La boutique est vide",
                  "لا شيء في المتجر بعد"),
+            ["Nothing in this category goes off between those dates. Stock with no expiry date is not counted."] =
+                ("Rien dans cette catégorie ne périme entre ces dates. Le stock sans date de péremption n'est pas compté.",
+                 "لا شيء في هذه الفئة ينتهي بين هذين التاريخين. البضاعة بدون تاريخ انتهاء غير محسوبة."),
             ["Nothing in this period"] =
                 ("Rien sur cette période",
                  "لا شيء في هذه الفترة"),
@@ -1111,6 +1129,9 @@ public static class Translations
             ["Staff, wages and who can open the back office"] =
                 ("Le personnel, les salaires et qui peut ouvrir l'arrière-boutique",
                  "الموظفون والأجور ومن يمكنه فتح الإدارة"),
+            ["Start date"] =
+                ("Date de début",
+                 "تاريخ البداية"),
             ["Stock that came in"] =
                 ("Stock entré",
                  "المخزون الوارد"),
@@ -1240,6 +1261,9 @@ public static class Translations
             ["Today"] =
                 ("Aujourd'hui",
                  "اليوم"),
+            ["Tomorrow"] =
+                ("Demain",
+                 "غداً"),
             ["Total"] =
                 ("Total",
                  "المجموع"),
@@ -1249,6 +1273,9 @@ public static class Translations
             ["Try a different name or barcode."] =
                 ("Essayez un autre nom ou code-barres.",
                  "جرّب اسماً أو باركود آخر."),
+            ["Try a different name, barcode or category."] =
+                ("Essayez un autre nom, code-barres ou catégorie.",
+                 "جرّب اسماً أو باركود أو فئة أخرى."),
             ["Try a different name, or clear the filter."] =
                 ("Essayez un autre nom, ou enlevez le filtre.",
                  "جرّب اسماً آخر، أو امسح المرشّح."),
@@ -1429,6 +1456,9 @@ public static class Translations
             ["goods received. Not an expense: the shop swapped money for stock and is no poorer until it sells."] =
                 ("marchandises reçues. Pas une dépense : la boutique a échangé de l'argent contre du stock et n'est pas plus pauvre tant qu'il ne se vend pas.",
                  "بضاعة مستلمة. ليست مصروفاً: بادل المتجر مالاً بمخزون ولا يصير أفقر حتى يبيعه."),
+            ["in {0} days"] =
+                ("dans {0} jours",
+                 "بعد {0} أيام"),
             ["includes {0} DH of wages"] =
                 ("dont {0} DH de salaires",
                  "منها {0} درهم أجور"),
@@ -1606,6 +1636,9 @@ public static class Translations
             ["{0} each"] =
                 ("{0} l'unité",
                  "{0} للوحدة"),
+            ["{0} expiring or expired"] =
+                ("{0} proche de la péremption ou périmé",
+                 "{0} قارب على الانتهاء أو انتهى"),
             ["{0} hidden from the till"] =
                 ("{0} masquées en caisse",
                  "{0} مخفية عن الصندوق"),
