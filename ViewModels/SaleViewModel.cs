@@ -169,14 +169,6 @@ public sealed class SaleViewModel : ViewModelBase
     /// A typed quantity was brought down to what the shelf holds. Said out loud, because
     /// silently changing a number somebody just typed is how a cashier stops trusting the till.
     /// </summary>
-    private void Line_Capped(object? sender, decimal available)
-    {
-        if (sender is not CartLine line) return;
-
-        SetStatus(Loc.T("Error: only {0} of {1} left.",
-                        $"{available:0.###}", line.Product.Name), isError: true);
-    }
-
     /// <summary>A plain confirmation in the till's status banner, from outside the view model.</summary>
     public void Announce(string message) => SetStatus(message, isError: false);
 
@@ -619,10 +611,15 @@ public sealed class SaleViewModel : ViewModelBase
         var scanned = Catalog.FindByBarcode(query);
         if (scanned is not null)
         {
-            // Nothing on the shelf. Said before anything else, because a cashier scanning a
-            // run of items needs to know which one stopped rather than watch a basket quietly
-            // fail to grow.
-            if (scanned.IsOutOfStock)
+            // Nothing on the shelf, and nothing of it in the basket either. Said before
+            // anything else, because a cashier scanning a run of items needs to know which one
+            // stopped rather than watch a basket quietly fail to grow.
+            //
+            // Already in the basket is a different situation and not an error. The cashier has
+            // the thing in their hand and is scanning it a second time; telling them it does
+            // not exist while its name sits on the screen above the message is nonsense, and
+            // it stopped a sale that the shop had every intention of making.
+            if (scanned.IsOutOfStock && !AlreadyInTheBasket(scanned))
             {
                 Refuse(Loc.T("Error: {0} is out of stock.", scanned.Name));
                 return;
@@ -679,7 +676,6 @@ public sealed class SaleViewModel : ViewModelBase
     {
         var line = new CartLine(product, quantity);
         line.PropertyChanged += Line_PropertyChanged;
-        line.Capped += Line_Capped;
         Cart.Add(line);
         line.Flash();
 
@@ -698,6 +694,10 @@ public sealed class SaleViewModel : ViewModelBase
     /// are a sale and the thirty-first is a mistake, and the thirty-first looks exactly like
     /// the first if only the shelf is consulted.
     /// </summary>
+    /// <summary>Whether this product is already on the sale in front of the cashier.</summary>
+    private bool AlreadyInTheBasket(Product product) =>
+        Cart.Any(l => l.Product.Barcode == product.Barcode);
+
     private decimal RoomFor(Product product)
     {
         var alreadyInBasket = Cart
@@ -713,13 +713,13 @@ public sealed class SaleViewModel : ViewModelBase
         var existing = Cart.FirstOrDefault(l => l.Product.Barcode == product.Barcode);
         var wanted = existing?.Step ?? (product.Unit == Unit.Kg ? 1.0m : 1m);
 
-        // The shelf has the last word, and it says no.
-        if (RoomFor(product) < wanted)
+        // The shelf has the last word only on the first one. A product already on the sale is
+        // a product the cashier is holding: scanning it again means "another of these", and
+        // the sale carries on. What the shelf says then is a matter for the stock count, not
+        // for a red banner in front of a waiting customer.
+        if (existing is null && RoomFor(product) < wanted)
         {
-            Refuse(product.Stock <= 0m
-                ? Loc.T("Error: {0} is out of stock.", product.Name)
-                : Loc.T("Error: only {0} of {1} left, and they are all in this sale.",
-                        $"{product.Stock:0.###}", product.Name));
+            Refuse(Loc.T("Error: {0} is out of stock.", product.Name));
             return;
         }
 
@@ -733,8 +733,7 @@ public sealed class SaleViewModel : ViewModelBase
         {
             var line = new CartLine(product, product.Unit == Unit.Kg ? 1.0m : 1m);
             line.PropertyChanged += Line_PropertyChanged;
-            line.Capped += Line_Capped;
-            Cart.Add(line);
+                Cart.Add(line);
             line.Flash();
             touched = line;
         }

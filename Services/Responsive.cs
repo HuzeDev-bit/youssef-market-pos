@@ -45,13 +45,29 @@ public static class Responsive
         };
     }
 
-    /// <summary>True when this window already puts its content inside a scroller.</summary>
-    private static bool AlreadyScrolls(DependencyObject node)
+    /// <summary>
+    /// True when the window's own content is a scroller — not merely when there is one
+    /// somewhere inside it.
+    ///
+    /// This used to search the whole tree, and that is why the Add supplier dialog still ran
+    /// off the bottom of a shop laptop with the Save button out of reach. The dialog holds a
+    /// list of delivered goods, that list scrolls, and finding it was taken as proof that the
+    /// dialog scrolled. It did not: a scroller three levels down moves its own rows and
+    /// nothing else. Only a scroller wrapping the content can move the content.
+    ///
+    /// Walking down through single-child wrappers, because a window whose content is a Border
+    /// around a ScrollViewer is scrollable in every way that matters here.
+    /// </summary>
+    private static bool AlreadyScrolls(DependencyObject? node)
     {
-        if (node is ScrollViewer) return true;
+        while (node is not null)
+        {
+            if (node is ScrollViewer) return true;
 
-        foreach (var child in LogicalTreeHelper.GetChildren(node))
-            if (child is DependencyObject element && AlreadyScrolls(element)) return true;
+            foreach (var child in LogicalTreeHelper.GetChildren(node))
+                if (child is DependencyObject e2 && AlreadyScrolls(e2)) return true;
+            return false;
+        }
 
         return false;
     }

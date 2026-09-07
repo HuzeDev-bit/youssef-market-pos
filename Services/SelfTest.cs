@@ -906,7 +906,11 @@ public static class SelfTest
     /// </summary>
     private static void CheckEveryDialogFitsASmallScreen(StringBuilder report, ref int failures)
     {
-        const double smallScreen = 768;
+        // 1366x768 is the shop laptop, and Windows ships those at 125% scaling, which leaves
+        // WPF 614 device-independent pixels to lay a dialog out in. Testing against 768 was
+        // testing against a machine nobody has: the Add supplier dialog passed here and still
+        // ran off the bottom of the screen in the shop, with Save out of reach.
+        const double smallScreen = 614;
 
         (string Name, Func<Window> Make)[] dialogs =
         [
@@ -1277,10 +1281,17 @@ public static class SelfTest
 
         var onTheSale = counter.Vm.Cart.FirstOrDefault()?.Quantity ?? 0m;
 
-        Verdict(report, ref failures, "scanning past the last one stops at the last one",
-            onTheSale == stocked.Stock,
+        // Every scan counts, including the ones past what the shelf claims to hold. The
+        // cashier is holding the goods; the count catching up is a stocktake, not a refusal
+        // in front of a customer. What the till must never do is drop a scan silently.
+        Verdict(report, ref failures, "every scan lands on the sale, even past the shelf count",
+            onTheSale == scans,
             $"{scans} scans of {stocked.Name} ({stocked.Stock:0.###} in stock) put "
           + $"{onTheSale:0.###} on the sale");
+
+        Verdict(report, ref failures, "and none of them turns the till red",
+            !counter.Vm.StatusIsError,
+            $"status: {counter.Vm.StatusMessage}");
     }
 
     private static void CheckPriceCheck(StringBuilder report, ref int failures)

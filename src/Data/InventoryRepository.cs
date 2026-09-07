@@ -51,15 +51,21 @@ public static class InventoryRepository
 
             var after = before + quantity;
 
-            // The shelf cannot hold less than nothing.
+            // The shelf cannot hold less than nothing — except when something has already
+            // left it.
             //
-            // This is the floor for the whole application, not a convenience for the till.
-            // Every path that moves stock arrives here — a sale, a loss, a supplier return,
-            // a correction — so putting the check anywhere else would leave a way round it.
-            // Without it a shop with thirty tins could sell forty and the count would read
-            // minus ten for ever, quietly wrong in the stock value, the reorder list and the
-            // cost of goods.
-            if (after < 0m)
+            // A sale is a fact by the time it reaches here: the goods are in the customer's
+            // bag and the money is on the counter. Refusing it because the count disagrees
+            // does not put the goods back, it only loses the record of them going. And the
+            // count disagreeing is the ordinary case in a real shop — a delivery entered
+            // late, a breakage nobody wrote down. So a sale is allowed to take the count
+            // negative, and the negative is the shop telling its owner that the count is
+            // behind, which is exactly what it should say.
+            //
+            // Everything else still stops at zero. Writing off ten of something the shop has
+            // three of, or returning stock it never received, is not a fact that already
+            // happened — it is somebody typing the wrong number, and there is time to say so.
+            if (after < 0m && reason != StockReason.Sale)
                 throw new NotEnoughStockException(NameOf(db, productId), before, -quantity);
 
             using (var write = db.CreateCommand())

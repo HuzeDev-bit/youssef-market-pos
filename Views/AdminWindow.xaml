@@ -60,7 +60,12 @@
                        Stretch="Uniform" HorizontalAlignment="Left" Margin="12,6,0,26"
                        RenderOptions.BitmapScalingMode="HighQuality"/>
 
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+                <!-- Auto, not Hidden. Hidden still scrolls, but says nothing about there
+                     being anything to scroll to — on a 768px laptop the navigation simply
+                     stopped after Staff and the rest of the shop looked like it did not
+                     exist. See AdminWindow.FitTheNavigation, which tightens the rows first
+                     so that on most screens there is nothing to scroll at all. -->
+                <ScrollViewer x:Name="NavScroller" Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel x:Name="NavList">
                         <TextBlock Text="DAILY" Style="{StaticResource Text.Eyebrow}" Margin="12,4,0,6"/>
                         <RadioButton x:Name="NavDashboard" Style="{StaticResource Button.Nav}" GroupName="admin"
@@ -293,7 +298,21 @@
                     </StackPanel>
                 </Border>
 
-                <ContentControl x:Name="PageHost" Grid.Row="2" Margin="14,6,20,16"/>
+                <!-- A table squeezed narrower than its columns does not become a smaller
+                     table, it becomes a column of ellipses: at 1093px the suppliers list
+                     read "...0.0" in every cell. Below the width a page needs, it scrolls
+                     sideways instead, which keeps every figure readable. -->
+                <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto">
+                    <!-- Below these, the page scrolls rather than shrinking. A table squeezed
+                         narrower than its columns does not become a smaller table, it becomes
+                         a column of ellipses — at 1093px the suppliers list read "...0.0" in
+                         every cell. And a dashboard squeezed shorter than its panels simply
+                         cuts the bottom one off, which is how a shop laptop came to show a
+                         "what is selling" list with no rows in it. -->
+                    <ContentControl x:Name="PageHost" MinWidth="1010" MinHeight="560"
+                                    Margin="14,6,20,16"/>
+                </ScrollViewer>
             </Grid>
         </Grid>
     </Border>

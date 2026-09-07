@@ -39,6 +39,12 @@ public partial class AdminWindow : Window
         Chrome.Fill(this);
         ShowWindowSize();
 
+        // The navigation has to fit the machine it is on, not the one it was drawn on.
+        // Hung off the scroller rather than the window, because the scroller is the thing
+        // that knows how much room there actually is — and it is told, whether the window
+        // was resized, laid out for the first time, or measured by the screenshot harness.
+        NavScroller.SizeChanged += (_, _) => FitTheNavigation();
+
         Vm.Dates.RangeChanged += (_, _) =>
         {
             UpdateSubtitle();
@@ -228,6 +234,43 @@ public partial class AdminWindow : Window
         SizeGlyph.Data = (System.Windows.Media.Geometry)FindResource(
             filled ? "Icon.Restore" : "Icon.Maximize");
         SizeButton.ToolTip = Loc.T(filled ? "Make the window smaller" : "Fill the screen");
+    }
+
+    /// <summary>
+    /// Tightens the navigation until it fits, before letting it scroll.
+    ///
+    /// Fifteen rows at their drawn height need about 570px. A 1366x768 laptop at the 125%
+    /// scaling those machines ship with gives the sidebar around 460 — so the shop's own
+    /// screen showed everything down to Staff and simply stopped, and the owner had no
+    /// reason to think Reports existed. Scrolling is the backstop; fitting is the fix,
+    /// because a menu you have to scroll is a menu you have to already know the shape of.
+    ///
+    /// Only the row height and the gaps around the group headings change. Nothing moves,
+    /// nothing is hidden, and the type stays the size it was: a shorter row is still a row.
+    /// </summary>
+    private void FitTheNavigation()
+    {
+        if (NavList is null) return;
+
+        var rows = NavList.Children.OfType<RadioButton>().ToList();
+        var headings = NavList.Children.OfType<TextBlock>().ToList();
+        if (rows.Count == 0) return;
+
+        // What the sidebar actually has, asked of the thing that holds it.
+        var available = NavScroller.ActualHeight;
+        if (available <= 0) return;
+
+        // The drawn size first, then tighter, then tighter again. Below that it scrolls: a
+        // 24px row is a colour swatch rather than something to press.
+        foreach (var (height, gap) in new[] { (40.0, 6.0), (34.0, 4.0), (30.0, 2.0) })
+        {
+            foreach (var row in rows) row.Height = height;
+            foreach (var heading in headings)
+                heading.Margin = new Thickness(12, gap, 0, gap);
+
+            var needed = rows.Count * (height + 2) + headings.Count * (16 + gap * 2);
+            if (needed <= available) return;
+        }
     }
 
     private void Minimise_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;

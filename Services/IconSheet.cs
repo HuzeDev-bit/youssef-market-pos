@@ -392,21 +392,38 @@ public static class IconSheet
         Console.WriteLine($"  {System.IO.Path.GetFileName(path)}");
     }
 
+    /// <summary>
+    /// The size the screens are photographed at. A shop machine is not a developer's monitor,
+    /// and a layout only ever breaks on the smaller one — so this is settable, and worth
+    /// pointing at 1366x768 before believing anything fits.
+    /// </summary>
+    private static (int Width, int Height) ShotSize()
+    {
+        var asked = Environment.GetEnvironmentVariable("MARKETPOS_SHOT_SIZE");
+        if (asked?.Split('x') is [var w, var h]
+            && int.TryParse(w, out var width) && int.TryParse(h, out var height))
+            return (width, height);
+
+        return (1600, 900);
+    }
+
     private static void Shot(Views.AdminWindow shell, Models.AdminPage page, string path)
     {
         shell.GoTo(page);
+
+        var (shotWidth, shotHeight) = ShotSize();
 
         var root = (FrameworkElement)shell.Content;
         Services.Localizer.Apply(root);
         root.FlowDirection = Services.Loc.IsRightToLeft
             ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
-        root.Measure(new Size(1600, 900));
-        root.Arrange(new Rect(0, 0, 1600, 900));
+        root.Measure(new Size(shotWidth, shotHeight));
+        root.Arrange(new Rect(0, 0, shotWidth, shotHeight));
         root.UpdateLayout();
         Services.Localizer.Apply(root);   // again: the page's own labels exist only now
         root.UpdateLayout();
 
-        var bitmap = new RenderTargetBitmap(1600, 900, 96, 96, PixelFormats.Pbgra32);
+        var bitmap = new RenderTargetBitmap(shotWidth, shotHeight, 96, 96, PixelFormats.Pbgra32);
         bitmap.Render(root);
 
         var png = new PngBitmapEncoder();
