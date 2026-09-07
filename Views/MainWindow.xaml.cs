@@ -25,6 +25,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        // Translated here as well as on load. Waiting for an event is what left the sidebar in
+        // English while every other part of this same window was Arabic.
+        Services.Localizer.Apply(this);
+
         // A borderless window with WindowState=Maximized overhangs the screen by the
         // invisible resize border (~8px per side), which pushed the top-right window
         // controls partly off-screen and swallowed their clicks. Size to the work area

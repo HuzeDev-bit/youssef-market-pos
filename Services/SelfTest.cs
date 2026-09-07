@@ -65,6 +65,7 @@ public static class SelfTest
         CheckTheBasketAsksOneThing(report, ref failures);
         CheckTheTillRefusesWhatIsNotThere(report, ref failures);
         CheckAnEmptyShelfIsReported(report, ref failures);
+        CheckTheNavigationSpeaksTheShopsLanguage(report, ref failures);
         CheckPriceCheck(report, ref failures);
         CheckStandaloneShopIsLeftAlone(report, ref failures);
         CheckTillAsCashier(report, ref failures);
@@ -763,6 +764,68 @@ public static class SelfTest
     /// alert is the other half: it carries the product's name onto the Reports page and into
     /// the count on the sidebar, so a shop that ran out this morning knows by this evening.
     /// </summary>
+    /// <summary>
+    /// The navigation, in the shop's language — checked on the window itself rather than in a
+    /// screenshot.
+    ///
+    /// This is the check that was missing when the back office shipped with an English
+    /// sidebar. The diagnostics that photograph every screen call the translator explicitly,
+    /// so they showed Arabic navigation while the running app showed English: they were
+    /// exercising a path the app never takes. Building the window the way the app builds it is
+    /// the only version of this test worth having.
+    /// </summary>
+    private static void CheckTheNavigationSpeaksTheShopsLanguage(StringBuilder report, ref int failures)
+    {
+        var was = Loc.Current;
+
+        try
+        {
+            Loc.Use(Models.Language.Arabic);
+
+            var shell = new AdminWindow();
+            var words = Descendants((FrameworkElement)shell.Content)
+                .OfType<System.Windows.Controls.TextBlock>()
+                .Select(t => t.Text.Trim())
+                .Where(t => t.Length > 0)
+                .ToList();
+
+            // The English source words for the sidebar. Any of them still on screen means the
+            // navigation never went through the translator.
+            string[] nav =
+                ["Dashboard", "Sales history", "Add product", "Categories", "Inventory",
+                 "Suppliers", "Expenses", "Workers", "Reports", "Activity log",
+                 "DAILY", "GOODS", "MONEY", "PEOPLE", "INSIGHT"];
+
+            var untranslated = nav.Where(words.Contains).ToList();
+
+            Verdict(report, ref failures, "the back office navigation is in the shop's language",
+                untranslated.Count == 0,
+                untranslated.Count == 0
+                    ? $"all {nav.Length} nav labels translated"
+                    : "still English: " + string.Join(", ", untranslated));
+
+            // And the till, which is the screen that runs all day.
+            var till = new MainWindow();
+            var tillWords = Descendants((FrameworkElement)till.Content)
+                .OfType<System.Windows.Controls.TextBlock>()
+                .Select(t => t.Text.Trim())
+                .ToList();
+
+            string[] counter = ["Search", "Price check", "Reprint receipt"];
+            var englishAtTheTill = counter.Where(tillWords.Contains).ToList();
+
+            Verdict(report, ref failures, "and so is the till",
+                englishAtTheTill.Count == 0,
+                englishAtTheTill.Count == 0
+                    ? "the sale screen is translated"
+                    : "still English: " + string.Join(", ", englishAtTheTill));
+        }
+        finally
+        {
+            Loc.Use(was);
+        }
+    }
+
     private static void CheckAnEmptyShelfIsReported(StringBuilder report, ref int failures)
     {
         var empty = StockRepository.OutOfStock();

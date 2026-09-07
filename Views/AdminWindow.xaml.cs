@@ -27,6 +27,10 @@ public partial class AdminWindow : Window
     public AdminWindow()
     {
         InitializeComponent();
+
+        // Translated here as well as on load. Waiting for an event is what left the sidebar in
+        // English while every other part of this same window was Arabic.
+        Services.Localizer.Apply(this);
         DataContext = Vm;
 
         Vm.Dates.RangeChanged += (_, _) =>

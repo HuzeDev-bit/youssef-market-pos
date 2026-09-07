@@ -41,6 +41,17 @@ public static class Localizer
         EventManager.RegisterClassHandler(
             typeof(FrameworkElement), FrameworkElement.LoadedEvent,
             new RoutedEventHandler((sender, _) => Translate(sender as FrameworkElement)));
+
+        // And every window is walked whole the moment it loads.
+        //
+        // The per-element handler above does not reach everything: a label sitting inside
+        // another control's content can load without announcing itself where this can hear it,
+        // which is how the back office ended up with an English sidebar while the date chips
+        // beside it were Arabic. Walking the window is not a tidier way of doing the same
+        // thing — it is the one that actually reaches every label.
+        EventManager.RegisterClassHandler(
+            typeof(Window), FrameworkElement.LoadedEvent,
+            new RoutedEventHandler((sender, _) => Apply(sender as Window)));
     }
 
     /// <summary>
