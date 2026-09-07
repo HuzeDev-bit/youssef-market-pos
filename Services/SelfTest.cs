@@ -1163,6 +1163,34 @@ public static class SelfTest
                 Chrome.FillsTheScreen(window),
                 $"{window.Width:0}x{window.Height:0}");
 
+            // What actually makes the window draggable: Windows is told that the top strip
+            // is the caption. Doing this in WPF's own mouse events did not work — a press
+            // only reaches a handler if it lands on the exact element carrying it, and the
+            // strip is half a dozen elements with gaps between them. So this checks the
+            // thing that replaced all that, because without it the window cannot be moved
+            // at all and nothing else on screen would look wrong.
+            var chrome = System.Windows.Shell.WindowChrome.GetWindowChrome(window);
+
+            Verdict(report, ref failures, $"{name} gives Windows a caption to drag it by",
+                chrome is not null,
+                chrome is null ? "no WindowChrome — the window cannot be moved" : "WindowChrome is set");
+
+            Verdict(report, ref failures, $"{name} caption is deep enough to grab",
+                chrome is { CaptionHeight: >= 40 },
+                $"caption is {chrome?.CaptionHeight ?? 0:0}px deep");
+
+            Verdict(report, ref failures, $"{name} can still be resized by its edges",
+                chrome is not null && chrome.ResizeBorderThickness.Left > 0,
+                $"resize border is {chrome?.ResizeBorderThickness.Left ?? 0:0}px");
+
+            // The controls sitting in that strip have to be excused from it, or Windows
+            // takes their clicks and the buttons stop working.
+            Verdict(report, ref failures, $"{name} keeps its window buttons clickable",
+                button is not null && Excused(button),
+                button is null ? "no SizeButton"
+                    : "the window controls are marked hit-test visible in the chrome");
+
+
             // Both glyphs have to exist and differ, or the button never looks like it worked.
             var tall = window.TryFindResource("Icon.Maximize") as System.Windows.Media.Geometry;
             var small = window.TryFindResource("Icon.Restore") as System.Windows.Media.Geometry;
@@ -1174,6 +1202,26 @@ public static class SelfTest
 
             window.Close();
         }
+    }
+
+    /// <summary>
+    /// True when this element, or something it sits inside, is excused from the window's
+    /// caption. Anything in the title strip that is meant to be pressed needs this, because
+    /// the caption belongs to Windows and Windows would otherwise treat the press as a drag.
+    /// </summary>
+    private static bool Excused(DependencyObject? node)
+    {
+        while (node is not null)
+        {
+            if (node is UIElement element
+                && System.Windows.Shell.WindowChrome.GetIsHitTestVisibleInChrome(element))
+                return true;
+
+            node = System.Windows.Media.VisualTreeHelper.GetParent(node)
+                ?? LogicalTreeHelper.GetParent(node);
+        }
+
+        return false;
     }
 
     private static void CheckTheTillRefusesWhatIsNotThere(StringBuilder report, ref int failures)

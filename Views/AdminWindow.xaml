@@ -17,6 +17,20 @@
         RenderOptions.ClearTypeHint="Enabled"
         PreviewKeyDown="Window_PreviewKeyDown">
 
+
+    <!-- The top strip is handed to Windows as the window's caption, which is what makes it
+         drag, snap to the screen edges and respond to a double-click. Doing it in WPF's own
+         mouse events instead is what did not work: a press only reaches a handler if it lands
+         on the exact element carrying it, and the strip is made of half a dozen elements with
+         gaps between them. Windows does not care what the strip is made of.
+
+         Everything in the strip that is meant to be pressed carries
+         WindowChrome.IsHitTestVisibleInChrome, or the caption would swallow its clicks. -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="96" ResizeBorderThickness="6"
+                      GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolVis"/>
         <conv:InverseBooleanToVisibilityConverter x:Key="InvBoolVis"/>
@@ -211,7 +225,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Top bar. Doubles as the window's drag handle, since there is no title bar. -->
-                <Grid Grid.Row="0" Margin="14,22,20,10" MouseLeftButtonDown="TopBar_Drag">
+                <Grid Grid.Row="0" Margin="14,22,20,10" Background="Transparent">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
@@ -229,7 +243,8 @@
                                    Margin="0,5,0,0"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                WindowChrome.IsHitTestVisibleInChrome="True">
                         <Button Style="{StaticResource Button.RowAction}" ToolTip="تحديث"
                                 Click="Refresh_Click" Margin="0,0,6,0">
                             <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Refresh}"/>
@@ -251,7 +266,8 @@
 
                 <!-- Date filter. Shown only on the pages where a period actually changes
                      the numbers; a filter over a list of suppliers would just be noise. -->
-                <Border Grid.Row="1" x:Name="DateBar" Margin="14,4,20,14" Visibility="Collapsed">
+                <Border Grid.Row="1" x:Name="DateBar" Margin="14,4,20,14" Visibility="Collapsed"
+                        WindowChrome.IsHitTestVisibleInChrome="True">
                     <StackPanel Orientation="Horizontal">
                         <ToggleButton Style="{StaticResource Button.DateChip}" Content="اليوم"
                                       IsChecked="{Binding Dates.IsToday, Mode=OneWay}" Checked="Preset_Checked" Tag="Today"/>

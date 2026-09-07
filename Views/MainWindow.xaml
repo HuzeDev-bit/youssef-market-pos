@@ -62,6 +62,20 @@
         </Storyboard>
     </Window.Resources>
 
+
+    <!-- The top strip is handed to Windows as the window's caption, which is what makes it
+         drag, snap to the screen edges and respond to a double-click. Doing it in WPF's own
+         mouse events instead is what did not work: a press only reaches a handler if it lands
+         on the exact element carrying it, and the strip is made of half a dozen elements with
+         gaps between them. Windows does not care what the strip is made of.
+
+         Everything in the strip that is meant to be pressed carries
+         WindowChrome.IsHitTestVisibleInChrome, or the caption would swallow its clicks. -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="96" ResizeBorderThickness="6"
+                      GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
     <Window.DataContext>
         <vm:SaleViewModel/>
     </Window.DataContext>
@@ -112,8 +126,7 @@
 
             <!-- ===================== Top bar =====================
                  Also the window's drag handle: there is no title bar to grab. -->
-            <Grid Grid.Row="0" Margin="32,26,32,30" Background="Transparent"
-                  MouseLeftButtonDown="TopBar_Drag">
+            <Grid Grid.Row="0" Margin="32,26,32,30" Background="Transparent">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -130,7 +143,8 @@
                 <!-- Barcode input — the primary input device. Kept focused at all times; see FocusBarcode().
                      Spans the whole row and centers itself so it stays dead-center regardless of what's
                      in the side columns. -->
-                <Grid Grid.Column="0" Grid.ColumnSpan="3" Width="400" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid Grid.Column="0" Grid.ColumnSpan="3" Width="400" HorizontalAlignment="Center"
+                      VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
                     <TextBox x:Name="BarcodeBox"
                              Style="{StaticResource TextBox.Barcode}"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
@@ -167,7 +181,8 @@
 
                 <!-- No notifications/help/Support here — this is a till. Just window controls
                      (custom, since the window has no native title bar): minimize to hide, ✕ to close. -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
                     <!-- The link to the back office. Invisible on a shop with one computer;
                          on a second till it is the one thing a cashier needs to be able to
                          glance at, because it is the difference between "the shop knows about

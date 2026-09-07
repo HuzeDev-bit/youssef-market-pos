@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -208,12 +208,6 @@ public partial class AdminWindow : Window
         Catalog.Reload();
         Current?.Refresh();
         Vm.RefreshAlerts();
-    }
-
-    private void TopBar_Drag(object sender, MouseButtonEventArgs e)
-    {
-        Chrome.Drag(this, e);
-        ShowWindowSize();
     }
 
     /// <summary>The middle window control: fill the screen, or come back off it.</summary>

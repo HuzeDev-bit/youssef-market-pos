@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -473,12 +473,6 @@ public partial class MainWindow : Window
 
     // Custom window controls (top-right) — the window has no native title bar.
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
-
-    private void TopBar_Drag(object sender, MouseButtonEventArgs e)
-    {
-        Chrome.Drag(this, e);
-        ShowWindowSize();
-    }
 
     /// <summary>The middle window control: fill the screen, or come back off it.</summary>
     private void Size_Click(object sender, RoutedEventArgs e)
