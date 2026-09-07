@@ -445,19 +445,27 @@ public partial class MainWindow : Window
         // Print before the animation so paper starts moving immediately; any failure is
         // reported in the confirmation line rather than stopping the till, because the sale
         // is already banked by this point.
-        if (AppSettings.Current.AutoPrintReceipts)
+        var paper = SaleRepository.FindByInvoiceNumber(Vm.LastInvoiceNumber);
+        string? printProblem = null;
+
+        if (AppSettings.Current.AutoPrintReceipts && paper is not null)
         {
-            var receipt = SaleRepository.FindByInvoiceNumber(Vm.LastInvoiceNumber);
-            if (receipt is not null)
-            {
-                // Never silently routes to Print-to-PDF: PrintSilent refuses virtual printers
-                // and says so, rather than throwing a Save-As box at the cashier mid-queue.
-                var error = ReceiptPrinter.PrintSilent(receipt, isDuplicate: false);
-                if (error is not null) ConfirmDetail.Text = error;
-            }
+            // Never silently routes to Print-to-PDF: PrintSilent refuses virtual printers
+            // and says so, rather than throwing a Save-As box at the cashier mid-queue.
+            printProblem = ReceiptPrinter.PrintSilent(paper, isDuplicate: false);
+            if (printProblem is not null) ConfirmDetail.Text = printProblem;
         }
 
         ((Storyboard)FindResource("PaymentConfirmed")).Begin(this);
+
+        // The customer still has to be handed something. With a printer attached the paper is
+        // already coming out and the counter must not be held up, so nothing more happens
+        // here. With no printer — or a printer that just refused — the receipt is put on
+        // screen instead: the sale is banked either way, and the shop can read the total back
+        // to the customer or print it from this window once the machine arrives.
+        var printerDidIt = AppSettings.Current.AutoPrintReceipts && printProblem is null;
+        if (paper is not null && !printerDidIt)
+            new ReceiptWindow(paper, allowReprint: true) { Owner = this }.ShowDialog();
 
         FocusBarcode();
     }

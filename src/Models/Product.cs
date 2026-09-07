@@ -31,6 +31,29 @@ public sealed class Product
     public string? ImagePath { get; init; }
 
     /// <summary>
+    /// How many are on the shelf.
+    ///
+    /// The till carries it so a scan can be refused at the counter rather than at the moment
+    /// the sale is saved. The database still has the last word — see
+    /// <c>InventoryRepository.Move</c> — because this figure is a snapshot and a second till
+    /// may have sold the last one a moment ago.
+    /// </summary>
+    public decimal Stock { get; init; }
+
+    /// <summary>Nothing left on the shelf.</summary>
+    public bool IsOutOfStock => Stock <= 0m;
+
+    /// <summary>
+    /// The badge on an empty tile, in the shop's language.
+    ///
+    /// A property rather than a label typed into the tile's template. The template is built
+    /// once per product as the grid scrolls, and whether a translator has run by then depends
+    /// on load order — which is a thing that works on one machine and not another. Asking the
+    /// product what it is called takes the timing out of it.
+    /// </summary>
+    public string OutOfStockLabel => Services.Loc.T("Out of stock");
+
+    /// <summary>
     /// False for something the shop keeps a record of but does not sell over the counter.
     /// It disappears from the till entirely — it cannot be pressed and it cannot be scanned.
     /// </summary>

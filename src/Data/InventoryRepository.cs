@@ -51,6 +51,17 @@ public static class InventoryRepository
 
             var after = before + quantity;
 
+            // The shelf cannot hold less than nothing.
+            //
+            // This is the floor for the whole application, not a convenience for the till.
+            // Every path that moves stock arrives here — a sale, a loss, a supplier return,
+            // a correction — so putting the check anywhere else would leave a way round it.
+            // Without it a shop with thirty tins could sell forty and the count would read
+            // minus ten for ever, quietly wrong in the stock value, the reorder list and the
+            // cost of goods.
+            if (after < 0m)
+                throw new NotEnoughStockException(NameOf(db, productId), before, -quantity);
+
             using (var write = db.CreateCommand())
             {
                 write.CommandText = "UPDATE products SET stock = $stock, updated_at = $now WHERE id = $id;";
@@ -88,6 +99,18 @@ public static class InventoryRepository
             transaction?.Dispose();
             if (own) db.Dispose();
         }
+    }
+
+    /// <summary>
+    /// The product's name, for an error a person has to read. Looked up only when something
+    /// has already gone wrong, so the cost of the extra query never lands on a normal sale.
+    /// </summary>
+    private static string NameOf(SqliteConnection db, int productId)
+    {
+        using var command = db.CreateCommand();
+        command.CommandText = "SELECT name FROM products WHERE id = $id;";
+        command.With("$id", productId);
+        return command.ExecuteScalar() as string ?? $"#{productId}";
     }
 
     /// <summary>

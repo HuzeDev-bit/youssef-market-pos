@@ -223,6 +223,7 @@ public static class FlowTest
         TheBillsAreNotStock();
         ASaleHandedOverByATill();
         AnOrdinaryDayForACashier();
+        SellingTheLastOne();
     }
 
     /// <summary>
@@ -526,6 +527,79 @@ public static class FlowTest
               saved.CashierLabel.Contains("Fatima") ? 1 : 0, 1);
         Check("it is dated when it happened, not when it arrived",
               Math.Abs((saved.SoldAt - soldAt).TotalMinutes) < 1 ? 1 : 0, 1);
+    }
+
+    /// <summary>
+    /// Selling down to the last one, and then trying to sell one more.
+    ///
+    /// The bug this holds shut: stock was a signed sum with no floor, so a shop with thirty
+    /// tins could sell forty and the count read minus ten afterwards — quietly wrong in the
+    /// stock value, in the reorder list, and in the cost of goods for ever after. Nothing on
+    /// any screen looked broken.
+    /// </summary>
+    private static void SellingTheLastOne()
+    {
+        Session.UnlockAsOwner();
+
+        var id = StockRepository.Create(new StockItem
+        {
+            Barcode = "9990000000777",
+            Name = "Last Tin",
+            Category = "Test",
+            Cost = 4m,
+            Price = 10m,
+            MinStock = 1m,
+        }, openingStock: 3m);
+
+        Check("the shelf starts with three", StockRepository.Find(id)!.Stock, 3m);
+
+        Catalog.Reload();
+        var product = Catalog.Products.First(p => p.Id == id);
+        var line = new List<SaleItem> { new(product, 3m) };
+
+        // All three, which is allowed exactly once.
+        SaleRepository.Save(line, 30m, DiscountKind.None, 0m, 0m, 30m, 0m, 30m,
+                            PaymentMethod.Cash, 30m);
+
+        Check("selling all three empties the shelf", StockRepository.Find(id)!.Stock, 0m);
+        Check("and the shop calls it out of stock",
+              StockRepository.Find(id)!.Status == StockStatus.OutOfStock ? 1 : 0, 1);
+
+        // The fourth. This is the whole point.
+        var refused = false;
+        var message = string.Empty;
+        try
+        {
+            SaleRepository.Save(new List<SaleItem> { new(product, 1m) }, 10m, DiscountKind.None,
+                                0m, 0m, 10m, 0m, 10m, PaymentMethod.Cash, 10m);
+        }
+        catch (NotEnoughStockException error)
+        {
+            refused = true;
+            message = error.Message;
+        }
+
+        Check("selling one more is refused", refused ? 1 : 0, 1);
+        Check("the shelf is still zero, not minus one", StockRepository.Find(id)!.Stock, 0m);
+
+        // And the refusal must not have half-written a sale.
+        var sales = SalesHistoryRepository.List(DateRange.For(DatePreset.ThisYear))
+            .Count(x => x.InvoiceNumber > 0);
+        SaleRepository.Save(new List<SaleItem>(), 0m, DiscountKind.None, 0m, 0m, 0m, 0m, 0m,
+                            PaymentMethod.Cash, 0m);
+        var after = SalesHistoryRepository.List(DateRange.For(DatePreset.ThisYear))
+            .Count(x => x.InvoiceNumber > 0);
+
+        Check("a refused sale leaves no invoice behind", after - sales, 1);
+
+        Log.AppendLine($"      the till would say: {message}");
+
+        // A loss cannot dig below the floor either — the same rule, a different door.
+        var lossRefused = false;
+        try { InventoryRepository.RecordLoss(id, "Last Tin", 1m, StockReason.Damaged); }
+        catch (NotEnoughStockException) { lossRefused = true; }
+
+        Check("writing off more than is there is refused too", lossRefused ? 1 : 0, 1);
     }
 
     private static void Check(string what, decimal actual, decimal expected)

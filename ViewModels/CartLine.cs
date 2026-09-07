@@ -29,7 +29,16 @@ public sealed class CartLine : ViewModelBase
                 ? Math.Round(value, 3)
                 : Math.Round(value, 0, MidpointRounding.AwayFromZero);
 
+            // Never below one, and never above what the shop has. The cap is here as well as
+            // on the scan because this setter is what the quantity box writes to, and a
+            // cashier typing 99 into a line with three left is the same mistake as scanning
+            // the fourth one.
             var clamped = Math.Max(MinimumQuantity, normalized);
+            if (Product.Stock > 0m && clamped > Product.Stock)
+            {
+                clamped = Product.Stock;
+                Capped?.Invoke(this, Product.Stock);
+            }
 
             if (SetField(ref _quantity, clamped))
             {
@@ -73,6 +82,12 @@ public sealed class CartLine : ViewModelBase
         };
         timer.Start();
     }
+
+    /// <summary>
+    /// Raised when a typed quantity was more than the shelf holds and was brought back down,
+    /// so the till can say so rather than silently changing what somebody typed.
+    /// </summary>
+    public event EventHandler<decimal>? Capped;
 
     private decimal MinimumQuantity => Product.Unit == Unit.Kg ? 0.001m : 1m;
 

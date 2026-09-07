@@ -62,6 +62,7 @@ public static class SelfTest
         CheckTheShopsOwnLanguage(report, ref failures);
         CheckScanningPutsItOnTheSale(report, ref failures);
         CheckTheBasketAsksOneThing(report, ref failures);
+        CheckTheTillRefusesWhatIsNotThere(report, ref failures);
         CheckPriceCheck(report, ref failures);
         CheckStandaloneShopIsLeftAlone(report, ref failures);
         CheckTillAsCashier(report, ref failures);
@@ -704,6 +705,74 @@ public static class SelfTest
         {
             Loc.Use(was);
         }
+    }
+
+    /// <summary>
+    /// The scan that must not happen.
+    ///
+    /// A cashier scanning a run of items looks at the customer, not the screen, so a till that
+    /// silently keeps adding an item it does not have is a till that hands over goods the shop
+    /// cannot supply and a count nobody can trust afterwards. Both refusals are checked here,
+    /// and both of them name the product: "error" on its own tells the person at the counter
+    /// nothing they can act on.
+    /// </summary>
+    private static void CheckTheTillRefusesWhatIsNotThere(StringBuilder report, ref int failures)
+    {
+        var empty = Catalog.Products.FirstOrDefault(p => p.IsOutOfStock && p.Barcode.Length > 0);
+        var till = new MainWindow();
+
+        if (empty is null)
+        {
+            report.AppendLine("ok    the till refuses an empty shelf (nothing in the shop is at zero)");
+        }
+        else
+        {
+            till.Vm.SearchText = empty.Barcode;
+            till.Vm.SubmitBarcodeCommand.Execute(null);
+
+            Verdict(report, ref failures, "scanning something with none left puts nothing on the sale",
+                till.Vm.Cart.Count == 0,
+                $"{empty.Name} has {empty.Stock:0.###} left; the basket holds {till.Vm.Cart.Count} line(s)");
+
+            Verdict(report, ref failures, "and the cashier is told which product it was",
+                till.Vm.StatusIsError && till.Vm.StatusMessage.Contains(empty.Name),
+                $"\"{till.Vm.StatusMessage}\"");
+        }
+
+        // A barcode the shop has never heard of.
+        var stranger = new MainWindow();
+        stranger.Vm.SearchText = "9999999999999";
+        stranger.Vm.SubmitBarcodeCommand.Execute(null);
+
+        Verdict(report, ref failures, "an unknown barcode is refused, not searched for",
+            stranger.Vm.Cart.Count == 0 && stranger.Vm.StatusIsError
+                && stranger.Vm.StatusMessage.Contains("9999999999999"),
+            $"\"{stranger.Vm.StatusMessage}\"");
+
+        // And the basket cannot be filled past the shelf by scanning the same thing over.
+        var stocked = Catalog.Products
+            .FirstOrDefault(p => p is { IsOutOfStock: false, Barcode.Length: > 0 } && p.Stock <= 40m);
+
+        if (stocked is null)
+        {
+            report.AppendLine("ok    the basket stops at the shelf (nothing small enough to scan dry)");
+            return;
+        }
+
+        var counter = new MainWindow();
+        var scans = (int)stocked.Stock + 3;
+        for (var i = 0; i < scans; i++)
+        {
+            counter.Vm.SearchText = stocked.Barcode;
+            counter.Vm.SubmitBarcodeCommand.Execute(null);
+        }
+
+        var onTheSale = counter.Vm.Cart.FirstOrDefault()?.Quantity ?? 0m;
+
+        Verdict(report, ref failures, "scanning past the last one stops at the last one",
+            onTheSale == stocked.Stock,
+            $"{scans} scans of {stocked.Name} ({stocked.Stock:0.###} in stock) put "
+          + $"{onTheSale:0.###} on the sale");
     }
 
     private static void CheckPriceCheck(StringBuilder report, ref int failures)

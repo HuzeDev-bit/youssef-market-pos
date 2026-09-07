@@ -154,6 +154,14 @@ public static class ReceiptPrinter
             Background = Brushes.White,
             Foreground = Brushes.Black,
             TextAlignment = TextAlignment.Left,
+
+            // A receipt is thirty-two columns of fixed-width text: the label on the left, the
+            // figure padded to the right edge. That only holds in a left-to-right paragraph.
+            // Laid out right to left for Arabic, the bidi algorithm moved every Latin run to
+            // the other end and the paper came out reading "DH 64.50  المجموع" with the
+            // columns gone. The Arabic words still read right to left inside the line, which
+            // is correct; it is the column that must not move.
+            FlowDirection = FlowDirection.LeftToRight,
         };
 
         var logo = BlackLogo();
@@ -264,11 +272,21 @@ public static class ReceiptPrinter
     };
 
     /// <summary>Label left, amount hard right, padded to the column width.</summary>
+    /// <summary>
+    /// A label on the left, a figure padded to the right edge — the shape of every line on a
+    /// receipt.
+    ///
+    /// The marks around the figure are what keep it together next to an Arabic label. Without
+    /// them the bidi algorithm reads "64.50 DH" as two runs either side of the Arabic word and
+    /// prints "DH 64.50 المجموع", with the currency on the wrong side of its own number. The
+    /// padding is measured on the visible text, not on the marks, or the columns would drift a
+    /// character on every translated line.
+    /// </summary>
     private static string Pair(string left, string right)
     {
         left = Clip(left, Columns - right.Length - 1);
         var gap = Math.Max(1, Columns - left.Length - right.Length);
-        return left + new string(' ', gap) + right;
+        return left + new string(' ', gap) + Loc.Ltr(right);
     }
 
     private static string Centre(string text)
@@ -283,6 +301,11 @@ public static class ReceiptPrinter
     private static string Clip(string text, int width) =>
         text.Length <= width ? text : text[..Math.Max(0, width)];
 
+    /// <summary>
+    /// Plain digits, no marks: <see cref="Pair"/> adds them once the column width has been
+    /// measured, and adding them here as well would make every amount two characters wider
+    /// than it looks.
+    /// </summary>
     private static string Money(decimal value) =>
         value.ToString("N2", CultureInfo.InvariantCulture) + " DH";
 

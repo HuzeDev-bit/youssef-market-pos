@@ -463,12 +463,12 @@ public sealed class StockItem
         : Stock <= MinStock ? StockStatus.LowStock
         : StockStatus.InStock;
 
-    public string StatusLabel => Status switch
+    public string StatusLabel => Services.Loc.T(Status switch
     {
         StockStatus.OutOfStock => "Out of stock",
         StockStatus.LowStock => "Low stock",
         _ => "In stock",
-    };
+    });
 
     /// <summary>Days until expiry, or null when the product does not carry a date.</summary>
     public int? DaysToExpiry => ExpiresOn is { } d ? (int)(d.Date - DateTime.Today).TotalDays : null;

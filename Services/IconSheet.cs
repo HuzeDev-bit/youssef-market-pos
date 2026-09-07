@@ -247,6 +247,29 @@ public static class IconSheet
         Dialog(till, 1500,
                System.IO.Path.Combine(System.IO.Path.GetDirectoryName(path)!, "till-pricecheck.png"));
 
+        // The paper the customer is handed. Drawn from a real sale out of the shop's own books,
+        // because the receipt is the one screen whose layout is dictated by 32 columns of
+        // fixed-width text rather than by anything in the theme.
+        try
+        {
+            var last = Data.SalesHistoryRepository
+                .List(Models.DateRange.For(Models.DatePreset.ThisYear))
+                .OrderByDescending(x => x.InvoiceNumber)
+                .FirstOrDefault();
+
+            var paper = last is null
+                ? null
+                : Data.SaleRepository.FindByInvoiceNumber(last.InvoiceNumber);
+
+            if (paper is not null)
+                Dialog(new Views.ReceiptWindow(paper, allowReprint: true), 420,
+                       System.IO.Path.Combine(System.IO.Path.GetDirectoryName(path)!, "receipt.png"));
+        }
+        catch (Exception error)
+        {
+            Console.WriteLine($"receipt not drawn: {error.GetType().Name}: {error.Message}");
+        }
+
         Dialog(new Views.SettingsWindow(), 500,
                System.IO.Path.Combine(System.IO.Path.GetDirectoryName(path)!, "dialog-Settings.png"));
 

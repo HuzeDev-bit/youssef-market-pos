@@ -14,7 +14,7 @@ public static class ProductRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT p.id, p.barcode, p.name, c.name, p.price, p.unit, p.tax_rate, p.image_path,
-                   p.show_in_pos
+                   p.show_in_pos, p.stock
             FROM products p
             JOIN categories c ON c.id = p.category_id
             WHERE p.is_active = 1
@@ -40,6 +40,7 @@ public static class ProductRepository
                     ? ProductImages.Find(reader.GetString(1))
                     : reader.GetString(7),
                 SoldAtTheTill = reader.IsDBNull(8) || reader.GetInt32(8) != 0,
+                Stock = reader.Dec(9),
             });
         }
         return products;

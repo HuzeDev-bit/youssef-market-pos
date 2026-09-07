@@ -313,6 +313,18 @@ public static class Translations
             ["Enter what it sells for."] =
                 ("Indiquez son prix de vente.",
                  "أدخل سعر بيعه."),
+            ["Error: only {0} of {1} left, and they are all in this sale."] =
+                ("Erreur : il ne reste que {0} de {1}, et ils sont déjà tous dans cette vente.",
+                 "خطأ: لم يتبق سوى {0} من {1}، وكلها في هذه العملية بالفعل."),
+            ["Error: only {0} of {1} left."] =
+                ("Erreur : il ne reste que {0} de {1}.",
+                 "خطأ: لم يتبق سوى {0} من {1}."),
+            ["Error: {0} is out of stock."] =
+                ("Erreur : {0} est en rupture de stock.",
+                 "خطأ: {0} نفد من المخزون."),
+            ["Error: {0} not found in stock."] =
+                ("Erreur : {0} introuvable dans le stock.",
+                 "خطأ: {0} غير موجود في المخزون."),
             ["Especes"] =
                 ("Especes",
                  "نقداً"),
@@ -403,6 +415,9 @@ public static class Translations
             ["ITEMS SOLD"] =
                 ("ARTICLES VENDUS",
                  "المنتجات المباعة"),
+            ["In stock"] =
+                ("En stock",
+                 "متوفر"),
             ["Inventory"] =
                 ("Stock",
                  "المخزون"),
@@ -439,6 +454,9 @@ public static class Translations
             ["Low"] =
                 ("Bas",
                  "منخفض"),
+            ["Low stock"] =
+                ("Stock bas",
+                 "مخزون منخفض"),
             ["MARGIN"] =
                 ("MARGE",
                  "الهامش"),
@@ -640,6 +658,9 @@ public static class Translations
             ["Out"] =
                 ("Rupture",
                  "نفد"),
+            ["Out of stock"] =
+                ("Rupture de stock",
+                 "نفد من المخزون"),
             ["Over 100%"] =
                 ("Plus de 100 %",
                  "أكثر من 100%"),
@@ -754,6 +775,9 @@ public static class Translations
             ["Price check"] =
                 ("Vérifier le prix",
                  "التحقق من السعر"),
+            ["Print"] =
+                ("Imprimer",
+                 "طباعة"),
             ["Print another copy of a past receipt"] =
                 ("Imprimer une copie d'un ancien ticket",
                  "طباعة نسخة من إيصال سابق"),
@@ -826,6 +850,9 @@ public static class Translations
             ["Read top to bottom. Each line takes something off the one above it, and the last line is what the shop actually kept."] =
                 ("À lire de haut en bas. Chaque ligne retire quelque chose à celle du dessus, et la dernière ligne est ce que la boutique a réellement gardé.",
                  "اقرأ من الأعلى إلى الأسفل. كل سطر يطرح شيئاً من السطر الذي فوقه، والسطر الأخير هو ما احتفظ به المتجر فعلاً."),
+            ["Receipt #{0}"] =
+                ("Ticket n° {0}",
+                 "إيصال رقم {0}"),
             ["Receipt number, product or cashier"] =
                 ("Numéro de ticket, produit ou caissier",
                  "رقم الإيصال أو المنتج أو الكاشير"),
@@ -1462,6 +1489,9 @@ public static class Translations
             ["rent, power, water, wifi"] =
                 ("loyer, électricité, eau, wifi",
                  "الكراء والكهرباء والماء والواي فاي"),
+            ["reprints as a duplicate"] =
+                ("réimprimé comme duplicata",
+                 "يُعاد طبعه كنسخة"),
             ["running low"] =
                 ("bientôt épuisé",
                  "على وشك النفاد"),

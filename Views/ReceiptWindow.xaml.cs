@@ -24,12 +24,15 @@ public partial class ReceiptWindow : Window
         _receipt = receipt;
         _asDuplicate = allowReprint;
 
-        HeadingText.Text = $"Receipt #{receipt.InvoiceNumber}";
-        SubText.Text = allowReprint
-            ? $"{receipt.SoldAt:dd/MM/yyyy HH:mm}  ·  {receipt.Total:N2} DH  ·  reprints as a duplicate"
-            : $"{receipt.SoldAt:dd/MM/yyyy HH:mm}  ·  {receipt.Total:N2} DH";
+        HeadingText.Text = Loc.T("Receipt #{0}", receipt.InvoiceNumber);
 
-        PrintButton.Content = allowReprint ? "Reprint" : "Print";
+        var when = receipt.SoldAt.ToString("dd/MM/yyyy HH:mm");
+        var total = Loc.Ltr($"{receipt.Total:N2} DH");
+        SubText.Text = allowReprint
+            ? $"{when}  ·  {total}  ·  {Loc.T("reprints as a duplicate")}"
+            : $"{when}  ·  {total}";
+
+        PrintButton.Content = Loc.T(allowReprint ? "Reprint" : "Print");
         Preview.Document = ReceiptPrinter.Build(receipt, _asDuplicate);
     }
 

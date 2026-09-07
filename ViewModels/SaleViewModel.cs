@@ -131,6 +131,52 @@ public sealed class SaleViewModel : ViewModelBase
         private set => SetField(ref _statusIsError, value);
     }
 
+    /// <summary>
+    /// Refuses something, and says why where the cashier is already looking.
+    ///
+    /// The query is cleared with it: leaving the barcode in the box means the next scan lands
+    /// on the end of the last one, and a cashier who scans three more items in the second it
+    /// takes to read the message ends up with a search for a number nothing matches.
+    /// </summary>
+    private void Refuse(string why)
+    {
+        SetStatus(why, isError: true);
+        SearchText = string.Empty;
+        Refused?.Invoke(this, why);
+        FocusBarcode();
+    }
+
+    /// <summary>
+    /// Re-reads the shop from the database and puts the new counts on screen.
+    ///
+    /// Called after anything that moves stock. The grid is rebuilt rather than nudged because
+    /// a product that has just hit zero has to leave the tiles as well as stop scanning.
+    /// </summary>
+    public void ReloadCatalogue()
+    {
+        Catalog.Reload();
+        ProductsView = BuildProductsView();
+        ApplySort();
+        OnPropertyChanged(nameof(ProductsView));
+        RefreshProducts();
+        if (IsProductsPage) RefreshProductsPage();
+    }
+
+    /// <summary>Raised when a scan was turned away, so the till can make a noise about it.</summary>
+    public event EventHandler<string>? Refused;
+
+    /// <summary>
+    /// A typed quantity was brought down to what the shelf holds. Said out loud, because
+    /// silently changing a number somebody just typed is how a cashier stops trusting the till.
+    /// </summary>
+    private void Line_Capped(object? sender, decimal available)
+    {
+        if (sender is not CartLine line) return;
+
+        SetStatus(Loc.T("Error: only {0} of {1} left.",
+                        $"{available:0.###}", line.Product.Name), isError: true);
+    }
+
     /// <summary>A plain confirmation in the till's status banner, from outside the view model.</summary>
     public void Announce(string message) => SetStatus(message, isError: false);
 
@@ -573,6 +619,15 @@ public sealed class SaleViewModel : ViewModelBase
         var scanned = Catalog.FindByBarcode(query);
         if (scanned is not null)
         {
+            // Nothing on the shelf. Said before anything else, because a cashier scanning a
+            // run of items needs to know which one stopped rather than watch a basket quietly
+            // fail to grow.
+            if (scanned.IsOutOfStock)
+            {
+                Refuse(Loc.T("Error: {0} is out of stock.", scanned.Name));
+                return;
+            }
+
             // Something the shop keeps a record of but does not sell. Saying so is kinder than
             // a silent nothing, which reads as a broken scanner.
             if (!scanned.SoldAtTheTill)
@@ -598,7 +653,7 @@ public sealed class SaleViewModel : ViewModelBase
                 // this yet — which is a different problem from a search with no results, and
                 // one the cashier cannot fix from the till.
                 SetStatus(LooksLikeABarcode(query)
-                    ? Loc.T("{0} is not in the shop. Add it in the back office.", query)
+                    ? Loc.T("Error: {0} not found in stock.", query)
                     : Loc.T("Nothing matches \"{0}\"", query), isError: true);
                 break;
             default:
@@ -624,6 +679,7 @@ public sealed class SaleViewModel : ViewModelBase
     {
         var line = new CartLine(product, quantity);
         line.PropertyChanged += Line_PropertyChanged;
+        line.Capped += Line_Capped;
         Cart.Add(line);
         line.Flash();
 
@@ -634,10 +690,39 @@ public sealed class SaleViewModel : ViewModelBase
         FocusBarcode();
     }
 
+    /// <summary>
+    /// How many more of this the basket may take.
+    ///
+    /// The shelf, less whatever is already in this basket. Counting the basket is the part
+    /// that is easy to forget and the part that matters: with thirty in stock, thirty scans
+    /// are a sale and the thirty-first is a mistake, and the thirty-first looks exactly like
+    /// the first if only the shelf is consulted.
+    /// </summary>
+    private decimal RoomFor(Product product)
+    {
+        var alreadyInBasket = Cart
+            .Where(l => l.Product.Barcode == product.Barcode)
+            .Sum(l => l.Quantity);
+
+        return product.Stock - alreadyInBasket;
+    }
+
     private void AddProduct(Product product)
     {
         CartLine touched;
         var existing = Cart.FirstOrDefault(l => l.Product.Barcode == product.Barcode);
+        var wanted = existing?.Step ?? (product.Unit == Unit.Kg ? 1.0m : 1m);
+
+        // The shelf has the last word, and it says no.
+        if (RoomFor(product) < wanted)
+        {
+            Refuse(product.Stock <= 0m
+                ? Loc.T("Error: {0} is out of stock.", product.Name)
+                : Loc.T("Error: only {0} of {1} left, and they are all in this sale.",
+                        $"{product.Stock:0.###}", product.Name));
+            return;
+        }
+
         if (existing is not null)
         {
             existing.Quantity += existing.Step;
@@ -648,6 +733,7 @@ public sealed class SaleViewModel : ViewModelBase
         {
             var line = new CartLine(product, product.Unit == Unit.Kg ? 1.0m : 1m);
             line.PropertyChanged += Line_PropertyChanged;
+            line.Capped += Line_Capped;
             Cart.Add(line);
             line.Flash();
             touched = line;
@@ -809,9 +895,22 @@ public sealed class SaleViewModel : ViewModelBase
             ClearCart();
             if (IsTicketsPage) LoadTickets();
 
+            // The shelf has just changed. Without re-reading it the till goes on believing
+            // the counts it loaded at start-up, and a shop with thirty tins would happily
+            // sell another thirty before anybody restarted the app.
+            ReloadCatalogue();
+
             // No success banner: the Payment Confirmed animation already says this, and a
             // second message left sitting on screen just gets stale. Failures still surface.
             StatusMessage = string.Empty;
+        }
+        catch (NotEnoughStockException shortfall)
+        {
+            // Somebody else sold the last one while this basket was being filled — the other
+            // till, or the back office writing off a breakage. Nothing was saved; the message
+            // is the shop's own words, so it goes out as it is.
+            ReloadCatalogue();
+            SetStatus(shortfall.Message, isError: true);
         }
         catch (Exception ex)
         {
