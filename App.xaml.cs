@@ -82,6 +82,29 @@ public partial class App : Application
         // Start the back-office server so both backend and frontend run together
         // from this single executable.
         ShopServer.Start();
+
+        // ---------------------------------------------------------------- what to put on screen
+        //
+        // A shop with two computers can give the server one a screen and a keyboard, and then
+        // it is an ordinary machine running the app that happens to answer the tills. Or it can
+        // be a box in the back with nothing plugged into it, and then a window is something
+        // nobody will ever look at and somebody will eventually close by accident — which takes
+        // the shop's server down with it. --server is that second machine: the same program,
+        // serving the tills, with nothing on screen to close.
+        if (e.Args.Contains("--server"))
+        {
+            // Nothing will ever open a window, and an application whose last window closed is
+            // an application that quits — so this one is told to keep going until it is
+            // stopped from outside.
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            return;
+        }
+
+        // Opened here rather than through StartupUri, which WPF acts on after this method
+        // returns whatever has happened inside it — so every mode above had to end the process
+        // outright to stop a till window being built behind it.
+        MainWindow = new Views.MainWindow();
+        MainWindow.Show();
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -91,21 +114,14 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Ends a run that has no window to show.
+    /// Ends a run that has no window to show, with the exit code the diagnostics reported.
     ///
-    /// Shutdown alone is not enough: StartupUri is declared in App.xaml, and WPF goes on to
-    /// build that window after OnStartup returns — so a headless mode that skipped
-    /// Catalog.Load would raise the till anyway, watch its view model throw for want of a
-    /// catalogue, and sit on an error dialog forever instead of exiting.
+    /// Leaves through the process rather than through Shutdown, which asks WPF to stop once it
+    /// gets back to its message loop and is therefore not a way to stop what the rest of this
+    /// method would do next.
     /// </summary>
     private void Headless(int code)
     {
-        // Leaves now, rather than through Shutdown. StartupUri is declared in App.xaml, so
-        // WPF builds the till window once OnStartup returns no matter what Shutdown has been
-        // asked for — and a mode that skipped Catalog.Load then watches the view model throw
-        // for want of a catalogue and sits on an error dialog forever. StartupUri cannot be
-        // cleared either; its setter refuses null. Ending the process is what actually stops
-        // the window being built.
         Console.Out.Flush();
         Environment.Exit(code);
     }

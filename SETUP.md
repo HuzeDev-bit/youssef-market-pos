@@ -30,6 +30,20 @@ uses. This machine is the one that holds the shop: the database is at
 Find its address with `ipconfig` — the IPv4 line, e.g. `192.168.1.20`. The tills are pointed at
 `http://192.168.1.20:5000`.
 
+If the machine has a screen and somebody uses it, that is all: it is an ordinary machine
+running the app, which happens to answer the tills as well.
+
+If it is a box in the back with nothing plugged into it, run it with `--server` instead:
+
+```
+MarketPos.exe --server
+```
+
+Same program, same database, same port — with no window. Nothing on screen means nothing for
+somebody to close by accident, which on that machine would take the shop's server down with
+it. Put a shortcut to it in `shell:startup` so it comes back after a power cut. It stops from
+Task Manager, or by shutting the machine down.
+
 Two things to check the first time:
 
 - **Windows Firewall** will ask whether to allow it. Say yes for *private* networks.
