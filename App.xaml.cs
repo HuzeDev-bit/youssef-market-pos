@@ -79,19 +79,21 @@ public partial class App : Application
         // Once, and only on an install that has never had one — see AdminAccount.
         AdminAccount.StartWithTheDefault();
 
-        // Start the back-office server so both backend and frontend run together
-        // from this single executable.
-        ShopServer.Start();
+        var job = WhatThisOneIs(e.Args);
+
+        // The till machine does not serve anybody. Leaving the server running on it would put a
+        // second shop on the network, listening on the same port, answering with a catalogue
+        // that is only ever a copy — and whichever machine a till found first would be the one
+        // it believed.
+        if (job != Job.Till) ShopServer.Start();
 
         // ---------------------------------------------------------------- what to put on screen
         //
-        // A shop with two computers can give the server one a screen and a keyboard, and then
-        // it is an ordinary machine running the app that happens to answer the tills. Or it can
-        // be a box in the back with nothing plugged into it, and then a window is something
-        // nobody will ever look at and somebody will eventually close by accident — which takes
-        // the shop's server down with it. --server is that second machine: the same program,
-        // serving the tills, with nothing on screen to close.
-        if (e.Args.Contains("--server"))
+        // A server with a screen and a keyboard is the owner's machine: it holds the books, so
+        // it is where the back office is. A server that is a box in the back has nothing to
+        // show, and a window nobody looks at is a window somebody eventually closes — which on
+        // that machine takes the shop's server down with it.
+        if (e.Args.Contains("--server") || e.Args.Contains("--headless"))
         {
             // Nothing will ever open a window, and an application whose last window closed is
             // an application that quits — so this one is told to keep going until it is
@@ -103,8 +105,50 @@ public partial class App : Application
         // Opened here rather than through StartupUri, which WPF acts on after this method
         // returns whatever has happened inside it — so every mode above had to end the process
         // outright to stop a till window being built behind it.
+        if (job == Job.Server)
+        {
+            // The books, without the counter. Nobody sells on this machine, so there is no till
+            // window to come back to and the back office is the whole of what it shows —
+            // closed, and the machine has finished. The server itself goes on either way.
+            if (!Views.StaffSignInWindow.Ask(null))
+            {
+                Shutdown();
+                return;
+            }
+
+            var office = new Views.AdminWindow();
+            MainWindow = office;
+            office.Show();
+            return;
+        }
+
         MainWindow = new Views.MainWindow();
         MainWindow.Show();
+    }
+
+    /// <summary>
+    /// Which of the shop's two machines this copy is running on.
+    ///
+    /// Taken from the name of the file that was started, so that a shop is handed two downloads
+    /// and puts one on each machine, rather than the same one twice with a flag typed into a
+    /// shortcut that the next person to set the machine up will not know about. The flags still
+    /// work, and win, for anyone driving it by hand.
+    /// </summary>
+    private enum Job { Shop, Server, Till }
+
+    private static Job WhatThisOneIs(string[] args)
+    {
+        if (args.Contains("--till")) return Job.Till;
+        if (args.Contains("--server") || args.Contains("--headless")) return Job.Server;
+
+        var name = System.IO.Path.GetFileNameWithoutExtension(
+            Environment.ProcessPath ?? string.Empty);
+
+        if (name.EndsWith("Server", StringComparison.OrdinalIgnoreCase)) return Job.Server;
+        if (name.EndsWith("Till", StringComparison.OrdinalIgnoreCase)) return Job.Till;
+
+        // The one download that is both, which is what a shop with one computer wants.
+        return Job.Shop;
     }
 
     protected override void OnExit(ExitEventArgs e)

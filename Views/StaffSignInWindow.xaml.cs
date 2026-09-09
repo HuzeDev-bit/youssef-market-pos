@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -57,12 +57,22 @@ public partial class StaffSignInWindow : Window
     }
 
     /// <summary>Shows the lock and signs the person in. True when the caller may proceed.</summary>
-    public static bool Ask(Window owner)
+    /// <summary>
+    /// Asks who is at the machine, unless somebody already said this run.
+    ///
+    /// The owner window may be nothing at all: on the shop's server there is no till behind
+    /// this, and the sign-in is the first thing on screen.
+    /// </summary>
+    public static bool Ask(Window? owner)
     {
         if (Session.Current is not null) return true;    // somebody signed in this run
         if (Session.IsOwnerUnlocked) return true;
 
-        return new StaffSignInWindow { Owner = owner }.ShowDialog() == true;
+        var asking = new StaffSignInWindow();
+        if (owner is not null) asking.Owner = owner;
+        else asking.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
+        return asking.ShowDialog() == true;
     }
 
     /// <summary>
