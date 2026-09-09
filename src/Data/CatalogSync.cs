@@ -1,4 +1,4 @@
-using MarketPos.Link;
+﻿using MarketPos.Link;
 using MarketPos.Models;
 
 namespace MarketPos.Data;
@@ -129,5 +129,29 @@ public static class CatalogSync
     {
         get => Meta.Get("catalog_stamp");
         set => Meta.Set("catalog_stamp", value);
+    }
+
+    /// <summary>Whether this database has ever been handed a catalogue by a server.</summary>
+    public static bool HasEverSynced => Stamp.Length > 0;
+
+    /// <summary>
+    /// Takes everything off this till's shelves, because none of it is this till's to sell.
+    ///
+    /// A till is a copy of a shop. A machine that has never been handed that copy has no
+    /// business showing products at all — but if the app was ever run on it as a shop of its
+    /// own, or a database was carried over from somewhere, it has rows, and it will happily
+    /// put them on screen and sell them. Somebody opens the till on their laptop and sees a
+    /// shop: the wrong products, the wrong prices, and sales that no book in the world will
+    /// ever record.
+    ///
+    /// Retired rather than deleted, and the same way the server retires them, because a sale
+    /// already taken on this machine may point at one of them.
+    /// </summary>
+    public static int ForgetEverything()
+    {
+        using var connection = Database.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE products SET show_in_pos = 0, is_active = 0 WHERE is_active = 1;";
+        return command.ExecuteNonQuery();
     }
 }

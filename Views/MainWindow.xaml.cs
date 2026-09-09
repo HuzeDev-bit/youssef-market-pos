@@ -98,6 +98,22 @@ public partial class MainWindow : Window
 
         LinkChip.Visibility = Visibility.Visible;
 
+        // Nothing on the shelves until the shop has put something there.
+        //
+        // A till is a copy of a shop and holds nothing of its own. But the file it keeps that
+        // copy in is an ordinary database on an ordinary computer, and it may already have
+        // products in it — the app was run on that laptop as a shop of its own once, or a
+        // database was carried over. The till would put them on screen and sell them, and
+        // somebody opening the till on their own machine would see a shop: the wrong products,
+        // the wrong prices, and sales no book anywhere will record. So a till that has never
+        // been handed a catalogue starts with empty shelves, and the only thing that can fill
+        // them is the server.
+        if (!CatalogSync.HasEverSynced && CatalogSync.ForgetEverything() > 0)
+        {
+            Catalog.Reload();
+            Vm.ReloadProducts();
+        }
+
         if (!ShopLink.IsConfigured)
         {
             // The search runs once the till's own window is up, so the setup question it may
