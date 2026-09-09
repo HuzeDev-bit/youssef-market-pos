@@ -174,9 +174,17 @@ public static class TouchKeyboard
 
                     _button?.Wake();
 
-                    // Already up and the caret has moved to a box of the other kind: swap the
-                    // keys under the shop's hand rather than make them close it and press again.
-                    if (IsOpen) Open(sender);
+                    // Already up, and the caret has landed in a box that only takes numbers:
+                    // show the number pad without waiting to be asked.
+                    //
+                    // One way only. The caret moves on its own all the time at a till — Enter
+                    // on a quantity commits it and hands the caret back to the barcode box,
+                    // which takes letters because it doubles as the search box — and a
+                    // keyboard that turned back into forty letters every time the cashier
+                    // finished typing a number is a keyboard that is never the one wanted.
+                    // Going back to letters is the shop's decision: press into a box that
+                    // takes them, or press the keyboard key on the pad.
+                    if (IsOpen && OnlyTakesNumbers(sender)) Open(sender);
                 }));
         }
 

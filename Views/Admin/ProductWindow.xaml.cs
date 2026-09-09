@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Input;
@@ -66,6 +66,20 @@ public partial class ProductWindow : Window
     public static bool AddNew(Window owner) =>
         new ProductWindow(null) { Owner = owner }.ShowDialog() == true;
 
+    /// <summary>
+    /// The same form, opened already knowing the barcode — the cashier has just scanned
+    /// something the shop does not sell yet, and the number is the one thing about it that is
+    /// already certain. The caret starts on the name, which is the first thing that is not.
+    /// </summary>
+    public static bool AddScanned(Window owner, string barcode)
+    {
+        var form = new ProductWindow(null) { Owner = owner };
+        form.BarcodeBox.Text = barcode;
+        form.Loaded += (_, _) => { form.NameBox.Focus(); form.NameBox.SelectAll(); };
+
+        return form.ShowDialog() == true;
+    }
+
     public static bool Edit(Window owner, StockItem item) =>
         new ProductWindow(item) { Owner = owner }.ShowDialog() == true;
 
@@ -119,7 +133,7 @@ public partial class ProductWindow : Window
 
     // ------------------------------- Validation -------------------------------
 
-    private void Save_Click(object sender, RoutedEventArgs e)
+    private async void Save_Click(object sender, RoutedEventArgs e)
     {
         ErrorText.Text = string.Empty;
 
@@ -186,10 +200,40 @@ public partial class ProductWindow : Window
 
         try
         {
-            if (_existing is null)
+            // A till holds a copy of the shop, not the shop. A new product written into that
+            // copy would be overwritten by the server on the next sync, so it goes to the
+            // server — which is also the only place the back office, the stock list and the
+            // other till will ever look for it.
+            if (_existing is null && ShopLink.IsConfigured)
+            {
+                var made = await ShopLink.AddProduct(new Link.NewProduct(
+                    barcode, name, category, price, cost, item.TaxRate,
+                    item.Unit.ToString(), stock,
+                    Session.Current?.Name ?? Session.OwnerLabel));
+
+                if (made is null)
+                {
+                    // Deliberately not saved here as a fallback. A product that exists on this
+                    // counter and nowhere else is worse than one that does not exist yet: it
+                    // sells, the stock never moves in the books, and nobody finds out until
+                    // the shelves are counted.
+                    ErrorText.Text = Loc.T("The shop's server did not take it: {0}",
+                                           ShopLink.LastProblem);
+                    return;
+                }
+
+                // Straight back down again, so the thing just added is on this till's own
+                // screen before the cashier looks up.
+                await ShopLink.PullCatalogue();
+            }
+            else if (_existing is null)
+            {
                 StockRepository.Create(item, openingStock: stock);
+            }
             else
+            {
                 StockRepository.Update(item);
+            }
 
             FilePicture(barcode, _existing?.Barcode);
             Catalog.Reload();

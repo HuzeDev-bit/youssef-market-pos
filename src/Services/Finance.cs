@@ -1,4 +1,4 @@
-using MarketPos.Data;
+﻿using MarketPos.Data;
 using MarketPos.Models;
 
 namespace MarketPos.Services;
@@ -8,15 +8,31 @@ public sealed class Financials
 {
     public required DateRange Range { get; init; }
 
+    /// <summary>
+    /// What the shop sold, at its own prices, before any remise it chose to give.
+    ///
+    /// A remise is not a smaller sale. The goods left the shelf at the shelf price and the
+    /// shop gave some of that back to keep a customer — so it belongs with the other things
+    /// that eat the profit, not hidden inside a sales figure that then quietly reads low. Seen
+    /// the old way, an owner giving remises all week saw takings fall and could not tell
+    /// whether they had sold less or given more away.
+    /// </summary>
     public decimal Revenue { get; init; }
+
     public decimal Cogs { get; init; }
-    public decimal GrossProfit => Revenue - Cogs;
+
+    /// <summary>What the shop sold minus what it cost and what was given away on it.</summary>
+    public decimal GrossProfit => Revenue - Cogs - Discounts;
 
     public decimal OperatingExpenses { get; init; }
     public decimal SalaryExpense { get; init; }
     public decimal StockLosses { get; init; }
 
-    /// <summary>Everything that reduces profit but is not the cost of what was sold.</summary>
+    /// <summary>
+    /// Everything that reduces profit but is not the cost of what was sold. The remise is not
+    /// here: it is taken off in <see cref="GrossProfit"/>, because it is given away on the
+    /// sale itself rather than spent running the shop.
+    /// </summary>
     public decimal TotalOperating => OperatingExpenses + SalaryExpense + StockLosses;
 
     public decimal NetProfit => GrossProfit - TotalOperating;
@@ -52,9 +68,10 @@ public sealed class Financials
 /// and the export cannot answer the same question three different ways. The accounting is
 /// deliberately plain:
 ///
-///     Revenue      = completed sales, less anything refunded
+///     Revenue      = completed sales at the shop's own prices, less anything refunded
+///     Remise       = what was given away on those sales
 ///     COGS         = the cost snapshotted onto those sale lines when they were rung up
-///     Gross profit = Revenue − COGS
+///     Gross profit = Revenue − COGS − remise
 ///     Net profit   = Gross profit − operating expenses − salaries paid − stock written off
 ///
 /// Buying stock never appears as an expense. It becomes COGS when the item sells, and the
@@ -91,6 +108,10 @@ public static class Finance
     /// Cancelled sales are excluded outright. Refunds are subtracted from revenue rather than
     /// hidden, and the matching cost is subtracted too — a returned item is back on the shelf,
     /// so its cost is no longer a cost of goods sold.
+    ///
+    /// Revenue is read before the remise — gross_before_discount, the figure that was rung up —
+    /// and the remise comes off the profit instead. The money in the drawer is unchanged and
+    /// is answered by CashCollected, which still counts what was actually paid.
     /// </summary>
     private static (decimal Revenue, decimal Cogs, int Count, decimal Items,
                     decimal Discounts, decimal Refunds, decimal Cash, decimal Card)
@@ -105,7 +126,9 @@ public static class Finance
         {
             command.CommandText = $"""
                 SELECT COUNT(*),
-                       {Db.Sum("total")},
+                       COALESCE(SUM(CASE WHEN CAST(gross_before_discount AS REAL) > 0
+                                         THEN CAST(gross_before_discount AS REAL)
+                                         ELSE CAST(total AS REAL) END), 0),
                        {Db.Sum("refunded")},
                        {Db.Sum("discount_amount")},
                        COALESCE(SUM(CASE WHEN payment_method = 'Cash'

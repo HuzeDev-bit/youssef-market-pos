@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -73,6 +73,7 @@ public partial class MainWindow : Window
         Vm.RequestBarcodeFocus += (_, _) => FocusBarcode();
         Vm.PaymentRequested += Vm_PaymentRequested;
         Vm.CartLineTouched += Vm_CartLineTouched;
+        Vm.ScannedSomethingUnknown += Vm_ScannedSomethingUnknown;
 
         StartTalkingToTheBackOffice();
     }
@@ -82,19 +83,95 @@ public partial class MainWindow : Window
     private DispatcherTimer? _sync;
 
     /// <summary>
-    /// Keeps this till and the back office in step, when there is a back office to keep step
-    /// with. A shop with one computer never enters any of this.
+    /// Connects this till to the shop that owns it.
     ///
-    /// Everything here is best-effort on purpose: the till sells from its own database, so a
-    /// failed exchange is a message in the corner of the screen, never an interruption.
+    /// The all-in-one MarketPos.exe is the shop and the till in one program and needs none of
+    /// this. A till on another machine — MarketPosTill.exe — belongs to a server somewhere,
+    /// and one that starts with no address would quietly keep its own books on the cashier's
+    /// computer, which is the one place they must not be. So a till with no address searches
+    /// the network for the shop, and asks the person setting it up where the shop is when
+    /// it cannot be found.
     /// </summary>
     private void StartTalkingToTheBackOffice()
     {
-        if (!ShopLink.IsConfigured) return;
+        if (App.CurrentJob != App.Job.Till) return;
 
         LinkChip.Visibility = Visibility.Visible;
-        ShowLinkState();
 
+        if (!ShopLink.IsConfigured)
+        {
+            // The search runs once the till's own window is up, so the setup question it may
+            // end in is asked in front of the till it belongs to. A till that is already
+            // connected by then skips straight to the usual syncing.
+            ShowLinkState();
+            Loaded += async (_, _) => await FindTheShop();
+            return;
+        }
+
+        SetupSyncing();
+        Loaded += async (_, _) =>
+        {
+            await ShopLink.Sync();
+            Vm.ReloadProducts();
+        };
+    }
+
+    /// <summary>
+    /// Finds the shop a till with no address belongs to, and either connects it or asks
+    /// where the shop is. Called once, when the till's window is already on screen.
+    /// </summary>
+    private async System.Threading.Tasks.Task FindTheShop()
+    {
+        if (ShopLink.IsConfigured)
+        {
+            SetupSyncing();
+            await ShopLink.Sync();
+            return;
+        }
+
+        ShowLooking();
+
+        var found = await ShopFinder.Look();
+
+        // A machine that answered is the shop — or at worst a shop on the same network, which
+        // is the closest thing this machine has to the one it is being set up for.
+        if (found is not null)
+        {
+            AppSettings.Current.ServerAddress = found.Address;
+            AppSettings.Current.Save();
+        }
+
+        if (ShopLink.IsConfigured && await ShopLink.Ping())
+        {
+            await ShopLink.Sync();
+            Vm.ReloadProducts();
+            SetupSyncing();
+            return;
+        }
+
+        // No shop answered. The person setting the till up can type the address or press
+        // Find again; choosing to work alone leaves the till visibly unconnected in red,
+        // rather than silently running a second shop that nobody knows about.
+        if (ServerSetupWindow.Ask(this, out _))
+        {
+            await ShopLink.Sync();
+            Vm.ReloadProducts();
+            SetupSyncing();
+        }
+        else
+        {
+            ShowLinkState();
+        }
+    }
+
+    /// <summary>
+    /// The steady-state conversation with the back office: a half-minute watch, an indicator
+    /// that follows it, and nothing that can interrupt a sale. Everything here is best-effort
+    /// on purpose — the till sells from its own database, so a failed exchange is a message in
+    /// the corner of the screen, never an interruption.
+    /// </summary>
+    private void SetupSyncing()
+    {
         EventHandler linkChanged = (_, _) => Dispatcher.BeginInvoke(ShowLinkState);
         ShopLink.Changed += linkChanged;
         Closed += (_, _) => ShopLink.Changed -= linkChanged;
@@ -106,11 +183,22 @@ public partial class MainWindow : Window
         _sync.Start();
         Closed += (_, _) => _sync?.Stop();
 
-        Loaded += (_, _) => _ = ShopLink.Sync();
+        ShowLinkState();
     }
 
     private void ShowLinkState()
     {
+        // A till with no shop to belong to must look nothing like a till that has one.
+        // This is the state the previous builds never showed: it is the honest face of a
+        // till that would otherwise be a second, hidden shop.
+        if (!ShopLink.IsConfigured)
+        {
+            LinkStatus.Text = Loc.T("Not connected to the shop");
+            LinkDot.Fill = (System.Windows.Media.Brush)FindResource("Brush.Danger");
+            LinkChip.ToolTip = Loc.T("Press to connect this till to the shop's server.");
+            return;
+        }
+
         LinkStatus.Text = ShopLink.Status;
         LinkDot.Fill = (System.Windows.Media.Brush)FindResource(
             ShopLink.IsOnline ? "Brush.Accent" : "Brush.Danger");
@@ -119,12 +207,33 @@ public partial class MainWindow : Window
             : $"{ShopLink.LastProblem} Press to try again.";
     }
 
+    private void ShowLooking()
+    {
+        LinkStatus.Text = Loc.T("Looking for the shop…");
+        LinkDot.Fill = (System.Windows.Media.Brush)FindResource("Brush.Danger");
+        LinkChip.ToolTip = Loc.T("Searching this network for the shop's server. This takes a moment.");
+    }
+
     /// <summary>
     /// A cashier who can see something is wrong should be able to do the obvious thing about
     /// it without finding a settings screen.
     /// </summary>
     private async void LinkChip_Click(object sender, RoutedEventArgs e)
     {
+        // The chip is also the way back to setup when a till was deliberately left alone.
+        if (!ShopLink.IsConfigured)
+        {
+            if (ServerSetupWindow.Ask(this, out _))
+            {
+                await ShopLink.Sync();
+                Vm.ReloadProducts();
+                SetupSyncing();
+            }
+            ShowLinkState();
+            FocusBarcode();
+            return;
+        }
+
         LinkStatus.Text = Loc.T("Sending…");
         await ShopLink.Sync();
         ShowLinkState();
@@ -135,6 +244,53 @@ public partial class MainWindow : Window
     /// Brings the just-scanned cart line into view. Runs at Background priority because the
     /// container for a brand new row does not exist until after the layout pass.
     /// </summary>
+    /// <summary>
+    /// Something was scanned that the shop does not sell. Offers to add it, there and then.
+    ///
+    /// <para>
+    /// This is the one moment anybody knows what the thing is: it is in the cashier's hand,
+    /// the price is on the box, and the delivery it came out of is on the floor beside them.
+    /// The alternative was a red line saying "not found", a note on paper, and somebody in the
+    /// back office that evening working out what 6111245830021 was.
+    /// </para>
+    ///
+    /// <para>
+    /// It asks first, because a scan that finds nothing is often a scan of the wrong thing —
+    /// a loyalty card, a customer's own shopping, a barcode on the shelf edge — and a form
+    /// opening by itself in the middle of a queue is worse than the red line was. Saying yes
+    /// opens the same form the back office uses, with the barcode already in it, and what it
+    /// saves goes into the shop's own database exactly as it would from Inventory.
+    /// </para>
+    /// </summary>
+    private void Vm_ScannedSomethingUnknown(object? sender, string barcode)
+    {
+        // Whoever is at the till has to be allowed to put something in the books. A cashier
+        // without that right gets the red line and nothing else, which is the state the till
+        // was in before this existed.
+        if (!Session.Can(Permission.ManageProducts)) return;
+
+        if (!ConfirmWindow.Ask(this,
+                Loc.T("{0} is not in the shop yet. Add it?", Loc.Ltr(barcode)),
+                Loc.T("You will be asked for its name and price. It goes on the till as soon "
+                    + "as you save, and this sale can carry on.")))
+        {
+            FocusBarcode();
+            return;
+        }
+
+        if (Views.Admin.ProductWindow.AddScanned(this, barcode))
+        {
+            // Straight onto the sale it interrupted. The cashier scanned it because a customer
+            // is buying it.
+            Catalog.Reload();
+            Vm.ReloadProducts();
+            Vm.SearchText = barcode;
+            Vm.SubmitBarcodeCommand.Execute(null);
+        }
+
+        FocusBarcode();
+    }
+
     private void Vm_CartLineTouched(object? sender, CartLine line)
     {
         // Off the Sale page the cart sidebar does not exist, so a toast is the only

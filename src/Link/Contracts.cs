@@ -1,4 +1,4 @@
-namespace MarketPos.Link;
+﻿namespace MarketPos.Link;
 
 /// <summary>
 /// What a till and the server say to each other.
@@ -45,6 +45,29 @@ public sealed record StaffMember(
     string PinHash,
     string PinSalt,
     bool IsActive);
+
+/// <summary>
+/// A product a cashier put into the books from the counter, on its way to the shop's own
+/// database.
+///
+/// It goes to the server rather than into the till's copy, because the till's copy is a copy:
+/// everything in it arrived from the server and is replaced by the server on the next sync, so
+/// a product written only there would be sold once and then vanish, and would never be seen by
+/// the back office, the stock list or the second till.
+/// </summary>
+public sealed record NewProduct(
+    string Barcode,
+    string Name,
+    string Category,
+    decimal Price,
+    decimal Cost,
+    decimal TaxRate,
+    string Unit,
+    decimal Stock,
+    string AddedBy);
+
+/// <summary>What the server made of it.</summary>
+public sealed record ProductAccepted(int Id, string Barcode, string Name, bool AlreadyHad);
 
 /// <summary>One product as a till needs it — enough to ring it up and print it on a receipt.</summary>
 public sealed record CatalogItem(

@@ -127,6 +127,9 @@ public static class Translations
             ["An in-store code has been made for it. Fill in the rest and save."] =
                 ("Un code interne a été créé. Remplissez le reste et enregistrez.",
                  "أُنشئ له رمز داخلي. أكمل الباقي واحفظ."),
+            ["An address looks like 192.168.1.20. The app fills in the rest."] =
+                ("Une adresse ressemble à 192.168.1.20. L'application complète le reste.",
+                 "العنوان يبدو مثل 192.168.1.20. يكمّل التطبيق الباقي."),
             ["Another product already uses that barcode."] =
                 ("Un autre produit utilise déjà ce code-barres.",
                  "منتج آخر يستخدم هذا الباركود بالفعل."),
@@ -322,6 +325,12 @@ public static class Translations
             ["Confirm refund"] =
                 ("Confirmer le retour",
                  "تأكيد الإرجاع"),
+            ["Connect"] =
+                ("Connecter",
+                 "اتصال"),
+            ["Connect this till to the shop"] =
+                ("Connecter cette caisse au magasin",
+                 "ربط هذا الصندوق بالمتجر"),
             ["Connected"] =
                 ("Connecté",
                  "متصل"),
@@ -559,6 +568,9 @@ public static class Translations
             ["Found {0} at {1}. Press Save."] =
                 ("{0} trouvé à {1}. Appuyez sur Enregistrer.",
                  "تم العثور على {0} في {1}. اضغط حفظ."),
+            ["Found {0} at {1}. Press Connect."] =
+                ("{0} trouvé à {1}. Appuyez sur Connecter.",
+                 "تم العثور على {0} في {1}. اضغط اتصال."),
             ["GOODS"] =
                 ("MARCHANDISE",
                  "البضاعة"),
@@ -853,6 +865,9 @@ public static class Translations
             ["No tickets yet"] =
                 ("Aucun ticket",
                  "لا توجد تذاكر بعد"),
+            ["Not connected to the shop"] =
+                ("Non connecté au magasin",
+                 "غير متصل بالمتجر"),
             ["No worker has a password yet, so only the owner can open the back office."] =
                 ("Aucun employé n'a encore de mot de passe : seul le propriétaire peut ouvrir l'arrière-boutique.",
                  "لا يملك أي موظف كلمة مرور بعد، لذا لا يمكن فتح الإدارة إلا للمالك."),
@@ -1099,6 +1114,9 @@ public static class Translations
             ["Press to send now"] =
                 ("Appuyez pour envoyer maintenant",
                  "اضغط للإرسال الآن"),
+            ["Press to connect this till to the shop's server."] =
+                ("Appuyez pour connecter cette caisse au serveur du magasin.",
+                 "اضغط لربط هذا الصندوق بخادم المتجر."),
             ["Price check"] =
                 ("Vérifier le prix",
                  "التحقق من السعر"),
@@ -1423,6 +1441,9 @@ public static class Translations
             ["Search"] =
                 ("Rechercher",
                  "بحث"),
+            ["Searching this network for the shop's server. This takes a moment."] =
+                ("Recherche du serveur du magasin sur ce réseau. Cela prend un instant.",
+                 "جارٍ البحث عن خادم المتجر في هذه الشبكة. يستغرق ذلك لحظة."),
             ["See what was bought and what was paid"] =
                 ("Voir ce qui a été acheté et payé",
                  "عرض ما اشتُري وما دُفع"),
@@ -1579,6 +1600,9 @@ public static class Translations
             ["That receipt could not be read back."] =
                 ("Ce ticket n'a pas pu être relu.",
                  "تعذّرت قراءة هذا الإيصال."),
+            ["That does not look like an address. Try 192.168.1.20 — or press Find the shop."] =
+                ("Cela ne ressemble pas à une adresse. Essayez 192.168.1.20 — ou appuyez sur Trouver le magasin.",
+                 "هذا لا يبدو عنواناً. جرّب 192.168.1.20 — أو اضغط ابحث عن المتجر."),
             ["The amount cannot be negative."] =
                 ("Le montant ne peut pas être négatif.",
                  "لا يمكن أن يكون المبلغ سالباً."),
@@ -1624,6 +1648,9 @@ public static class Translations
             ["The shop does not sell this yet. Add it in the back office and it will scan next time."] =
                 ("La boutique ne vend pas encore cet article. Ajoutez-le dans l'arrière-boutique et il se scannera la prochaine fois.",
                  "المتجر لا يبيع هذا بعد. أضفه من الإدارة وسيُمسح في المرة القادمة."),
+            ["The shop's server did not take it: {0}"] =
+                ("Le serveur du magasin ne l'a pas accepté : {0}",
+                 "لم يقبله خادم المتجر: {0}"),
             ["The shop, and how it prints"] =
                 ("La boutique, et comment elle imprime",
                  "المتجر، وطريقة الطباعة"),
@@ -1657,6 +1684,12 @@ public static class Translations
             ["There is already a category called {0}."] =
                 ("Il existe déjà une catégorie appelée {0}.",
                  "توجد بالفعل فئة باسم {0}."),
+            ["This computer is the only one. Work alone, with its own database."] =
+                ("Cet ordinateur est le seul. Travailler seul, avec sa propre base de données.",
+                 "هذا الحاسوب هو الوحيد. اعمل وحده، مع قاعدة بيانات خاصة به."),
+            ["This machine is a cashier's till. Every sale taken here is sent to the shop's database, which lives on another computer. Tell it where that computer is — or let this app find it."] =
+                ("Cette machine est une caisse. Chaque vente faite ici est envoyée à la base de données du magasin, qui vit sur un autre ordinateur. Indiquez où se trouve cet ordinateur — ou laissez l'application le trouver.",
+                 "هذا الجهاز صندوقُ كاشير. كل عملية بيع تتم هنا تُرسَل إلى قاعدة بيانات المتجر الموجودة على حاسوب آخر. أخبره أين يوجد ذلك الحاسوب — أو دع التطبيق يجدها له."),
             ["This month"] =
                 ("Ce mois-ci",
                  "هذا الشهر"),
@@ -1714,6 +1747,9 @@ public static class Translations
             ["Type a receipt number in the search bar above, or pick a ticket to view and reprint it."] =
                 ("Saisissez un numéro de ticket dans la barre de recherche, ou choisissez un ticket pour le voir et le réimprimer.",
                  "اكتب رقم إيصال في شريط البحث أعلاه، أو اختر تذكرة لعرضها وإعادة طباعتها."),
+            ["Type the shop's address, or press Find the shop."] =
+                ("Saisissez l'adresse du magasin, ou appuyez sur Trouver le magasin.",
+                 "اكتب عنوان المتجر، أو اضغط ابحث عن المتجر."),
             ["UNITS"] =
                 ("UNITÉS",
                  "الوحدات"),
@@ -1852,6 +1888,9 @@ public static class Translations
             ["Yesterday"] =
                 ("Hier",
                  "أمس"),
+            ["You will be asked for its name and price. It goes on the till as soon as you save, and this sale can carry on."] =
+                ("On vous demandera son nom et son prix. Il apparaît en caisse dès l'enregistrement, et cette vente peut continuer.",
+                 "سيُطلب منك اسمه وثمنه. سيظهر في الصندوق بمجرد الحفظ، ويمكن متابعة هذه العملية."),
             ["across {0} bill · {1}"] =
                 ("sur {0} facture · {1}",
                  "على فاتورة واحدة · {1}"),
@@ -2218,6 +2257,9 @@ public static class Translations
             ["{0} hidden from the till"] =
                 ("{0} masquées en caisse",
                  "{0} مخفية عن الصندوق"),
+            ["{0} is not in the shop yet. Add it?"] =
+                ("{0} n'est pas encore dans le magasin. L'ajouter ?",
+                 "{0} غير موجود في المتجر بعد. هل تضيفه؟"),
             ["{0} is not in the shop. Add it in the back office."] =
                 ("{0} n'est pas dans la boutique. Ajoutez-le dans l'arrière-boutique.",
                  "{0} غير موجود في المتجر. أضفه من الإدارة."),

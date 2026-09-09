@@ -138,31 +138,38 @@
             <!-- The handle. A keyboard docked along the bottom covers whatever was there, and
                  on a till that is sometimes the total or the Pay button — so it can be picked
                  up and put somewhere else, and it stays where it is put. -->
-            <Border x:Name="Grip" DockPanel.Dock="Top" Height="44" Background="Transparent"
+            <Border x:Name="Grip" DockPanel.Dock="Top" Background="Transparent"
                     Cursor="SizeAll" ToolTip="Drag to move the keyboard"
                     MouseLeftButtonDown="Grip_Down"
                     MouseMove="Grip_Move"
                     MouseLeftButtonUp="Grip_Up">
-                <Grid>
-                    <Rectangle Width="56" Height="4" RadiusX="2" RadiusY="2"
+                <!-- Left to right like the keys below it. In Arabic the window is laid out
+                     right to left, which put the two size buttons against the left edge with
+                     the drag handle beside them instead of the tidy handle-in-the-middle,
+                     buttons-at-the-end the row is drawn to be. -->
+                <!-- A row, not a stack of things on top of each other. The two size buttons
+                     take the end they need and the drag bar gets the room that is left — laid
+                     over one another in a Grid, the bar ran underneath the buttons as soon as
+                     the panel was narrow, which is exactly what the number pad is.
+
+                     Bigger and smaller are two presses rather than a corner to drag: a corner
+                     grip is a mouse idea, and on a touchscreen it is a four-pixel target under
+                     a fingertip. Their size comes from PadKeyboard.Grip so they grow with the
+                     keys they resize. -->
+                <DockPanel FlowDirection="LeftToRight" LastChildFill="True" Margin="14,0">
+                    <StackPanel x:Name="SizeButtons" DockPanel.Dock="Right"
+                                Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="SmallerButton" Style="{StaticResource Key.Command}"
+                                Content="−" ToolTip="Smaller keyboard" Click="Smaller_Click"/>
+                        <Button x:Name="BiggerButton" Style="{StaticResource Key.Command}"
+                                Content="+" ToolTip="Bigger keyboard" Click="Bigger_Click"/>
+                    </StackPanel>
+
+                    <Rectangle x:Name="DragBar" Height="4" RadiusX="2" RadiusY="2"
+                               MaxWidth="56" Margin="0,0,14,0"
                                Fill="{StaticResource Brush.Border}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                    <!-- Bigger and smaller, as two presses rather than a corner to drag. A
-                         corner grip is a mouse idea: on the touchscreen this runs on, it is a
-                         four-pixel target under a fingertip. These are sized to be hit with a
-                         thumb without looking, because that is how they are used — press,
-                         look at the keys, press again. -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
-                                VerticalAlignment="Center" FlowDirection="LeftToRight">
-                        <Button Style="{StaticResource Key.Command}" Content="−"
-                                Width="72" Height="36" FontSize="22" Margin="0,0,8,0"
-                                ToolTip="Smaller keyboard" Click="Smaller_Click"/>
-                        <Button Style="{StaticResource Key.Command}" Content="+"
-                                Width="72" Height="36" FontSize="22"
-                                ToolTip="Bigger keyboard" Click="Bigger_Click"/>
-                    </StackPanel>
-                </Grid>
+                </DockPanel>
             </Border>
 
             <StackPanel x:Name="Rows"/>

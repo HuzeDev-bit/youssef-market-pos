@@ -106,13 +106,13 @@ public partial class App : Application
         // Once, and only on an install that has never had one — see AdminAccount.
         AdminAccount.StartWithTheDefault();
 
-        var job = WhatThisOneIs(e.Args);
+        CurrentJob = WhatThisOneIs(e.Args);
 
         // The till machine does not serve anybody. Leaving the server running on it would put a
         // second shop on the network, listening on the same port, answering with a catalogue
         // that is only ever a copy — and whichever machine a till found first would be the one
         // it believed.
-        if (job != Job.Till) ShopServer.Start();
+        if (CurrentJob != Job.Till) ShopServer.Start();
 
         // ---------------------------------------------------------------- what to put on screen
         //
@@ -132,7 +132,7 @@ public partial class App : Application
         // Opened here rather than through StartupUri, which WPF acts on after this method
         // returns whatever has happened inside it — so every mode above had to end the process
         // outright to stop a till window being built behind it.
-        if (job == Job.Server)
+        if (CurrentJob == Job.Server)
         {
             // The books, without the counter. Nobody sells on this machine, so there is no till
             // window to come back to and the back office is the whole of what it shows —
@@ -153,6 +153,16 @@ public partial class App : Application
         MainWindow.Show();
     }
 
+    /// <summary>Which of the shop's two machines this copy is running on.</summary>
+    public enum Job { Shop, Server, Till }
+
+    /// <summary>
+    /// What this copy is, decided once at start-up from the file it was started as. A till on
+    /// the counter finds this out so it can insist on belonging to a shop instead of quietly
+    /// becoming one of its own.
+    /// </summary>
+    public static Job CurrentJob { get; private set; }
+
     /// <summary>
     /// Which of the shop's two machines this copy is running on.
     ///
@@ -161,8 +171,6 @@ public partial class App : Application
     /// shortcut that the next person to set the machine up will not know about. The flags still
     /// work, and win, for anyone driving it by hand.
     /// </summary>
-    private enum Job { Shop, Server, Till }
-
     private static Job WhatThisOneIs(string[] args)
     {
         if (args.Contains("--till")) return Job.Till;

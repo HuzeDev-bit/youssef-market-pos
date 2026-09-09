@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Data;
 using MarketPos.Data;
@@ -186,6 +186,13 @@ public sealed class SaleViewModel : ViewModelBase
 
     /// <summary>Raised when a scan was turned away, so the till can make a noise about it.</summary>
     public event EventHandler<string>? Refused;
+
+    /// <summary>
+    /// A barcode was scanned that the shop does not sell. Carries the number, so the till can
+    /// offer to put it in the books there and then — the cashier has the thing in their hand,
+    /// which is the only moment anybody knows what it is and what it costs.
+    /// </summary>
+    public event EventHandler<string>? ScannedSomethingUnknown;
 
     /// <summary>
     /// A typed quantity was brought down to what the shelf holds. Said out loud, because
@@ -690,9 +697,18 @@ public sealed class SaleViewModel : ViewModelBase
                 // A long run of digits is a scanner, so the miss means the shop does not sell
                 // this yet — which is a different problem from a search with no results, and
                 // one the cashier cannot fix from the till.
-                SetStatus(LooksLikeABarcode(query)
-                    ? Loc.T("Error: {0} not found in stock.", query)
-                    : Loc.T("Nothing matches \"{0}\"", query), isError: true);
+                if (LooksLikeABarcode(query))
+                {
+                    // Not a search that found nothing — a product the shop does not have yet.
+                    // The till offers to add it; until somebody says yes, nothing has changed.
+                    SetStatus(Loc.T("Error: {0} not found in stock.", query), isError: true);
+                    ScannedSomethingUnknown?.Invoke(this, query);
+                }
+                else
+                {
+                    SetStatus(Loc.T("Nothing matches \"{0}\"", query), isError: true);
+                }
+
                 break;
             default:
                 // Leave the text in place so the grid stays filtered to the candidates.
@@ -925,6 +941,12 @@ public sealed class SaleViewModel : ViewModelBase
     /// </summary>
     public void CompleteSale(PaymentMethod method, decimal amountTendered)
     {
+        // LastInvoiceNumber is the only signal the window uses to tell a saved sale from a
+        // failed one. Left over from the previous sale it would announce a success that never
+        // happened, so it is cleared before a stroke of work — a return of 0 is the contract
+        // that says "nothing was saved".
+        LastInvoiceNumber = 0;
+
         try
         {
             var invoiceNumber = SaleRepository.Save(

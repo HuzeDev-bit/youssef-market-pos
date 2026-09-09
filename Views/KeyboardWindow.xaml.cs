@@ -20,7 +20,21 @@ public partial class KeyboardWindow : Window
     private const double Gap = 6;
 
     /// <summary>Padding inside the panel, and the height of the drag handle above the keys.</summary>
-    private const double PadTop = 12, PadBottom = 14, PadSide = 14, GripHeight = 44;
+    private const double PadTop = 12, PadBottom = 14, PadSide = 14;
+
+    /// <summary>
+    /// How tall the handle row is, which is the size of the buttons in it plus room around
+    /// them. Not a constant any more: the buttons grow with the keys they resize, and a fixed
+    /// strip either cropped them at the top of the range or left a band of empty grey at the
+    /// bottom of it.
+    /// </summary>
+    private double GripHeight => Math.Round(ButtonHeight + 10);
+
+    private double ButtonHeight => Math.Clamp(Math.Round(34 * Scale), 28, 52);
+    private double ButtonWidth => Math.Round(ButtonHeight * 1.9);
+
+    /// <summary>Room between the two, so neither is pressed while reaching for the other.</summary>
+    private double ButtonGap => Math.Round(ButtonHeight * 0.5);
 
     /// <summary>
     /// The widest row is twelve units across. Every row is measured against that number, so the
@@ -147,7 +161,9 @@ public partial class KeyboardWindow : Window
     /// </summary>
     public Size FitTo(Size screen)
     {
+        // Width first: the handle row decides whether there is room for a drag bar from it.
         Width = Roll(screen);
+        SizeTheGrip();
         Height = Build(screen);
         return new Size(Width, Height);
     }
@@ -155,6 +171,28 @@ public partial class KeyboardWindow : Window
     /// <summary>
     /// How wide the panel is: the shop's chosen size, and never wider than the screen.
     /// </summary>
+    /// <summary>Makes the two size buttons match the keys, with a thumb's room between them.</summary>
+    private void SizeTheGrip()
+    {
+        if (SmallerButton is null) return;
+
+        foreach (var button in new[] { SmallerButton, BiggerButton })
+        {
+            button.Width = ButtonWidth;
+            button.Height = ButtonHeight;
+            button.FontSize = Math.Round(ButtonHeight * 0.62);
+        }
+
+        SmallerButton.Margin = new Thickness(0, 0, ButtonGap, 0);
+        Grip.Height = GripHeight;
+
+        // The bar is what is left over. On the number pad there is barely any, and a drag
+        // handle squeezed to two pixels reads as a smudge — better to have none.
+        DragBar.Visibility = Width - ButtonWidth * 2 - ButtonGap - PadSide * 4 > 30
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
     private double Roll(Size screen) => Math.Min(
         screen.Width, (_numbersOnly ? MaxRoll * NumbersWide / Units : MaxRoll) * Scale);
 
@@ -279,7 +317,18 @@ public partial class KeyboardWindow : Window
 
         if (_numbersOnly)
         {
-            foreach (var row in NumberPad(unit, height)) Rows.Children.Add(row);
+            // Sized off the pad's own panel and its own four columns. Measured off the letter
+            // keyboard's twelve, the keys came out a third of the width they were given and
+            // the pad sat in the middle of an empty panel.
+            var key = (width - PadSide * 2 - Gap * (Columns - 1)) / Columns;
+
+            // Taller keys, because there are four of them across instead of twelve and the room
+            // is there. Kept in this variable and not recomputed below: the panel is sized from
+            // the rows it actually built, and the two coming apart is what left the Enter key
+            // hanging off the bottom edge with nothing under it.
+            height = Math.Min(height * 1.15, room / Rows5 - Gap);
+
+            foreach (var row in NumberPad(key, height)) Rows.Children.Add(row);
         }
         else
         {
@@ -292,7 +341,7 @@ public partial class KeyboardWindow : Window
         }
 
         // Five rows, each carrying its own bottom gap, plus the handle and the padding.
-        return Math.Round(5 * (Math.Round(height) + Gap) + GripHeight + PadTop + PadBottom + 2);
+        return Math.Round(Rows5 * (Math.Round(height) + Gap) + GripHeight + PadTop + PadBottom + 2);
     }
 
     /// <summary>Rebuilds and resizes in place — a layout or shift change alters the height.</summary>
@@ -309,39 +358,51 @@ public partial class KeyboardWindow : Window
 
     /// <summary>
     /// The number pad: a till keypad, laid out the way every calculator and cash register is,
-    /// with 7 8 9 on the top row. Five rows so the panel is the same height as the letters and
-    /// nothing jumps when the shop moves from a name to a price.
+    /// with 7 8 9 on the top row.
+    ///
+    /// Four columns of one width, five rows of one height, and every key on a column. A keypad
+    /// whose rows each held a different number of keys of a different width was a grid only by
+    /// accident — the fingers that use this are aiming at remembered positions, not reading it.
     /// </summary>
-    private IEnumerable<StackPanel> NumberPad(double unit, double height)
+    private IEnumerable<StackPanel> NumberPad(double key, double height)
     {
-        foreach (var line in new[] { "789", "456", "123" })
+        foreach (var (line, last) in new[]
+                 {
+                     ("789", ("⌫", "Key.Command", (Action)(() => KeyStrokes.Press(KeyStrokes.Backspace)))),
+                     ("456", (Loc.T("Clear"), "Key.Command", KeyStrokes.ClearField)),
+                     ("123", ("⌨", "Key.Command", () => { _numbersOnly = false; Rebuild(); })),
+                     (".0", ("✕", "Key.Command", TouchKeyboard.Close)),
+                 })
         {
             var row = Row();
-            foreach (var digit in line)
+
+            foreach (var mark in line)
             {
-                var one = digit.ToString();
-                row.Children.Add(Key(one, unit * 1.6, height, () => KeyStrokes.Type(one)));
+                var one = mark.ToString();
+                row.Children.Add(Key(one, key, height, () => KeyStrokes.Type(one)));
             }
 
-            row.Children.Add(Key("⌫", unit * 1.6, height,
-                                 () => KeyStrokes.Press(KeyStrokes.Backspace), "Key.Command"));
+            // The bottom row is a digit short — a decimal point and a zero — so the double
+            // zero every price ends in fills the gap rather than a stretched key.
+            if (line == ".0") row.Children.Add(Key("00", key, height, () => KeyStrokes.Type("00")));
+
+            var (text, style, press) = last;
+            row.Children.Add(Key(text, key, height, press, style));
             yield return row;
         }
 
-        var last = Row();
-        last.Children.Add(Key(".", unit * 1.6, height, () => KeyStrokes.Type(".")));
-        last.Children.Add(Key("0", unit * 1.6, height, () => KeyStrokes.Type("0")));
-        last.Children.Add(Key("00", unit * 1.6, height, () => KeyStrokes.Type("00")));
-        last.Children.Add(Key(Loc.T("Clear"), unit * 1.6, height, KeyStrokes.ClearField, "Key.Command"));
-        yield return last;
-
-        var commands = Row();
-        commands.Children.Add(Key("✕", unit * 1.6, height, TouchKeyboard.Close, "Key.Command"));
-        commands.Children.Add(Key("⏎", unit * 3.3 + Gap * 2, height, KeyStrokes.PressEnter, "Key.Enter"));
-        commands.Children.Add(Key("⌨", unit * 1.6, height,
-                                  () => { _numbersOnly = false; Rebuild(); }, "Key.Command"));
-        yield return commands;
+        // Enter across the whole width. It is the key this pad exists to end on — the quantity
+        // is typed and the sale carries on — and the one that must not be hit by accident.
+        var done = Row();
+        done.Children.Add(Key("⏎", key * Columns + Gap * (Columns - 1), height,
+                              Finish, "Key.Enter"));
+        yield return done;
     }
+
+    private const double Columns = 4;
+
+    /// <summary>Both faces are five rows tall, which is what the panel is measured against.</summary>
+    private const double Rows5 = 5;
 
     private StackPanel DigitsRow(double unit, double height)
     {
@@ -420,7 +481,7 @@ public partial class KeyboardWindow : Window
                       () => { _layout = pick; _shift = false; Rebuild(); }));
         }
 
-        keys.Add(("⏎", 1.4, "Key.Enter", KeyStrokes.PressEnter));
+        keys.Add(("⏎", 1.4, "Key.Enter", Finish));
         keys.Add(("✕", 1.0, "Key.Command", TouchKeyboard.Close));
 
         // Made to fit the panel, gaps and all.
@@ -438,6 +499,19 @@ public partial class KeyboardWindow : Window
             row.Children.Add(Key(text, unit * weight * fit, height, press, style));
 
         return row;
+    }
+
+    /// <summary>
+    /// Enter, and then out of the way.
+    ///
+    /// Enter is the shop saying it has finished with this box — the quantity is typed, the
+    /// name is entered, the sale carries on. Leaving the keys up over the screen afterwards
+    /// made every one of those an extra press to dismiss something nobody was using any more.
+    /// </summary>
+    private static void Finish()
+    {
+        KeyStrokes.PressEnter();
+        TouchKeyboard.Close();
     }
 
     private static StackPanel Row() => new()

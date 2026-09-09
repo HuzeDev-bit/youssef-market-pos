@@ -128,6 +128,43 @@ app.MapGet("/catalog", (string? since) =>
     return Results.Ok(new CatalogPage(stamp, items, Complete: true));
 });
 
+// ---------------------------------------------------------------- products coming in
+
+// A cashier scanned something the shop does not sell and filled its details in at the counter.
+// It is created here, in the shop's own database, so that it exists for the back office, the
+// stock list and every other till the moment it is saved — and so that the record of who added
+// it and when is written in the one place that keeps such records.
+app.MapPost("/products", (NewProduct arriving) =>
+{
+    var barcode = arriving.Barcode.Trim();
+    if (barcode.Length == 0) return Results.BadRequest("A product needs a barcode.");
+
+    // Two tills can scan the same unknown thing within a minute of each other, and the second
+    // one is not an error: the shop already has it, which is the answer that till needs.
+    var already = StockRepository.FindByBarcode(barcode);
+    if (already is not null)
+    {
+        Note($"product {barcode} was already here as {already.Name}");
+        return Results.Ok(new ProductAccepted(already.Id, already.Barcode, already.Name, true));
+    }
+
+    var id = StockRepository.Create(new StockItem
+    {
+        Barcode = barcode,
+        Name = arriving.Name.Trim(),
+        Category = arriving.Category.Trim(),
+        Price = arriving.Price,
+        Cost = arriving.Cost,
+        TaxRate = arriving.TaxRate,
+        Unit = arriving.Unit == nameof(Unit.Kg) ? Unit.Kg : Unit.Each,
+        MinStock = AppSettings.Current.DefaultLowStock,
+        ShowInPos = true,
+    }, openingStock: arriving.Stock);
+
+    Note($"{arriving.AddedBy} added {arriving.Name} ({barcode}) from a till");
+    return Results.Ok(new ProductAccepted(id, barcode, arriving.Name.Trim(), false));
+});
+
 // ---------------------------------------------------------------- sales coming in
 
 app.MapPost("/sales", (SaleBatch batch) =>

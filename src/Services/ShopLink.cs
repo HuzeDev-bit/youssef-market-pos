@@ -1,4 +1,4 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using MarketPos.Data;
@@ -244,6 +244,44 @@ public static class ShopLink
         {
             Fail(Explain(error));
             return 0;
+        }
+    }
+
+    /// <summary>
+    /// Puts a product a cashier filled in at the counter into the shop's own database.
+    ///
+    /// <para>
+    /// Straight to the server, and not into this machine's copy. Everything in a till's
+    /// database arrived from the server and is overwritten by the server on the next sync, so
+    /// a product written only here would be sold once and then quietly disappear — and would
+    /// never reach the back office, the stock list, or the till on the other counter.
+    /// </para>
+    ///
+    /// <para>
+    /// This one is not queued like a sale is. A sale has already happened and the money is in
+    /// the drawer whatever the network is doing; a product that has not reached the books is
+    /// not yet a product, and the cashier standing there is the only person who can be told so.
+    /// </para>
+    /// </summary>
+    public static async Task<ProductAccepted?> AddProduct(NewProduct product)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/products", product, Json);
+            response.EnsureSuccessStatusCode();
+
+            var made = await response.Content.ReadFromJsonAsync<ProductAccepted>(Json);
+            if (made is null) { Fail("The server did not say what it did with the product."); return null; }
+
+            Succeed();
+            return made;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
         }
     }
 

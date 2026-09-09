@@ -1,0 +1,69 @@
+<!-- Shown the first time a till starts with no shop to belong to. A till that begins with a
+     blank server address is a shop by accident — the cashier's machine quietly keeping its
+     own books — so this asks the person setting it up to point it at the machine that
+     actually holds them. The address is typed off a scrap of paper or found by pressing the
+     button, so the hints say what an address looks like and what Find does.
+
+     Written in English, which is the source text every translation is keyed by. -->
+<Window x:Class="MarketPos.Views.ServerSetupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Connect to the shop" Width="460" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        FlowDirection="RightToLeft"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Border CornerRadius="20" Background="{StaticResource Brush.Panel}" Padding="26">
+        <Border.Effect>
+            <DropShadowEffect Color="#1B2126" Opacity="0.25" BlurRadius="30" ShadowDepth="8" Direction="270"/>
+        </Border.Effect>
+
+        <StackPanel>
+            <TextBlock x:Name="SetupHeading" Style="{StaticResource Text.Title}" FontSize="19"
+                       TextWrapping="Wrap"
+                       Text="Connect this till to the shop"/>
+            <TextBlock x:Name="SetupBody" Style="{StaticResource Text.Muted}" Margin="0,8,0,0"
+                       TextWrapping="Wrap"
+                       Text="This machine is a cashier's till. Every sale taken here is sent to the shop's database, which lives on another computer. Tell it where that computer is — or let this app find it."/>
+
+            <TextBlock Text="SHOP SERVER" Style="{StaticResource Text.Eyebrow}" Margin="2,18,0,8"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="AddressBox" Grid.Column="0" Style="{StaticResource TextBox.Field}"
+                         Height="40"/>
+                <Button x:Name="FindButton" Grid.Column="2" Style="{StaticResource Button.PillMuted}"
+                        Content="Find the shop" Height="40" Click="Find_Click"/>
+            </Grid>
+            <TextBlock x:Name="SetupHint" Style="{StaticResource Text.Muted}" FontSize="11"
+                       Margin="2,8,2,0" TextWrapping="Wrap"/>
+
+            <TextBlock x:Name="AloneButton" Style="{StaticResource Text.Muted}" FontSize="12"
+                       Margin="2,20,2,0" Padding="0,3" TextWrapping="Wrap"
+                       Cursor="Hand" Background="Transparent"
+                       Text="This computer is the only one. Work alone, with its own database."
+                       Focusable="True" MouseLeftButtonUp="Alone_MouseLeftButtonUp"/>
+
+            <Grid Margin="0,22,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                        Style="{StaticResource Button.PillMuted}" Content="Cancel" Click="Cancel_Click"/>
+                <Button Grid.Column="2" Style="{StaticResource Button.Pill}" Content="Connect"
+                        Click="Connect_Click" IsDefault="True"/>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>
