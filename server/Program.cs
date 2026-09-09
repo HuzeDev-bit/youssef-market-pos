@@ -15,6 +15,44 @@ using MarketPos.Services;
 // rule about cost, stock or profit — a second implementation would be a second answer.
 // ============================================================================
 
+// A console window that opens and shuts itself has told nobody anything, and the machine this
+// runs on is a box in the back that nobody is watching. So everything this server does at
+// startup, and anything that stops it, is written down where it can be read afterwards.
+var diary = System.IO.Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MarketPos",
+    "server.log");
+
+void Note(string line)
+{
+    try
+    {
+        System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(diary)!);
+        System.IO.File.AppendAllText(diary, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}  {line}{Environment.NewLine}");
+    }
+    catch { /* a server that cannot write its diary still has a shop to serve */ }
+}
+
+Note($"--- starting, from {Environment.ProcessPath}");
+
+// Catches what the try around Run cannot: anything thrown while the server is being built, on
+// a background thread, or after it is up.
+AppDomain.CurrentDomain.UnhandledException += (_, fatal) =>
+{
+    Note("FATAL " + fatal.ExceptionObject);
+
+    Console.WriteLine();
+    Console.WriteLine("The shop server stopped.");
+    Console.WriteLine((fatal.ExceptionObject as Exception)?.Message ?? "Unknown error.");
+    Console.WriteLine();
+    Console.WriteLine($"Written down in {diary}");
+    Console.WriteLine("Press any key to close.");
+
+    if (!Console.IsInputRedirected)
+    {
+        try { Console.ReadKey(true); } catch { /* nobody there */ }
+    }
+};
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Listens on the shop's network, not just on this machine. Kestrel's default is localhost,
@@ -119,7 +157,13 @@ app.MapPost("/sales", (SaleBatch batch) =>
 // Says where it is, in words the person who has to type it into a till can use. A server
 // that starts silently leaves them reading Kestrel's console output for an IP address.
 foreach (var address in LocalAddresses())
+{
     app.Logger.LogInformation("Tills should be pointed at http://{Address}:5000", address);
+    Note($"tills should be pointed at http://{address}:5000");
+}
+
+Note($"database {MarketPos.Data.Database.Path}");
+Note("running");
 
 // Anything that stops this from starting stops the shop's tills, and a console window that
 // closes as fast as it opened tells whoever double-clicked it nothing at all. So the reason is
@@ -130,6 +174,8 @@ try
 }
 catch (Exception problem)
 {
+    Note("COULD NOT START " + problem);
+
     Console.WriteLine();
     Console.WriteLine("The shop server could not start.");
     Console.WriteLine();
