@@ -1,4 +1,5 @@
-﻿using MarketPos.Models;
+﻿using Microsoft.Data.Sqlite;
+using MarketPos.Models;
 using MarketPos.Services;
 
 namespace MarketPos.Data;
@@ -40,6 +41,28 @@ public static class CategoryRepository
         Session.Require(Permission.ManageCategories);
 
         using var connection = Database.Open();
+
+        // A name that belongs to a category the shop hid, back when hiding was what removing
+        // did, is a name the shop cannot see and cannot use. Typing it again means it wants
+        // that category, so this puts the old row back rather than refusing over a row no
+        // screen would show.
+        using var hidden = connection.CreateCommand();
+        hidden.CommandText = "SELECT id FROM categories WHERE name = $name AND is_active = 0;";
+        hidden.With("$name", name.Trim());
+        if (hidden.ExecuteScalar() is { } found and not DBNull)
+        {
+            var back = Convert.ToInt32(found);
+
+            using var revive = connection.CreateCommand();
+            revive.CommandText =
+                "UPDATE categories SET is_active = 1, icon = $icon, image = $image WHERE id = $id;";
+            revive.With("$icon", icon).With("$image", image).With("$id", back).ExecuteNonQuery();
+
+            ActivityRepository.Record("added category", "Category", back, newValue: name,
+                                      detail: ActivityRepository.Say("added category {0}", name));
+            return back;
+        }
+
         using var command = connection.CreateCommand();
         command.CommandText = """
             INSERT INTO categories (name, icon, is_active, image) VALUES ($name, $icon, 1, $image);
@@ -73,6 +96,79 @@ public static class CategoryRepository
     /// products still assigned is refused outright — silently orphaning stock is worse than
     /// an error message.
     /// </summary>
+    /// <summary>
+    /// Deletes a category outright, and says why if it will not go.
+    ///
+    /// <para>
+    /// Hiding it was not what the shop meant. A category made by mistake, or one the shop has
+    /// stopped stocking, was left in the table for ever holding on to its name — so typing the
+    /// name again came back "there is already a category called that", about something no
+    /// screen in the app would show. What is deleted has to be gone.
+    /// </para>
+    ///
+    /// <para>
+    /// Two things it will not do. It will not empty a category out from underneath the till:
+    /// while products are still on the shelves in it, nothing happens and the shop is told to
+    /// move them first. And it will not touch the sales history — products already taken off
+    /// the shelves go with the category, but only the ones no receipt points at; if one has
+    /// ever been sold, the whole delete is rolled back rather than leave last year's takings
+    /// pointing at nothing.
+    /// </para>
+    /// </summary>
+    public static bool Delete(int id, string name, out string problem)
+    {
+        Session.Require(Permission.ManageCategories);
+        problem = string.Empty;
+
+        using var connection = Database.Open();
+
+        using var check = connection.CreateCommand();
+        check.CommandText = "SELECT COUNT(*) FROM products WHERE category_id = $id AND is_active = 1;";
+        check.With("$id", id);
+        var count = Convert.ToInt32(check.ExecuteScalar());
+        if (count > 0)
+        {
+            problem = Loc.T(count == 1
+                ? "{0} still has {1} product in it. Move it to another category first."
+                : "{0} still has {1} products in it. Move them to another category first.",
+                name, count);
+            return false;
+        }
+
+        using var work = connection.BeginTransaction();
+        try
+        {
+            // Products already off the shelves have nowhere to go: category_id cannot be
+            // empty, so they leave with the category they were filed under.
+            using var sweep = connection.CreateCommand();
+            sweep.Transaction = work;
+            sweep.CommandText = "DELETE FROM products WHERE category_id = $id AND is_active = 0;";
+            sweep.With("$id", id).ExecuteNonQuery();
+
+            using var drop = connection.CreateCommand();
+            drop.Transaction = work;
+            drop.CommandText = "DELETE FROM categories WHERE id = $id;";
+            drop.With("$id", id).ExecuteNonQuery();
+
+            work.Commit();
+        }
+        catch (SqliteException)
+        {
+            // Something outside this table is holding on — a sale line, a delivery. The
+            // database says so by refusing the delete, which is exactly the answer wanted.
+            work.Rollback();
+            problem = Loc.T("{0} cannot be deleted: what is in it appears in the sales history. "
+                          + "Move the products to another category first.", name);
+            return false;
+        }
+
+        ActivityRepository.Record("deleted category", "Category", id, oldValue: name,
+            detail: ActivityRepository.Say("deleted category {0}", name));
+
+        CategoryImages.Forget(id);
+        return true;
+    }
+
     public static bool SetActive(int id, string name, bool active, out string problem)
     {
         Session.Require(Permission.ManageCategories);

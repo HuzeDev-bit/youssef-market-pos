@@ -12,6 +12,7 @@
         xmlns:vm="clr-namespace:MarketPos.ViewModels"
         xmlns:conv="clr-namespace:MarketPos.Converters"
         xmlns:ctl="clr-namespace:MarketPos.Controls"
+        xmlns:num="clr-namespace:MarketPos.Views.Admin"
         mc:Ignorable="d" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         Title="Market POS"
@@ -985,9 +986,14 @@
                                                     </Button>
                                                     <!-- Type the quantity directly — essential for weighed goods,
                                                          where stepping to 1.35 kg would be 13 taps. -->
+                                                    <!-- Numeric.Only as well as the handler beside it: the
+                                                         handler is what enforces whole numbers or kilos, and
+                                                         this is what tells the on-screen keyboard to come up
+                                                         as a number pad rather than forty letters. -->
                                                     <TextBox DockPanel.Dock="Left"
                                                              Style="{StaticResource TextBox.Quantity}"
                                                              Text="{Binding QuantityText, UpdateSourceTrigger=LostFocus}"
+                                                             num:Numeric.Only="True"
                                                              GotFocus="QuantityBox_GotFocus"
                                                              PreviewTextInput="QuantityBox_PreviewTextInput"
                                                              KeyDown="QuantityBox_KeyDown"

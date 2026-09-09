@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -24,6 +24,13 @@ public sealed class AppSettings
 
     public string AdminPasswordHash { get; set; } = string.Empty;
     public string AdminPasswordSalt { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether this install has already been given the starting password. Written once, and
+    /// read for ever after, so a shop that deliberately turns the password off does not find
+    /// it back the next morning.
+    /// </summary>
+    public bool AdminPasswordStarted { get; set; }
 
     // ---------------------------- Business details ----------------------------
     // Printed on receipts and shown in the back office.

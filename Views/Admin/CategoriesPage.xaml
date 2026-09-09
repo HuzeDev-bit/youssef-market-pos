@@ -138,14 +138,12 @@
                                                  opening a dialog to undo one press is a poor
                                                  trade on a touchscreen. Opposite corner from
                                                  the Hidden badge so the two never overlap. -->
-                                            <Button x:Name="removeButton"
-                                                    Style="{StaticResource Button.RowDanger}"
+                                            <Button Style="{StaticResource Button.RowDanger}"
                                                     HorizontalAlignment="Left" VerticalAlignment="Top"
                                                     Margin="6"
                                                     Click="Remove_Click" Tag="{Binding Id}"
                                                     ToolTip="Remove this category">
-                                                <Path x:Name="removeGlyph"
-                                                      Style="{StaticResource Icon.Small}"
+                                                <Path Style="{StaticResource Icon.Small}"
                                                       Data="{StaticResource Icon.Trash}"/>
                                             </Button>
                                         </Grid>
@@ -188,12 +186,6 @@
                                 <DataTrigger Binding="{Binding IsActive}" Value="False">
                                     <Setter TargetName="card" Property="Opacity" Value="0.55"/>
                                     <Setter TargetName="hiddenTag" Property="Visibility" Value="Visible"/>
-                                    <Setter TargetName="removeGlyph" Property="Data"
-                                            Value="{StaticResource Icon.Undo}"/>
-                                    <Setter TargetName="removeButton" Property="Foreground"
-                                            Value="{StaticResource Brush.Muted}"/>
-                                    <Setter TargetName="removeButton" Property="ToolTip"
-                                            Value="Put this category back"/>
                                 </DataTrigger>
                             </DataTemplate.Triggers>
                         </DataTemplate>

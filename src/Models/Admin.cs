@@ -1,4 +1,4 @@
-namespace MarketPos.Models;
+﻿namespace MarketPos.Models;
 
 // ============================== Enumerations ==============================
 
@@ -626,9 +626,9 @@ public sealed class CategoryRow
     /// <summary>What is in it.</summary>
     public string CountLabel => ProductCount switch
     {
-        0 => "Nothing in it yet",
-        1 => "1 product",
-        _ => $"{ProductCount} products",
+        0 => Services.Loc.T("Nothing in it yet"),
+        1 => Services.Loc.T("1 product"),
+        _ => Services.Loc.T("{0} products", ProductCount),
     };
 
     /// <summary>What that stock cost, blank when there is none to speak of.</summary>

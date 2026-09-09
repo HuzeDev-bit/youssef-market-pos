@@ -5,7 +5,10 @@
 Nothing to set up. Run `MarketPos.exe`. The till and the back office are the same program, and
 the database lives at `%AppData%\MarketPos\marketpos.db`.
 
-Leave **Settings → Back office address** empty. The shop never touches the network.
+Leave **Settings → Shop server** empty. The shop never touches the network.
+
+The back office asks for a password the first time it is opened. A new install starts with
+**123456**; change it from the lock beside your name in the back office.
 
 ---
 
@@ -16,18 +19,16 @@ catalogue, sells with or without the network, and hands its sales over afterward
 
 ### On the back-office machine
 
-Start the server. It reads and writes the same `marketpos.db` the back office uses.
-
-```bash
-dotnet run --project server
-```
-
-It listens on port 5000 on every network the machine is on, and prints the addresses a till
-should be pointed at:
+Nothing to start. The server is inside `MarketPos.exe` — running the app runs it, listening on
+port 5000 on every network the machine is on, over the same `marketpos.db` the back office
+uses. This machine is the one that holds the shop: the database is at
 
 ```
-Tills should be pointed at http://192.168.1.20:5000
+%AppData%\MarketPos\marketpos.db
 ```
+
+Find its address with `ipconfig` — the IPv4 line, e.g. `192.168.1.20`. The tills are pointed at
+`http://192.168.1.20:5000`.
 
 Two things to check the first time:
 
@@ -40,11 +41,14 @@ database file on the one machine, which is the only place SQLite is safe to shar
 
 ### On each till
 
-**Settings → Back office address**: type what the server printed, e.g. `192.168.1.20:5000`
-(the `http://` is added for you). Give the till a name while you are there — it goes on every
-sale that came from it.
+Install the same `MarketPos.exe`. Nothing else — there is no separate program for a till.
 
-Press **Test**. It will say which shop it found, or what is wrong in words you can act on.
+**Settings → Shop server**: type the back-office machine's address, e.g. `192.168.1.20:5000`
+(the `http://` and the port are filled in for you). Give the till a name while you are there —
+it goes on every sale that came from it.
+
+Filling that box in is the whole difference between the two machines: empty means "this is the
+shop", filled in means "this is a till belonging to that shop".
 
 From then on the till shows a small chip in its top corner:
 

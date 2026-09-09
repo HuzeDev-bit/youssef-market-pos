@@ -85,7 +85,7 @@
 
             <Grid Margin="0,22,0,0">
                 <Button x:Name="DeactivateButton" Style="{StaticResource Button.PillMuted}"
-                        Content="Deactivate" HorizontalAlignment="Left" Width="118"
+                        Content="Delete" HorizontalAlignment="Left" Width="118"
                         Foreground="{StaticResource Brush.Danger}" Click="Deactivate_Click"
                         Visibility="Collapsed"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

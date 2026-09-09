@@ -112,17 +112,15 @@ public partial class CategoriesPage : AdminPageBase
     }
 
     /// <summary>
-    /// Takes a category off the shelves, or puts it back.
+    /// Deletes a category, for good.
     ///
-    /// Hidden, not deleted: products that were filed under it still point at this row, and the
-    /// shop may well want it back next season. It asks nothing first, because it is reversible
-    /// in one press — the card stays on the list wearing a Hidden badge, and the same button
-    /// undoes it.
+    /// It asks nothing first. What makes that safe is not a dialog but what it refuses to do:
+    /// a category with products still on the shelves in it does not go, and says so in the
+    /// line above the list. What is left to delete is a name and a picture, and typing them
+    /// again is a shorter job than the confirmation would have been.
     ///
-    /// What it will not do is empty a category out from underneath the till. A category with
-    /// products still in it says so in the line above the list and nothing changes; move them
-    /// first. The click stops here either way, or it would carry on to the card and open the
-    /// editor for the category just removed.
+    /// The click stops here, or it would carry on to the card and open the editor for the
+    /// category just deleted.
     /// </summary>
     private void Remove_Click(object sender, RoutedEventArgs e)
     {
@@ -133,7 +131,7 @@ public partial class CategoriesPage : AdminPageBase
         var row = _rows.FirstOrDefault(c => c.Id == id);
         if (row is null) return;
 
-        if (CategoryRepository.SetActive(row.Id, row.Name, active: !row.IsActive, out var problem))
+        if (CategoryRepository.Delete(row.Id, row.Name, out var problem))
         {
             ReloadAll();
             return;

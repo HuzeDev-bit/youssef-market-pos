@@ -22,6 +22,9 @@ public static class Translations
             ["*** DUPLICATA / REPRINT ***"] =
                 ("*** DUPLICATA / REPRINT ***",
                  "*** نسخة / إعادة طباعة ***"),
+            ["1 product"] =
+                ("1 produit",
+                 "منتج واحد"),
             ["= gross profit"] =
                 ("= bénéfice brut",
                  "= الربح الإجمالي"),
@@ -379,9 +382,15 @@ public static class Translations
             ["Deactivate"] =
                 ("Désactiver",
                  "تعطيل"),
+            ["Delete"] =
+                ("Supprimer",
+                 "حذف"),
             ["Delete this ticket"] =
                 ("Supprimer ce ticket",
                  "حذف هذه الفاتورة"),
+            ["Delete {0}?"] =
+                ("Supprimer {0} ?",
+                 "حذف {0}؟"),
             ["Deliveries"] =
                 ("Livraisons",
                  "التسليمات"),
@@ -643,6 +652,9 @@ public static class Translations
             ["Invoices"] =
                 ("Factures",
                  "الفواتير"),
+            ["It goes for good. Products still on the shelves in it have to be moved first."] =
+                ("Elle part définitivement. Les produits encore en rayon doivent d'abord être déplacés.",
+                 "سيتم حذفها نهائياً. يجب نقل المنتجات التي ما زالت في الرفوف أولاً."),
             ["It goes on the till as soon as you save."] =
                 ("Il arrive en caisse dès l'enregistrement.",
                  "يصل إلى الصندوق بمجرد الحفظ."),
@@ -673,6 +685,9 @@ public static class Translations
             ["Leave empty if this is the only computer in the shop. Fill it in on a second till, and it will keep selling even when the back office is off — sales catch up when it comes back."] =
                 ("Laissez vide s'il s'agit du seul ordinateur de la boutique. Renseignez-le sur une deuxième caisse : elle continuera à vendre même si l'arrière-boutique est éteinte — les ventes se rattrapent à son retour.",
                  "اتركه فارغاً إن كان هذا هو الحاسوب الوحيد في المتجر. املأه في صندوق ثانٍ، وسيواصل البيع حتى وإن كان جهاز الإدارة مطفأً — وتلحق المبيعات عند عودته."),
+            ["Leave empty on the machine that holds the shop's database. On a second till, put the address of the first one — http://192.168.1.10:5000 — and this till will take its products from there and send its sales back."] =
+                ("Laissez vide sur la machine qui contient la base de données du magasin. Sur une deuxième caisse, indiquez l'adresse de la première — http://192.168.1.10:5000 — et cette caisse y prendra ses produits et y renverra ses ventes.",
+                 "اتركه فارغاً على الجهاز الذي يحتوي قاعدة بيانات المتجر. على صندوق ثانٍ، ضع عنوان الجهاز الأول — http://192.168.1.10:5000 — وسيأخذ هذا الصندوق منتجاته من هناك ويرسل مبيعاته إليه."),
             ["Leave this off when the goods came back damaged or opened — the stock is gone either way, and ticking it would put items back that cannot be sold."] =
                 ("Laissez décoché si la marchandise est revenue abîmée ou ouverte — le stock est perdu de toute façon, et cocher remettrait en rayon des articles invendables.",
                  "اترك هذا دون تحديد إذا عادت البضاعة تالفة أو مفتوحة — المخزون ضائع في الحالتين، وتحديده سيعيد إلى الرف منتجات لا يمكن بيعها."),
@@ -730,6 +745,9 @@ public static class Translations
             ["NAME"] =
                 ("NOM",
                  "الاسم"),
+            ["NAME OF THIS TILL"] =
+                ("NOM DE CETTE CAISSE",
+                 "اسم هذا الصندوق"),
             ["NEEDS ATTENTION"] =
                 ("À TRAITER",
                  "يحتاج انتباهك"),
@@ -847,6 +865,9 @@ public static class Translations
             ["Nothing here matches what you typed, or the category filter is hiding it."] =
                 ("Rien ici ne correspond à votre saisie, ou le filtre de catégorie le masque.",
                  "لا شيء هنا يطابق ما كتبته، أو أن مرشّح الفئة يخفيه."),
+            ["Nothing in it yet"] =
+                ("Rien dedans pour l'instant",
+                 "لا شيء فيها بعد"),
             ["Nothing in the shop yet"] =
                 ("La boutique est vide",
                  "لا شيء في المتجر بعد"),
@@ -1291,6 +1312,9 @@ public static class Translations
             ["SHOP NAME"] =
                 ("NOM DE LA BOUTIQUE",
                  "اسم المتجر"),
+            ["SHOP SERVER"] =
+                ("SERVEUR DU MAGASIN",
+                 "خادم المتجر"),
             ["SKU / INTERNAL CODE"] =
                 ("SKU / CODE INTERNE",
                  "رمز داخلي"),
@@ -1558,6 +1582,9 @@ public static class Translations
             ["The new shelf price. Leave it as it is to keep the old one."] =
                 ("Le nouveau prix de vente. Laissez tel quel pour garder l'ancien.",
                  "سعر الرف الجديد. اتركه كما هو للاحتفاظ بالقديم."),
+            ["The password is {0} until you change it — the lock beside your name in the back office."] =
+                ("Le mot de passe est {0} jusqu'à ce que vous le changiez — le cadenas à côté de votre nom dans l'administration.",
+                 "كلمة السر هي {0} إلى أن تغيّرها — القفل بجانب اسمك في لوحة الإدارة."),
             ["The photo is optional here — this product is scanned, so it only shows on lists and receipts."] =
                 ("La photo est facultative ici — ce produit se scanne, elle n'apparaît donc que sur les listes et les tickets.",
                  "الصورة اختيارية هنا — هذا المنتج يُمسح ضوئياً، فتظهر على القوائم والإيصالات فقط."),
@@ -1612,6 +1639,9 @@ public static class Translations
             ["Their details, role and wage"] =
                 ("Leurs informations, rôle et salaire",
                  "بياناتهم ودورهم وأجرهم"),
+            ["There is already a category called {0}."] =
+                ("Il existe déjà une catégorie appelée {0}.",
+                 "توجد بالفعل فئة باسم {0}."),
             ["This month"] =
                 ("Ce mois-ci",
                  "هذا الشهر"),
@@ -2155,6 +2185,9 @@ public static class Translations
             ["{0} can open the back office · each sees only the pages their role allows"] =
                 ("{0} peuvent ouvrir l'arrière-boutique · chacun ne voit que les pages permises par son rôle",
                  "{0} يمكنهم فتح الإدارة · كل واحد يرى الصفحات التي يسمح بها دوره"),
+            ["{0} cannot be deleted: what is in it appears in the sales history. Move the products to another category first."] =
+                ("{0} ne peut pas être supprimée : ce qu'elle contient figure dans l'historique des ventes. Déplacez d'abord les produits vers une autre catégorie.",
+                 "لا يمكن حذف {0}: ما بداخلها يظهر في سجل المبيعات. انقل المنتجات إلى فئة أخرى أولاً."),
             ["{0} changes · {1} stock movements · {2}"] =
                 ("{0} modifications · {1} mouvements de stock · {2}",
                  "{0} تغييرات · {1} حركات مخزون · {2}"),

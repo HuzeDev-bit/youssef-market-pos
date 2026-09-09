@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using MarketPos.Services;
 
 namespace MarketPos;
@@ -74,6 +74,10 @@ public partial class App : Application
         }
 
         if (e.Args.Contains("--selftest")) SelfTest.Run(this);
+
+        // A new install opens with a password on the back office rather than without one.
+        // Once, and only on an install that has never had one — see AdminAccount.
+        AdminAccount.StartWithTheDefault();
 
         // Start the back-office server so both backend and frontend run together
         // from this single executable.

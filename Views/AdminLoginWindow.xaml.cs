@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 using MarketPos.Services;
 
@@ -50,7 +50,14 @@ public partial class AdminLoginWindow : Window
         else
         {
             HeadingText.Text = Loc.T("Admin");
-            SubText.Text = Loc.T("Enter the admin password to continue.");
+
+            // While it is still 123456 there is no secret to keep, and the useful thing to
+            // say is where to change it. The moment the owner does, this goes away.
+            SubText.Text = AdminAccount.IsStillTheStartingOne
+                ? Loc.T("The password is {0} until you change it — the lock beside your name in "
+                      + "the back office.", AdminAccount.Starting)
+                : Loc.T("Enter the admin password to continue.");
+
             SubmitButton.Content = Loc.T("Unlock");
         }
 

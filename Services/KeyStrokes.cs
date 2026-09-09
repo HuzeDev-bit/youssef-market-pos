@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace MarketPos.Services;
 
@@ -44,6 +44,56 @@ public static class KeyStrokes
     /// <summary>Presses and releases a key by its virtual-key code — Backspace, Enter, Tab.</summary>
     public static void Press(ushort key) =>
         Send(new[] { Virtual(key, up: false), Virtual(key, up: true) });
+
+    /// <summary>
+    /// Presses Enter at whatever the shop is filling in.
+    ///
+    /// Enter is the one key here that is not about the text in the box: it means "done with
+    /// this", and every screen in the app answers it in its own KeyDown handler — commit the
+    /// quantity and go back to scanning, save the product, sign in. Sent through the operating
+    /// system like the letters are, it went to the window with the keyboard focus, which on a
+    /// till driven entirely by fingers is not reliably the window the shop is looking at, and
+    /// the press did nothing at all.
+    ///
+    /// So this one is raised where it is meant to land: on the element with the caret, as the
+    /// same pair of routed events a real Enter would arrive as. The handlers cannot tell the
+    /// difference — they read the key and nothing else — and there is no text being filtered
+    /// here for the operating-system route to protect. If nothing has the caret there is
+    /// nothing to finish, and it falls back to the plain keystroke.
+    /// </summary>
+    public static void PressEnter()
+    {
+        if (System.Windows.Input.Keyboard.FocusedElement is not System.Windows.DependencyObject caret
+            || System.Windows.PresentationSource.FromDependencyObject(caret) is not { } source)
+        {
+            Press(Enter);
+            return;
+        }
+
+        var pressed = new System.Windows.Input.KeyEventArgs(
+            System.Windows.Input.Keyboard.PrimaryDevice, source, 0,
+            System.Windows.Input.Key.Enter)
+        {
+            RoutedEvent = System.Windows.Input.Keyboard.PreviewKeyDownEvent,
+        };
+
+        var target = (System.Windows.UIElement?)(caret as System.Windows.UIElement);
+        if (target is null)
+        {
+            Press(Enter);
+            return;
+        }
+
+        target.RaiseEvent(pressed);
+
+        // The tunnelling pass is where a window says "not for the box, for me" — a dialog that
+        // saves on Enter, say. Only if nobody claimed it does the bubbling pass follow, exactly
+        // as WPF does it for a key off the counter.
+        if (pressed.Handled) return;
+
+        pressed.RoutedEvent = System.Windows.Input.Keyboard.KeyDownEvent;
+        target.RaiseEvent(pressed);
+    }
 
     /// <summary>
     /// Empties the box being typed into: select everything in it, then delete the selection.

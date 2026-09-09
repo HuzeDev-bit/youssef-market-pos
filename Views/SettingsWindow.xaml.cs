@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 using MarketPos.Services;
 
@@ -60,6 +60,9 @@ public partial class SettingsWindow : Window
 
         PrinterHint.Text = Loc.T("Receipts will print automatically to this printer.");
 
+        ServerBox.Text = AppSettings.Current.ServerAddress;
+        TillBox.Text = AppSettings.Current.TillName;
+
         Loaded += (_, _) => LanguageBox.Focus();
     }
 
@@ -82,6 +85,12 @@ public partial class SettingsWindow : Window
             AppSettings.Current.ReceiptPrinterName = selectedPrinter;
         }
 
+        // Typed by hand off a scrap of paper, so the shapes that get typed instead of an
+        // address are put right rather than refused: a bare machine name or IP is http on
+        // port 5000, and a trailing slash is nothing.
+        AppSettings.Current.ServerAddress = Address(ServerBox.Text);
+        AppSettings.Current.TillName = TillBox.Text.Trim();
+
         AppSettings.Current.Save();
 
         // A language is applied when windows are built, so the ones already open would keep the
@@ -91,6 +100,21 @@ public partial class SettingsWindow : Window
 
         DialogResult = true;
         Close();
+    }
+
+    /// <summary>Turns what was typed into an address the till can actually call.</summary>
+    private static string Address(string? typed)
+    {
+        var text = (typed ?? string.Empty).Trim().TrimEnd('/');
+        if (text.Length == 0) return string.Empty;
+
+        if (!text.Contains("://", StringComparison.Ordinal)) text = "http://" + text;
+
+        // A host with no port is the shop server's own, which is the only port this app
+        // listens on and the one nobody types.
+        return Uri.TryCreate(text, UriKind.Absolute, out var address) && address.IsDefaultPort
+            ? $"{address.Scheme}://{address.Host}:5000"
+            : text;
     }
 
     private void TestPrint_Click(object sender, RoutedEventArgs e)

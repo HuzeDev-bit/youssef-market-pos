@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
@@ -167,7 +167,7 @@ public partial class CategoryWindow : Window
         {
             // A duplicate name hits the UNIQUE constraint; say so in shop language.
             ErrorText.Text = error.Message.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase)
-                ? $"There is already a category called {name}."
+                ? Loc.T("There is already a category called {0}.", name)
                 : error.Message;
         }
     }
@@ -205,11 +205,11 @@ public partial class CategoryWindow : Window
     {
         if (_existing is null) return;
 
-        if (!ConfirmWindow.Ask(this, $"Deactivate {_existing.Name}?",
-                "It stops appearing on the till. Nothing is deleted."))
+        if (!ConfirmWindow.Ask(this, Loc.T("Delete {0}?", _existing.Name),
+                Loc.T("It goes for good. Products still on the shelves in it have to be moved first.")))
             return;
 
-        if (!CategoryRepository.SetActive(_existing.Id, _existing.Name, active: false, out var problem))
+        if (!CategoryRepository.Delete(_existing.Id, _existing.Name, out var problem))
         {
             ErrorText.Text = problem;
             return;

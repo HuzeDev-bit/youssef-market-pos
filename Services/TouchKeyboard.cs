@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -101,13 +101,23 @@ public static class TouchKeyboard
         if (IsOpen) Close(); else Open();
     }
 
-    public static void Open()
+    public static void Open(object? forThis = null)
     {
         if (!_started) return;
 
         _keys ??= new KeyboardWindow();
-        _keys.SlideIn();
+        _keys.SlideIn(OnlyTakesNumbers(forThis ?? Keyboard.FocusedElement));
     }
+
+    /// <summary>
+    /// Whether the box being filled in refuses everything that is not a number.
+    ///
+    /// Read off the box itself rather than kept in a list here: a price box says so in markup,
+    /// with the attached property that does the refusing, and a box added to a form next year
+    /// says so by the same line that makes it a price box. Nothing has to be told twice.
+    /// </summary>
+    private static bool OnlyTakesNumbers(object? element) =>
+        element is TextBox box && Views.Admin.Numeric.GetOnly(box);
 
     public static void Close() => _keys?.SlideOut();
 
@@ -147,18 +157,27 @@ public static class TouchKeyboard
             // Pressing one is the shop saying it wants to type; focus is only the app tidying
             // up after itself.
             EventManager.RegisterClassHandler(box, UIElement.PreviewMouseLeftButtonDownEvent,
-                new MouseButtonEventHandler((sender, _) => { if (TypedInto(sender)) Open(); }));
+                new MouseButtonEventHandler((sender, _) => { if (TypedInto(sender)) Open(sender); }));
 
             EventManager.RegisterClassHandler(box, UIElement.PreviewTouchDownEvent,
-                new EventHandler<TouchEventArgs>((sender, _) => { if (TypedInto(sender)) Open(); }));
+                new EventHandler<TouchEventArgs>((sender, _) => { if (TypedInto(sender)) Open(sender); }));
 
             EventManager.RegisterClassHandler(box, UIElement.PreviewStylusDownEvent,
-                new StylusDownEventHandler((sender, _) => { if (TypedInto(sender)) Open(); }));
+                new StylusDownEventHandler((sender, _) => { if (TypedInto(sender)) Open(sender); }));
 
             // The button lights up for any focus at all, pressed or not, so it is obvious where
             // the keys come from on the one screen where they did not appear by themselves.
             EventManager.RegisterClassHandler(box, UIElement.GotKeyboardFocusEvent,
-                new RoutedEventHandler((sender, _) => { if (TypedInto(sender)) _button?.Wake(); }));
+                new RoutedEventHandler((sender, _) =>
+                {
+                    if (!TypedInto(sender)) return;
+
+                    _button?.Wake();
+
+                    // Already up and the caret has moved to a box of the other kind: swap the
+                    // keys under the shop's hand rather than make them close it and press again.
+                    if (IsOpen) Open(sender);
+                }));
         }
 
         // A press on anything that is not typed into puts the keys away.
