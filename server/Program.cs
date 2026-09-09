@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.Link;
@@ -121,8 +121,47 @@ app.MapPost("/sales", (SaleBatch batch) =>
 foreach (var address in LocalAddresses())
     app.Logger.LogInformation("Tills should be pointed at http://{Address}:5000", address);
 
-app.Run();
-return;
+// Anything that stops this from starting stops the shop's tills, and a console window that
+// closes as fast as it opened tells whoever double-clicked it nothing at all. So the reason is
+// said in words, and the window is held open until it has been read.
+try
+{
+    app.Run();
+}
+catch (Exception problem)
+{
+    Console.WriteLine();
+    Console.WriteLine("The shop server could not start.");
+    Console.WriteLine();
+
+    // Far and away the likeliest one: the all-in-one MarketPos.exe is open on this machine and
+    // has taken the port, because it is the till and the server in one program.
+    if (problem is IOException or System.Net.Sockets.SocketException)
+    {
+        Console.WriteLine("Something else on this machine is already using port 5000.");
+        Console.WriteLine("It is probably MarketPos.exe — close it, start this server, then");
+        Console.WriteLine("open it again. It will leave the port alone and use this server.");
+    }
+    else
+    {
+        Console.WriteLine(problem.Message);
+    }
+
+    Console.WriteLine();
+    Console.WriteLine("Press any key to close.");
+
+    // Only when somebody is looking. Started from a shortcut there is a console to read this
+    // in; started by the machine at boot there is nobody, and waiting for a key would be a
+    // server that never comes back after a power cut.
+    if (!Console.IsInputRedirected)
+    {
+        try { Console.ReadKey(true); } catch { /* no console: nothing to wait for */ }
+    }
+
+    return 1;
+}
+
+return 0;
 
 /// <summary>This machine's addresses on the shop's own network.</summary>
 static List<string> LocalAddresses() =>
