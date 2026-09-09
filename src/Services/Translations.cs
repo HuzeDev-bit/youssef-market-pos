@@ -553,6 +553,12 @@ public static class Translations
             ["Find"] =
                 ("Chercher",
                  "بحث"),
+            ["Find the shop"] =
+                ("Trouver le magasin",
+                 "ابحث عن المتجر"),
+            ["Found {0} at {1}. Press Save."] =
+                ("{0} trouvé à {1}. Appuyez sur Enregistrer.",
+                 "تم العثور على {0} في {1}. اضغط حفظ."),
             ["GOODS"] =
                 ("MARCHANDISE",
                  "البضاعة"),
@@ -685,12 +691,18 @@ public static class Translations
             ["Leave empty if this is the only computer in the shop. Fill it in on a second till, and it will keep selling even when the back office is off — sales catch up when it comes back."] =
                 ("Laissez vide s'il s'agit du seul ordinateur de la boutique. Renseignez-le sur une deuxième caisse : elle continuera à vendre même si l'arrière-boutique est éteinte — les ventes se rattrapent à son retour.",
                  "اتركه فارغاً إن كان هذا هو الحاسوب الوحيد في المتجر. املأه في صندوق ثانٍ، وسيواصل البيع حتى وإن كان جهاز الإدارة مطفأً — وتلحق المبيعات عند عودته."),
+            ["Leave empty on the machine that holds the shop's database. On a second till, press Find the shop — or type the address of the first machine yourself."] =
+                ("Laissez vide sur la machine qui contient la base de données. Sur une deuxième caisse, appuyez sur Trouver le magasin — ou saisissez vous-même l'adresse de la première machine.",
+                 "اتركه فارغاً على الجهاز الذي يحتوي قاعدة البيانات. على صندوق ثانٍ، اضغط ابحث عن المتجر — أو اكتب عنوان الجهاز الأول بنفسك."),
             ["Leave empty on the machine that holds the shop's database. On a second till, put the address of the first one — http://192.168.1.10:5000 — and this till will take its products from there and send its sales back."] =
                 ("Laissez vide sur la machine qui contient la base de données du magasin. Sur une deuxième caisse, indiquez l'adresse de la première — http://192.168.1.10:5000 — et cette caisse y prendra ses produits et y renverra ses ventes.",
                  "اتركه فارغاً على الجهاز الذي يحتوي قاعدة بيانات المتجر. على صندوق ثانٍ، ضع عنوان الجهاز الأول — http://192.168.1.10:5000 — وسيأخذ هذا الصندوق منتجاته من هناك ويرسل مبيعاته إليه."),
             ["Leave this off when the goods came back damaged or opened — the stock is gone either way, and ticking it would put items back that cannot be sold."] =
                 ("Laissez décoché si la marchandise est revenue abîmée ou ouverte — le stock est perdu de toute façon, et cocher remettrait en rayon des articles invendables.",
                  "اترك هذا دون تحديد إذا عادت البضاعة تالفة أو مفتوحة — المخزون ضائع في الحالتين، وتحديده سيعيد إلى الرف منتجات لا يمكن بيعها."),
+            ["Looking for the shop on this network…"] =
+                ("Recherche du magasin sur ce réseau…",
+                 "جارٍ البحث عن المتجر في هذه الشبكة…"),
             ["Low"] =
                 ("Bas",
                  "منخفض"),
@@ -826,6 +838,9 @@ public static class Translations
             ["No sales yet"] =
                 ("Aucune vente",
                  "لا مبيعات بعد"),
+            ["No shop server answered. Check it is switched on and that both machines are on the same network."] =
+                ("Aucun serveur n'a répondu. Vérifiez qu'il est allumé et que les deux machines sont sur le même réseau.",
+                 "لم يستجب أي خادم. تأكد من تشغيله ومن أن الجهازين على نفس الشبكة."),
             ["No staff yet"] =
                 ("Aucun employé",
                  "لا يوجد موظفون بعد"),

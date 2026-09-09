@@ -102,6 +102,48 @@ public partial class SettingsWindow : Window
         Close();
     }
 
+    /// <summary>
+    /// Looks for the shop's server on this network and fills the box in with what it finds.
+    ///
+    /// The whole point of the button is that the person pressing it does not know the answer,
+    /// so it says what it is doing while it does it and what it found afterwards — a button
+    /// that goes quiet for three seconds and then quietly changes a box is a button nobody
+    /// trusts the second time.
+    /// </summary>
+    private async void Find_Click(object sender, RoutedEventArgs e)
+    {
+        FindButton.IsEnabled = false;
+        ServerHint.Text = Loc.T("Looking for the shop on this network…");
+
+        try
+        {
+            var shop = await ShopFinder.Look();
+
+            if (shop is null)
+            {
+                ServerHint.Text = Loc.T("No shop server answered. Check it is switched on and "
+                                      + "that both machines are on the same network.");
+                return;
+            }
+
+            // The shop answered from this very machine, which means this machine is the shop.
+            // Filling the box in would point it at itself.
+            if (ShopFinder.IsThisMachine(shop.Address))
+            {
+                ServerHint.Text = Loc.T("This machine is the shop's server. Leave this empty.");
+                return;
+            }
+
+            ServerBox.Text = shop.Address;
+            ServerHint.Text = Loc.T("Found {0} at {1}. Press Save.",
+                                    shop.ShopName, Loc.Ltr(shop.Address));
+        }
+        finally
+        {
+            FindButton.IsEnabled = true;
+        }
+    }
+
     /// <summary>Turns what was typed into an address the till can actually call.</summary>
     private static string Address(string? typed)
     {

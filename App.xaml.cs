@@ -50,6 +50,33 @@ public partial class App : Application
             return;
         }
 
+        // Answers "where is the shop?" from a command line, and writes it down. The same search
+        // the Find the shop button runs, for a machine where somebody is trying to work out why
+        // the till cannot see the server.
+        if (e.Args.Contains("--find"))
+        {
+            // On a worker thread, waited on from here: this is the one place in the app that
+            // blocks the thread the search would otherwise want to come back to.
+            var found = Task.Run(() => Services.ShopFinder.Look()).GetAwaiter().GetResult();
+            var said = found is null
+                ? "No shop server answered on this machine's network."
+                : $"Found {found.ShopName} at {found.Address}";
+
+            Console.WriteLine(said);
+            try
+            {
+                System.IO.File.WriteAllText(
+                    System.IO.Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        "MarketPos", "find.log"),
+                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}  {said}{Environment.NewLine}");
+            }
+            catch { /* the answer is on screen either way */ }
+
+            Headless(found is null ? 1 : 0);
+            return;
+        }
+
         if (e.Args.Contains("--icons"))
         {
             var target = Array.IndexOf(e.Args, "--icons") + 1;

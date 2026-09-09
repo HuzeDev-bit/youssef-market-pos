@@ -52,10 +52,23 @@
                  back. Which one this machine is, is decided by whether this box is filled in:
                  empty means it is the shop itself. -->
             <TextBlock Text="SHOP SERVER" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,8"/>
-            <TextBox x:Name="ServerBox" Style="{StaticResource TextBox.Field}" Height="40"/>
-            <TextBlock Style="{StaticResource Text.Muted}" FontSize="11" Margin="2,6,2,0"
-                       TextWrapping="Wrap"
-                       Text="Leave empty on the machine that holds the shop's database. On a second till, put the address of the first one — http://192.168.1.10:5000 — and this till will take its products from there and send its sales back."/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="ServerBox" Grid.Column="0" Style="{StaticResource TextBox.Field}"
+                         Height="40"/>
+                <!-- Nobody at a grocery counter knows what an IP address is, and the machine
+                     that has one is a box in the back with no screen. This asks the network
+                     instead. -->
+                <Button x:Name="FindButton" Grid.Column="2" Style="{StaticResource Button.PillMuted}"
+                        Content="Find the shop" Height="40" Click="Find_Click"/>
+            </Grid>
+            <TextBlock x:Name="ServerHint" Style="{StaticResource Text.Muted}" FontSize="11"
+                       Margin="2,6,2,0" TextWrapping="Wrap"
+                       Text="Leave empty on the machine that holds the shop's database. On a second till, press Find the shop — or type the address of the first machine yourself."/>
 
             <TextBlock Text="NAME OF THIS TILL" Style="{StaticResource Text.Eyebrow}" Margin="2,14,0,8"/>
             <TextBox x:Name="TillBox" Style="{StaticResource TextBox.Field}" Height="40"/>
