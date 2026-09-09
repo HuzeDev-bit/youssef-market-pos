@@ -74,8 +74,8 @@ public partial class SaleDetailWindow : Window
 
         ReasonBox.ItemsSource = new[]
         {
-            "Customer changed their mind", "Wrong item", "Damaged goods",
-            "Expired", "Rung up twice", "Price was wrong",
+            Loc.T("Customer changed their mind"), Loc.T("Wrong item"), Loc.T("Damaged goods"),
+            Loc.T("Expired"), Loc.T("Rung up twice"), Loc.T("Price was wrong"),
         };
 
         Bind();
@@ -132,7 +132,7 @@ public partial class SaleDetailWindow : Window
         PrintButton.Visibility = _refunding ? Visibility.Collapsed : Visibility.Visible;
 
         RefundPanel.Visibility = _refunding ? Visibility.Visible : Visibility.Collapsed;
-        PrimaryButton.Content = _refunding ? "Confirm refund" : "Close";
+        PrimaryButton.Content = Loc.T(_refunding ? "Confirm refund" : "Close");
         UpdateRefundTotal();
     }
 
@@ -213,14 +213,14 @@ public partial class SaleDetailWindow : Window
         var chosen = _lines.Where(l => l.Selected && l.CanReturn).ToList();
         if (chosen.Count == 0)
         {
-            ErrorText.Text = "Tick at least one line to return.";
+            ErrorText.Text = Loc.T("Tick at least one line to return.");
             return;
         }
 
         var reason = ReasonBox.Text.Trim();
         if (reason.Length == 0)
         {
-            ErrorText.Text = "Say why it is coming back — this goes on the record.";
+            ErrorText.Text = Loc.T("Say why it is coming back — this goes on the record.");
             ReasonBox.Focus();
             return;
         }
@@ -284,7 +284,7 @@ public partial class SaleDetailWindow : Window
         var receipt = SaleRepository.FindByInvoiceNumber(_sale.InvoiceNumber);
         if (receipt is null)
         {
-            ErrorText.Text = "That receipt could not be read back.";
+            ErrorText.Text = Loc.T("That receipt could not be read back.");
             return;
         }
 

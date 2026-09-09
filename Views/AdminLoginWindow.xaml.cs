@@ -30,20 +30,20 @@ public partial class AdminLoginWindow : Window
         if (_isChangingPassword)
         {
             var replacing = AdminAccount.IsConfigured;
-            HeadingText.Text = replacing ? "Change admin password" : "Set admin password";
+            HeadingText.Text = Loc.T(replacing ? "Change admin password" : "Set admin password");
             SubText.Text = replacing
                 ? "Enter the new password twice. The old one stops working straight away."
                 : "This will start protecting the back office. Leave both boxes empty and save "
                   + "to turn the password off again.";
-            FirstLabel.Text = replacing ? "NEW PASSWORD" : "PASSWORD";
+            FirstLabel.Text = Loc.T(replacing ? "NEW PASSWORD" : "PASSWORD");
             ConfirmSection.Visibility = Visibility.Visible;
-            SubmitButton.Content = replacing ? "Change" : "Set password";
+            SubmitButton.Content = Loc.T(replacing ? "Change" : "Set password");
         }
         else if (_isOpen)
         {
             HeadingText.Text = Loc.T("Back office");
-            SubText.Text = Loc.T("No admin password is set, so anyone at this machine can open the ")
-                         + "back office. You can set one under Settings → Access.";
+            SubText.Text = Loc.T("No admin password is set, so anyone at this machine can open the "
+                               + "back office. You can set one under Settings → Access.");
             PasswordSection.Visibility = Visibility.Collapsed;
             SubmitButton.Content = Loc.T("Unlock");
         }
@@ -123,7 +123,7 @@ public partial class AdminLoginWindow : Window
 
     private void Fail(string message)
     {
-        ErrorText.Text = message;
+        ErrorText.Text = Loc.T(message);
         PasswordBox.Clear();
         ConfirmBox.Clear();
         PasswordBox.Focus();

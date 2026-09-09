@@ -32,7 +32,10 @@ public partial class ExpenseWindow : Window
             Loc.T("Cash"), Loc.T("Bank transfer"), Loc.T("Cheque"),
             Loc.T("Card"), Loc.T("Other"),
         };
-        RepeatBox.ItemsSource = new[] { "Does not repeat", "Weekly", "Monthly", "Yearly" };
+        RepeatBox.ItemsSource = new[]
+        {
+            Loc.T("Does not repeat"), Loc.T("Weekly"), Loc.T("Monthly"), Loc.T("Yearly"),
+        };
 
         var source = existing ?? template;
 
@@ -120,7 +123,7 @@ public partial class ExpenseWindow : Window
         var name = NameBox.Text.Trim();
         if (name.Length == 0)
         {
-            ErrorText.Text = "Say what the money was spent on.";
+            ErrorText.Text = Loc.T("Say what the money was spent on.");
             NameBox.Focus();
             return;
         }
@@ -129,7 +132,7 @@ public partial class ExpenseWindow : Window
                               NumberStyles.Number, CultureInfo.InvariantCulture, out var amount)
             || amount <= 0m)
         {
-            ErrorText.Text = "Enter an amount greater than zero.";
+            ErrorText.Text = Loc.T("Enter an amount greater than zero.");
             AmountBox.Focus();
             return;
         }

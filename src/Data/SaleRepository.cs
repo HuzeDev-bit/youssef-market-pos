@@ -127,7 +127,8 @@ public static class SaleRepository
 
         ActivityRepository.Record("completed a sale", "Sale", invoiceNumber,
             newValue: $"{total:0.00} DH",
-            detail: $"completed sale #{invoiceNumber} for {total:0.00} DH", connection: connection);
+            detail: ActivityRepository.Say("completed sale #{0} for {1}",
+                                          invoiceNumber, $"{total:0.00} DH"), connection: connection);
 
         transaction.Commit();
 

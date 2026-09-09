@@ -61,7 +61,7 @@ public partial class DiscountWindow : Window
         if (FixedButton is null) return;
         FixedButton.IsChecked = false;
         Kind = DiscountKind.Percent;
-        FieldLabel.Text = "Discount percentage";
+        FieldLabel.Text = Loc.T("Discount percentage");
         Recalculate();
     }
 
@@ -69,7 +69,7 @@ public partial class DiscountWindow : Window
     {
         PercentButton.IsChecked = false;
         Kind = DiscountKind.Fixed;
-        FieldLabel.Text = "Discount amount in DH";
+        FieldLabel.Text = Loc.T("Discount amount in DH");
         Recalculate();
     }
 

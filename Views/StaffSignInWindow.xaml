@@ -19,20 +19,20 @@
                 <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.User}" Width="22" Height="22"/>
             </Border>
 
-            <TextBlock x:Name="HeadingText" Text="المكتب الخلفي" Style="{StaticResource Text.Title}"
+            <TextBlock x:Name="HeadingText" Text="Back office" Style="{StaticResource Text.Title}"
                        FontSize="19" Margin="0,16,0,0"/>
             <TextBlock x:Name="SubText" Style="{StaticResource Text.Muted}" Margin="0,4,0,18"
                        TextWrapping="Wrap"
-                       Text="ما يظهره المكتب الخلفي يعتمد على هويتك، وكل ما يُحفظ فيه يُسجَّل باسمك."/>
+                       Text="What the back office shows depends on who you are, and everything saved there is recorded under your name."/>
 
-            <TextBlock x:Name="NameLabel" Text="الاسم" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+            <TextBlock x:Name="NameLabel" Text="NAME" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
             <!-- Editable: staff pick their name from the list, and the owner — who has no
                  staff row to be listed from — types theirs. -->
             <ComboBox x:Name="WorkerBox" Style="{StaticResource ComboBox.Form}" Height="42"
                       IsEditable="True" StaysOpenOnEdit="True" TextSearch.TextPath="Name"
                       ItemTemplate="{StaticResource Combo.Name}" SelectionChanged="Worker_Changed"/>
 
-            <TextBlock x:Name="PasswordLabel" Text="كلمة المرور" Style="{StaticResource Text.Eyebrow}"
+            <TextBlock x:Name="PasswordLabel" Text="PASSWORD" Style="{StaticResource Text.Eyebrow}"
                        Margin="2,16,0,7"/>
             <PasswordBox x:Name="PasswordBox" Style="{StaticResource PasswordBox.Field}"/>
 
@@ -50,10 +50,10 @@
                     <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}" Content="إلغاء"
+                <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}" Content="Cancel"
                         Click="Cancel_Click"/>
                 <Button x:Name="ConfirmButton" Grid.Column="2" Style="{StaticResource Button.Pill}"
-                        Content="تسجيل الدخول" Click="SignIn_Click"/>
+                        Content="Sign in" Click="SignIn_Click"/>
             </Grid>
         </StackPanel>
     </Border>

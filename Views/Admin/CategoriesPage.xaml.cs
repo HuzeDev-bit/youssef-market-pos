@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.Services;
@@ -84,6 +84,7 @@ public partial class CategoriesPage : AdminPageBase
             ? "no cost recorded yet"
             : "what the stock in them cost");
 
+        Hint.Foreground = (System.Windows.Media.Brush)FindResource("Brush.Muted");
         Hint.Text = loose == 0
             ? string.Empty
             : Loc.T(loose == 1
@@ -108,5 +109,37 @@ public partial class CategoriesPage : AdminPageBase
 
         var row = _rows.FirstOrDefault(c => c.Id == id);
         if (row is not null && CategoryWindow.Edit(Shell, row)) ReloadAll();
+    }
+
+    /// <summary>
+    /// Takes a category off the shelves, or puts it back.
+    ///
+    /// Hidden, not deleted: products that were filed under it still point at this row, and the
+    /// shop may well want it back next season. It asks nothing first, because it is reversible
+    /// in one press — the card stays on the list wearing a Hidden badge, and the same button
+    /// undoes it.
+    ///
+    /// What it will not do is empty a category out from underneath the till. A category with
+    /// products still in it says so in the line above the list and nothing changes; move them
+    /// first. The click stops here either way, or it would carry on to the card and open the
+    /// editor for the category just removed.
+    /// </summary>
+    private void Remove_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        if (sender is not FrameworkElement { Tag: int id }) return;
+
+        var row = _rows.FirstOrDefault(c => c.Id == id);
+        if (row is null) return;
+
+        if (CategoryRepository.SetActive(row.Id, row.Name, active: !row.IsActive, out var problem))
+        {
+            ReloadAll();
+            return;
+        }
+
+        Hint.Text = problem;
+        Hint.Foreground = (System.Windows.Media.Brush)FindResource("Brush.Danger");
     }
 }

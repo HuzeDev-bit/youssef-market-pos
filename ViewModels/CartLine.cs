@@ -87,6 +87,19 @@ public sealed class CartLine : ViewModelBase
 
     private decimal MinimumQuantity => Product.Unit == Unit.Kg ? 0.001m : 1m;
 
+    /// <summary>
+    /// True when this line is sold by weight. The cart then offers weights to press rather
+    /// than a count to step: a cashier weighing loose goods thinks in halves and grams, and
+    /// stepping to 0.75 kg in 100 g taps is seven presses for something worth one.
+    ///
+    /// Read from the product, so it is the product that decides. Nothing here forces the two
+    /// kinds of goods to be sold the same way.
+    /// </summary>
+    public bool IsWeighed => Product.Unit == Unit.Kg;
+
+    /// <summary>Sold as whole things — the +/- steppers apply.</summary>
+    public bool IsCounted => !IsWeighed;
+
     /// <summary>Step size for the +/- buttons: whole units for piece goods, 100 g for weighed goods.</summary>
     public decimal Step => Product.Unit == Unit.Kg ? 0.1m : 1m;
 

@@ -176,7 +176,8 @@ public static class StockRepository
                                      reference: "New product", unitCost: item.Cost, connection: connection);
 
         ActivityRepository.Record("added product", "Product", id, newValue: item.Name,
-                                  detail: $"added product {item.Name}", connection: connection);
+                                  detail: ActivityRepository.Say("added product {0}", item.Name),
+                                  connection: connection);
 
         transaction.Commit();
         return id;
@@ -228,12 +229,14 @@ public static class StockRepository
         if (price is not null && price != before.Price)
             ActivityRepository.Record("changed selling price", "Product", productId,
                 oldValue: $"{before.Price:0.00} DH", newValue: $"{price:0.00} DH",
-                detail: $"changed {before.Name} selling price", connection: connection);
+                detail: ActivityRepository.Say("changed {0} selling price", before.Name),
+                connection: connection);
 
         ActivityRepository.Record("received stock at the till", "Product", productId,
             oldValue: before.Stock.ToString("0.###"),
             newValue: (before.Stock + quantity).ToString("0.###"),
-            detail: $"received {quantity:0.###} of {before.Name}", connection: connection);
+            detail: ActivityRepository.Say("received {0} of {1}", $"{quantity:0.###}", before.Name),
+            connection: connection);
 
         transaction.Commit();
     }
@@ -280,14 +283,17 @@ public static class StockRepository
         if (before is not null && before.Price != item.Price)
             ActivityRepository.Record("changed selling price", "Product", item.Id,
                 oldValue: $"{before.Price:0.00} DH", newValue: $"{item.Price:0.00} DH",
-                detail: $"changed {item.Name} selling price", connection: connection);
+                detail: ActivityRepository.Say("changed {0} selling price", item.Name),
+                connection: connection);
         else if (before is not null && before.Cost != item.Cost)
             ActivityRepository.Record("changed purchase price", "Product", item.Id,
                 oldValue: $"{before.Cost:0.00} DH", newValue: $"{item.Cost:0.00} DH",
-                detail: $"changed {item.Name} purchase price", connection: connection);
+                detail: ActivityRepository.Say("changed {0} purchase price", item.Name),
+                connection: connection);
         else
             ActivityRepository.Record("edited product", "Product", item.Id, newValue: item.Name,
-                detail: $"edited product {item.Name}", connection: connection);
+                detail: ActivityRepository.Say("edited product {0}", item.Name),
+                connection: connection);
 
         transaction.Commit();
     }
@@ -339,7 +345,7 @@ public static class StockRepository
         command.ExecuteNonQuery();
 
         ActivityRepository.Record(active ? "reactivated product" : "deactivated product",
-            "Product", id, newValue: name, detail: $"{(active ? "reactivated" : "deactivated")} {name}");
+            "Product", id, newValue: name, detail: ActivityRepository.Say(active ? "reactivated {0}" : "deactivated {0}", name));
     }
 
     /// <summary>Barcode uniqueness check for the product form, excluding the row being edited.</summary>

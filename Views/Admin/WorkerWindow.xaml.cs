@@ -42,7 +42,7 @@ public partial class WorkerWindow : Window
         _existing = existing;
 
         RoleBox.ItemsSource = Roles.Select(r => Loc.T(r.Label)).ToList();
-        PeriodBox.ItemsSource = new[] { "Monthly", "Weekly", "Daily" };
+        PeriodBox.ItemsSource = new[] { Loc.T("Monthly"), Loc.T("Weekly"), Loc.T("Daily") };
 
         // Salary is not shown at all to someone who may not see salaries; leaving an empty
         // box there would invite them to type one in and have it silently rejected.
@@ -78,7 +78,7 @@ public partial class WorkerWindow : Window
             };
 
             ActiveButton.Visibility = Visibility.Visible;
-            ActiveButton.Content = existing.IsActive ? "Deactivate" : "Reactivate";
+            ActiveButton.Content = Loc.T(existing.IsActive ? "Deactivate" : "Reactivate");
             if (existing.IsActive)
                 ActiveButton.Foreground = (System.Windows.Media.Brush)FindResource("Brush.Danger");
         }
@@ -106,7 +106,7 @@ public partial class WorkerWindow : Window
         var name = NameBox.Text.Trim();
         if (name.Length == 0)
         {
-            ErrorText.Text = "Give the worker a name.";
+            ErrorText.Text = Loc.T("Give the worker a name.");
             NameBox.Focus();
             return;
         }
@@ -118,11 +118,11 @@ public partial class WorkerWindow : Window
                 !decimal.TryParse(SalaryBox.Text.Trim().Replace(',', '.'),
                                   NumberStyles.Number, CultureInfo.InvariantCulture, out salary))
             {
-                ErrorText.Text = "The salary must be a number, like 3000.";
+                ErrorText.Text = Loc.T("The salary must be a number, like 3000.");
                 SalaryBox.Focus();
                 return;
             }
-            if (salary < 0m) { ErrorText.Text = "The salary cannot be negative."; return; }
+            if (salary < 0m) { ErrorText.Text = Loc.T("The salary cannot be negative."); return; }
         }
 
         var worker = new Worker

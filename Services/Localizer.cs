@@ -95,6 +95,18 @@ public static class Localizer
     {
         if (element is null) return;
 
+        // Text a ContentPresenter made out of its own content is not ours to write into.
+        //
+        // WPF puts a plain string straight onto the generated TextBlock rather than binding
+        // it, so writing a translation there replaces the presenter's value with a local one —
+        // and a local value wins for ever. The presenter can never update that text again.
+        //
+        // That is what froze the closed half of every drop-down in the app: the list opened,
+        // the shop pressed a row, the filtering changed underneath, and the word above it
+        // stayed on whatever it had been showing the first time this ran. Anything displayed
+        // this way is translated where its items are built instead.
+        if (element.TemplatedParent is ContentPresenter) return;
+
         switch (element)
         {
             case TextBlock text when IsLiteral(text, TextBlock.TextProperty):

@@ -42,11 +42,11 @@ public partial class ProductWindow : Window
         Services.Responsive.Fit(this);
         _existing = existing;
 
-        UnitBox.ItemsSource = new[] { "Each / piece", "Kilogram" };
+        UnitBox.ItemsSource = new[] { Loc.T("Each / piece"), Loc.T("Kilogram") };
         TaxBox.ItemsSource = TaxRates.Select(t => t.Label).ToList();
         CategoryBox.ItemsSource = CategoryRepository.List().Select(c => c.Name).ToList();
 
-        _suppliers = new List<Supplier> { new() { Id = 0, Name = "No supplier" } };
+        _suppliers = new List<Supplier> { new() { Id = 0, Name = Loc.T("No supplier") } };
         _suppliers.AddRange(SupplierRepository.List());
         SupplierBox.ItemsSource = _suppliers;
 
@@ -105,8 +105,8 @@ public partial class ProductWindow : Window
         StockBox.Text = item.Stock.ToString("0.###", CultureInfo.InvariantCulture);
         StockBox.IsReadOnly = true;
         StockBox.Opacity = 0.6;
-        StockLabel.Text = "STOCK (CHANGE IT ON INVENTORY)";
-        StockBox.ToolTip = "Stock is changed on the Inventory page, so every movement has a reason recorded.";
+        StockLabel.Text = Loc.T("STOCK (CHANGE IT ON INVENTORY)");
+        StockBox.ToolTip = Loc.T("Stock is changed on the Inventory page, so every movement has a reason recorded.");
 
         MinStockBox.Text = item.MinStock.ToString("0.###", CultureInfo.InvariantCulture);
         ShelfBox.Text = item.Shelf;
@@ -292,7 +292,7 @@ public partial class ProductWindow : Window
 
     private void Fail(string message, System.Windows.Controls.Control focus)
     {
-        ErrorText.Text = message;
+        ErrorText.Text = Loc.T(message);
         focus.Focus();
     }
 

@@ -131,7 +131,7 @@ public partial class CategoryWindow : Window
         var name = NameBox.Text.Trim();
         if (name.Length == 0)
         {
-            ErrorText.Text = "Give the category a name.";
+            ErrorText.Text = Loc.T("Give the category a name.");
             NameBox.Focus();
             return;
         }

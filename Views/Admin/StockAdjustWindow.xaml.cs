@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using MarketPos.Data;
 using MarketPos.Models;
+using MarketPos.Services;
 
 namespace MarketPos.Views.Admin;
 
@@ -58,7 +59,7 @@ public partial class StockAdjustWindow : Window
     {
         if (QuantityLabel is null) return;
 
-        QuantityLabel.Text = IsCount ? "COUNTED TOTAL" : "QUANTITY";
+        QuantityLabel.Text = Loc.T(IsCount ? "COUNTED TOTAL" : "QUANTITY");
         ReasonBox.IsEnabled = !IsCount;
         if (IsCount) ReasonBox.SelectedIndex = Array.FindIndex(Reasons, r => r.Reason == StockReason.ManualCorrection);
         UpdatePreview();
@@ -73,7 +74,7 @@ public partial class StockAdjustWindow : Window
 
         if (!TryQuantity(out var typed))
         {
-            PreviewText.Text = "Enter a quantity.";
+            PreviewText.Text = Loc.T("Enter a quantity.");
             ValueText.Text = string.Empty;
             return;
         }
@@ -113,7 +114,7 @@ public partial class StockAdjustWindow : Window
     {
         if (!TryQuantity(out var typed))
         {
-            ErrorText.Text = "Enter a quantity, like 12 or 2.5.";
+            ErrorText.Text = Loc.T("Enter a quantity, like 12 or 2.5.");
             QuantityBox.Focus();
             return;
         }
@@ -122,14 +123,14 @@ public partial class StockAdjustWindow : Window
         {
             if (IsCount)
             {
-                if (typed < 0m) { ErrorText.Text = "A counted total cannot be negative."; return; }
+                if (typed < 0m) { ErrorText.Text = Loc.T("A counted total cannot be negative."); return; }
                 InventoryRepository.SetCount(_item.Id, _item.Name, typed, NoteBox.Text.Trim());
             }
             else
             {
                 var reason = Reasons[Math.Max(0, ReasonBox.SelectedIndex)].Reason;
                 var delta = Signed(typed, reason);
-                if (delta == 0m) { ErrorText.Text = "Enter a quantity greater than zero."; return; }
+                if (delta == 0m) { ErrorText.Text = Loc.T("Enter a quantity greater than zero."); return; }
 
                 if (_item.Stock + delta < 0m)
                 {

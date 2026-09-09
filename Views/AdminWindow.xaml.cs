@@ -134,7 +134,7 @@ public partial class AdminWindow : Window
         {
             // Signed in, but holding nothing this window can show. Say so rather than
             // opening on a page that will only refuse them.
-            PageTitle.Text = "Nothing here for you";
+            PageTitle.Text = Loc.T("Nothing here for you");
             PageSubtitle.Text = $"{Session.CurrentName} has no back-office access. "
                               + "The owner sets this under Workers.";
             return;
@@ -292,20 +292,17 @@ public partial class AdminWindow : Window
     private void BackToTill_Click(object sender, RoutedEventArgs e) => Close();
 
     /// <summary>
-    /// The shop's name, currency, address and printer. Reachable from here because there is
-    /// no Settings page and no reason for one — this is opened twice a year, not daily.
+    /// The language, and nothing else. The same screen the till opens.
+    ///
+    /// It used to be gated behind <c>ManageSettings</c>, which is the owner's alone, back when
+    /// this window set the shop's name, currency and printer. Those have gone; what is left is
+    /// which language the app speaks, and a manager who reads French being unable to change
+    /// that — while a cashier can, from the till — would be a rule with nothing behind it.
     /// </summary>
     private void Settings_Click(object sender, RoutedEventArgs e)
     {
-        if (!Session.Can(Permission.ManageSettings))
-        {
-            ConfirmWindow.Ask(this, "Not allowed",
-                $"{Session.CurrentName} may not change the shop's settings.");
-            return;
-        }
-
-        // The currency and the shop name are printed all over the office, so every page has
-        // to be rebuilt rather than just the one on screen.
+        // Rebuilt because the pages were built in the old language. It costs a reload of the
+        // page on screen and nothing else; the shop's figures are not touched.
         if (SettingsWindow.Ask(this)) Rebuild();
     }
 

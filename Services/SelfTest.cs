@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Windows;
 using MarketPos.Data;
@@ -49,6 +49,7 @@ public static class SelfTest
         CheckTopBarLayout(report, ref failures, shell);
         CheckComboDisplay(report, ref failures);
         CheckEveryDropDownReads(report, ref failures);
+        CheckTheLanguageBoxOffersTheShopsTwo(report, ref failures);
         CheckScannerRule(report, ref failures);
         CheckAddProductFields(report, ref failures, shell);
         CheckDashboardLayout(report, ref failures, shell);
@@ -61,6 +62,7 @@ public static class SelfTest
         Check(report, ref failures, "Notifications.Build", () => Notifications.Build());
 
         CheckTheShopsOwnLanguage(report, ref failures);
+        CheckTheActivityLogSpeaksTheShopsLanguage(report, ref failures);
         CheckScanningPutsItOnTheSale(report, ref failures);
         CheckTheBasketAsksOneThing(report, ref failures);
         CheckTheTillRefusesWhatIsNotThere(report, ref failures);
@@ -71,6 +73,8 @@ public static class SelfTest
         CheckEveryDialogFitsASmallScreen(report, ref failures);
         CheckADialogFitsTheWindowItOpensOver(report, ref failures);
         CheckTheShellsFitASmallScreen(report, ref failures);
+        CheckTheKeyboardFitsEveryScreen(report, ref failures);
+        CheckAFilterStaysWhereItIsPut(report, ref failures);
         CheckEveryDialogSpeaksTheShopsLanguage(report, ref failures);
         CheckTheNavigationSpeaksTheShopsLanguage(report, ref failures);
         CheckPriceCheck(report, ref failures);
@@ -183,6 +187,39 @@ public static class SelfTest
     /// something it can read — which is the half that broke, on the language list, in a screen
     /// nobody looks at twice.
     /// </summary>
+    /// <summary>
+    /// The language box offers the two languages this shop is run in, and not the one the code
+    /// happens to be written in.
+    ///
+    /// English is still the source text every translation is keyed by, so it cannot leave the
+    /// codebase — which is exactly why it is easy to let it back onto the screen without
+    /// noticing. Nobody at this counter reads it.
+    /// </summary>
+    private static void CheckTheLanguageBoxOffersTheShopsTwo(StringBuilder report, ref int failures)
+    {
+        try
+        {
+            var settings = new Views.SettingsWindow();
+            var box = Descendants((FrameworkElement)settings.Content)
+                .OfType<System.Windows.Controls.ComboBox>()
+                .FirstOrDefault(c => c.Name == "LanguageBox");
+
+            var offered = box?.ItemsSource?.Cast<object>().Select(o => o?.ToString() ?? "").ToList()
+                       ?? new List<string>();
+
+            Verdict(report, ref failures, "the language box offers Arabic and French, and only those",
+                offered.Count == 2
+                    && offered.Contains(Loc.NativeName(Models.Language.Arabic))
+                    && offered.Contains(Loc.NativeName(Models.Language.French)),
+                offered.Count == 0 ? "no language box found" : string.Join(", ", offered));
+        }
+        catch (Exception error)
+        {
+            failures++;
+            report.AppendLine($"FAIL  language box: {error.GetType().Name}: {error.Message}");
+        }
+    }
+
     private static void CheckEveryDropDownReads(StringBuilder report, ref int failures)
     {
         var settings = new Views.SettingsWindow();
@@ -681,6 +718,79 @@ public static class SelfTest
     /// translated: a product the shop called "Total" must come out of the database exactly as
     /// they typed it, on the receipt the customer takes away.
     /// </summary>
+    /// <summary>
+    /// The activity log speaks the shop's language, and still names things the shop's own way.
+    ///
+    /// The log stores a pattern and the values that go in it, kept apart, so that the sentence
+    /// can be assembled in whatever language is running — see <c>ActivityRepository.Say</c>.
+    /// Before that it stored finished English sentences, which no amount of translating could
+    /// ever have rescued: the words and the product names were baked together.
+    ///
+    /// Two halves, and the second is the one worth guarding. The pattern must translate, and
+    /// the product's name must come through it untouched — a shop that calls something "Pay"
+    /// has a product called Pay, not a button.
+    /// </summary>
+    private static void CheckTheActivityLogSpeaksTheShopsLanguage(StringBuilder report, ref int failures)
+    {
+        var was = Loc.Current;
+
+        try
+        {
+            Loc.Use(Models.Language.Arabic);
+
+            var entry = new Models.ActivityEntry
+            {
+                WorkerName = "Ahmed",
+                Action = "deactivated product",
+                Detail = Data.ActivityRepository.Say("deactivated {0}", "Cahier de notes"),
+            };
+
+            var said = entry.Sentence;
+
+            Verdict(report, ref failures, "the activity log is written in the shop's language",
+                !said.Contains("deactivated", StringComparison.OrdinalIgnoreCase),
+                said);
+
+            Verdict(report, ref failures, "and the product keeps the name the shop gave it",
+                said.Contains("Cahier de notes", StringComparison.Ordinal)
+                    && said.Contains("Ahmed", StringComparison.Ordinal),
+                said);
+
+            // An entry written before the log kept its words apart. The sentence is finished
+            // English with the shop's name already inside it — and it still has to come out in
+            // Arabic, or a shop that has been running for a year opens its log and finds the
+            // language stops halfway down the page.
+            var old = new Models.ActivityEntry
+            {
+                WorkerName = "Ahmed",
+                Action = "added product",
+                Detail = "added product Cahier de notes",
+            };
+
+            Verdict(report, ref failures, "and so is one written before the log knew how",
+                !old.Sentence.Contains("added product", StringComparison.OrdinalIgnoreCase)
+                    && old.Sentence.Contains("Cahier de notes", StringComparison.Ordinal),
+                old.Sentence);
+
+            // The one it must not do: a sentence no pattern fits is left exactly as recorded.
+            // Reaching for the nearest pattern would rewrite history to make it prettier.
+            var strange = new Models.ActivityEntry
+            {
+                WorkerName = "Ahmed",
+                Action = "did something",
+                Detail = "wandered off with the till key",
+            };
+
+            Verdict(report, ref failures, "and one that fits nothing is left exactly as recorded",
+                strange.Sentence.Contains("wandered off with the till key", StringComparison.Ordinal),
+                strange.Sentence);
+        }
+        finally
+        {
+            Loc.Use(was);
+        }
+    }
+
     private static void CheckTheShopsOwnLanguage(StringBuilder report, ref int failures)
     {
         var was = Loc.Current;
@@ -1058,6 +1168,207 @@ public static class SelfTest
             report.AppendLine($"FAIL  dialog fits its window: {error.GetType().Name}: {error.Message}");
         }
     }
+
+    /// <summary>
+    /// Lets the window finish what it was asked to do — lay out, and build the rows a
+    /// drop-down generates only once it is on screen. A diagnostic runs without ever giving
+    /// the dispatcher a turn, so nothing happens between one line and the next unless it is
+    /// asked for.
+    /// </summary>
+    private static void Settle(System.Windows.Threading.DispatcherObject window) =>
+        window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Background);
+
+    /// <summary>
+    /// A filter stays where the shop put it.
+    ///
+    /// Every one of these pages reloads itself when a filter changes, and a reload that also
+    /// rebuilds the filter puts it back to its first entry — so the list flicks back to
+    /// "Everything" the instant you choose anything else, and the page looks broken in a way
+    /// that is very hard to argue with.
+    /// </summary>
+    private static void CheckAFilterStaysWhereItIsPut(StringBuilder report, ref int failures)
+    {
+        try
+        {
+            // Shown, and far off the side of every monitor. A drop-down builds no rows until
+            // it is on a screen, so the half of this that matters — pressing one — cannot be
+            // checked on a window that was only ever measured.
+            var shell = new AdminWindow
+            {
+                WindowStartupLocation = WindowStartupLocation.Manual,
+                Left = -30000,
+                Top = -30000,
+                ShowInTaskbar = false,
+            };
+            shell.ShowWhatThisPersonMaySee();
+            shell.Show();
+            shell.GoTo(Models.AdminPage.Activity);
+            Settle(shell);
+
+            var page = (ActivityPage)((System.Windows.Controls.ContentControl)shell.FindName("PageHost")).Content;
+            var box = page.FindName("KindFilter") as System.Windows.Controls.ComboBox;
+
+            if (box is null)
+            {
+                Verdict(report, ref failures, "the activity filter stays where it is put",
+                    false, "no filter found on the page");
+                return;
+            }
+
+            var offered = box.Items.Count;
+            box.SelectedIndex = 1;
+            page.Refresh();
+
+            Verdict(report, ref failures, "the activity filter stays where it is put",
+                box.SelectedIndex == 1,
+                $"{offered} choices, chose 1, came back {box.SelectedIndex}");
+
+            // And the way a finger does it. Pressing a row in the drop-down is not the same
+            // code path as setting the index: the row's container marks itself selected and
+            // the box is meant to follow. If it does not, the list opens, the shop taps, and
+            // the box goes on showing whatever it showed before.
+            box.SelectedIndex = 0;
+            box.IsDropDownOpen = true;
+            Settle(shell);
+
+            var row = box.ItemContainerGenerator.ContainerFromIndex(2) as System.Windows.Controls.ComboBoxItem;
+            if (row is not null) row.IsSelected = true;
+            box.IsDropDownOpen = false;
+            Settle(shell);
+
+            Verdict(report, ref failures, "and follows a row pressed in the drop-down",
+                row is not null && box.SelectedIndex == 2,
+                row is null
+                    ? "the drop-down built no rows to press"
+                    : $"pressed row 2, box shows {box.SelectedIndex} ({box.SelectionBoxItem})");
+
+            // And what is actually painted in the closed box, which is a different question
+            // from what the property says. The shop reported the list filtering correctly
+            // while the word above it never changed.
+            var painted = string.Concat(Descendants(box)
+                .OfType<System.Windows.Controls.TextBlock>()
+                .Select(t => t.Text)
+                .Where(t => t is not "▾" and not ""));
+
+            var stuck = Descendants(box).OfType<System.Windows.Controls.TextBlock>()
+                .FirstOrDefault(t => t.Text is not "▾" and not "");
+
+            var how = stuck is null ? "no text block" :
+                $"bound={System.Windows.Data.BindingOperations.GetBindingExpressionBase(stuck, System.Windows.Controls.TextBlock.TextProperty) is not null}, " +
+                $"templated={stuck.TemplatedParent?.GetType().Name ?? "none"}";
+
+            Verdict(report, ref failures, "and the closed box paints what was chosen",
+                painted.Contains(box.SelectionBoxItem?.ToString() ?? "", StringComparison.Ordinal),
+                $"box says \"{box.SelectionBoxItem}\", screen says \"{painted}\" — {how}");
+
+            shell.Close();
+        }
+        catch (Exception error)
+        {
+            failures++;
+            report.AppendLine($"FAIL  activity filter: {error.GetType().Name}: {error.Message}");
+        }
+    }
+
+    /// <summary>
+    /// The on-screen keyboard, on every screen a shop might run it on.
+    ///
+    /// A keyboard is the one part of this app that has to fit. Everything else can scroll, be
+    /// scaled, or be read later; a key that is off the bottom edge is a letter the shop cannot
+    /// type, and a key too small to hit with a finger is the same thing more slowly.
+    ///
+    /// So: never wider or taller than the screen, never more than a share of it — the thing
+    /// being typed into has to stay visible above it — and never smaller than a fingertip.
+    /// </summary>
+    private static void CheckTheKeyboardFitsEveryScreen(StringBuilder report, ref int failures)
+    {
+        (double Width, double Height, string What)[] screens =
+        [
+            (1920, 1032, "counter display"),
+            (1366, 768, "shop laptop"),
+            (1093, 614, "shop laptop at 125%"),
+            (1024, 600, "netbook"),
+            (800, 480, "smallest thing anyone would try"),
+        ];
+
+        var was = AppSettings.Current.KeyboardScale;
+
+        try
+        {
+            var keyboard = new Views.KeyboardWindow();
+            var faults = new List<string>();
+            var sizes = new List<string>();
+
+            // Every screen at the smallest and biggest the shop can make it. The largest
+            // setting on the smallest screen is the one that has to be checked: a keyboard the
+            // shop grew until it was comfortable must not then bury the till it types into.
+            foreach (var scale in new[] { 0.7, 1.0, 1.4 })
+            foreach (var (width, height, what) in screens)
+            {
+                AppSettings.Current.KeyboardScale = scale;
+
+                var fitted = keyboard.FitTo(new Size(width, height));
+                if (scale == 1.0) sizes.Add($"{what} {fitted.Width:0}x{fitted.Height:0}");
+
+                if (fitted.Width > width + 1 || fitted.Height > height + 1)
+                    faults.Add($"{what} at {scale:0.0}x: {fitted.Width:0}x{fitted.Height:0} does not fit {width:0}x{height:0}");
+
+                // Half the screen is already generous for keys; past that the box being
+                // filled in is behind the keyboard and the shop is typing blind.
+                else if (fitted.Height > height * 0.56)
+                    faults.Add($"{what} at {scale:0.0}x: {fitted.Height:0}px of a {height:0}px screen");
+
+                // Every row inside the panel, not just the panel itself. The command row was
+                // 14.8 units wide in a panel twelve across: it is centred, so it hung off both
+                // ends and the keys at the edges were not on the screen at all. The first one
+                // lost was the decimal point, which a till cannot do without — and the panel's
+                // own size looked perfectly correct the whole time.
+                // 28 is the panel's own padding, 14 each side.
+                var overflow = WidestRow(keyboard) - (fitted.Width - 28);
+                if (overflow > 1)
+                    faults.Add($"{what} at {scale:0.0}x: a row is {overflow:0}px wider than the panel");
+
+                var key = SmallestKey(keyboard);
+                if (key < 26)
+                    faults.Add($"{what} at {scale:0.0}x: keys down to {key:0}px, too small to hit");
+            }
+
+            keyboard.Close();
+
+            Verdict(report, ref failures, "the keyboard fits every screen it might land on",
+                faults.Count == 0,
+                faults.Count == 0 ? string.Join(", ", sizes) : string.Join("; ", faults));
+        }
+        catch (Exception error)
+        {
+            failures++;
+            report.AppendLine($"FAIL  keyboard scaling: {error.GetType().Name}: {error.Message}");
+        }
+        finally
+        {
+            AppSettings.Current.KeyboardScale = was;
+        }
+    }
+
+    /// <summary>How wide the widest row of keys comes out, margins included.</summary>
+    private static double WidestRow(Views.KeyboardWindow keyboard) =>
+        keyboard.FindName("Rows") is System.Windows.Controls.Panel rows
+            ? rows.Children.OfType<System.Windows.Controls.Panel>()
+                .Select(row => row.Children.OfType<FrameworkElement>()
+                    .Sum(k => k.Width + k.Margin.Left + k.Margin.Right))
+                .DefaultIfEmpty(0)
+                .Max()
+            : 0;
+
+    /// <summary>The narrowest key on the panel — the letters, not the wide command keys.</summary>
+    private static double SmallestKey(Views.KeyboardWindow keyboard) =>
+        keyboard.FindName("Rows") is FrameworkElement rows
+            ? Descendants(rows)
+                .OfType<System.Windows.Controls.Button>()
+                .Select(b => Math.Min(b.Width, b.Height))
+                .DefaultIfEmpty(0)
+                .Min()
+            : 0;
 
     /// <summary>
     /// The two windows that fill the screen, on a screen that is not this one.
@@ -1745,12 +2056,61 @@ public static class SelfTest
             Verdict(report, ref failures, "every money box on Add product is guarded",
                 unguarded.Count == 0,
                 unguarded.Count == 0 ? "cost, price and quantity" : "unguarded: " + string.Join(", ", unguarded));
+
+            CheckDeliveriesCanBeTypedInGrams(report, ref failures, page);
         }
         catch (Exception error)
         {
             failures++;
             report.AppendLine($"FAIL  numeric fields: {error.GetType().Name}: {error.Message}");
         }
+    }
+
+    /// <summary>
+    /// A delivery can be typed the way the supplier wrote it down.
+    ///
+    /// The shop buys 300 g of saffron, and until now the form took kilograms or nothing.
+    /// The list has to offer the ways the supplier writes it, and the number typed has to
+    /// end up in the stored unit — a gram entry that went in as 300 kg
+    /// would price the delivery at a thousand times what it cost, and the mistake would only
+    /// surface in the month's figures.
+    /// </summary>
+    private static void CheckDeliveriesCanBeTypedInGrams(
+        StringBuilder report, ref int failures, AddProductPage page)
+    {
+        var box = page.FindName("AddUnitBox") as System.Windows.Controls.ComboBox;
+        var offered = (box?.ItemsSource as System.Collections.IEnumerable)?
+            .Cast<object>().Count() ?? 0;
+
+        Verdict(report, ref failures, "Add product offers every way of measuring a delivery",
+            offered == 3,
+            offered == 3 ? "per unit, kilo, gram" : $"{offered} in the list");
+
+        if (box is null || offered != 3) return;
+
+        // 500 g bought at 20 DH the kilo is 10 DH of stock, not 10 000.
+        var cost = (System.Windows.Controls.TextBox)page.FindName("AddCostBox");
+        var quantity = (System.Windows.Controls.TextBox)page.FindName("AddQuantityBox");
+        var total = (System.Windows.Controls.TextBlock)page.FindName("AddTotalCost");
+        var label = (System.Windows.Controls.TextBlock)page.FindName("AddQuantityLabel");
+
+        cost.Text = "20";
+        quantity.Text = "500";
+        box.SelectedIndex = 2;
+
+        var grams = total.Text;
+        var named = label.Text;
+
+        box.SelectedIndex = 1;
+        var kilos = total.Text;
+
+        Verdict(report, ref failures, "grams go into stock as kilograms",
+            grams.Contains("10") && !grams.Contains("000") && kilos.Contains("10,000"),
+            $"500 at 20/kg: grams {grams}, kilos {kilos}");
+
+        Verdict(report, ref failures, "the amount box says which unit it wants",
+            named == Loc.T("WEIGHT (G)") && label.Text == Loc.T("WEIGHT (KG)"),
+            $"\"{named}\" then \"{label.Text}\"");
     }
 
     /// <summary>

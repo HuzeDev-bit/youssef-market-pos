@@ -20,7 +20,7 @@
                         <StackPanel Orientation="Horizontal">
                             <Path Style="{StaticResource Icon.Small}" Data="{StaticResource Icon.Plus}"
                                   Width="14" Height="14"/>
-                            <TextBlock Text="إضافة منتج" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Add product" Margin="9,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </Grid>
@@ -43,6 +43,7 @@
                                 <ColumnDefinition Width="0.9*"/>
                                 <ColumnDefinition Width="1*"/>
                                 <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="46"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="PRODUCT" Style="{StaticResource Text.ColumnHead}"/>
                             <TextBlock Grid.Column="1" Text="CATEGORY" Style="{StaticResource Text.ColumnHead}"/>
@@ -77,6 +78,7 @@
                                                         <ColumnDefinition Width="0.9*"/>
                                                         <ColumnDefinition Width="1*"/>
                                                         <ColumnDefinition Width="1*"/>
+                                                        <ColumnDefinition Width="46"/>
                                                     </Grid.ColumnDefinitions>
 
                                                     <StackPanel Grid.Column="0" VerticalAlignment="Center"
@@ -111,6 +113,21 @@
                                                     <TextBlock Grid.Column="6" Text="{Binding AddedLabel}"
                                                                Style="{StaticResource Text.CellMuted}"
                                                                Margin="16,0,0,0"/>
+
+                                                    <!-- Takes it off the shelf, the same way
+                                                         the stock list does: hidden, not
+                                                         destroyed, so the receipts that point
+                                                         at it keep resolving. Here because a
+                                                         product typed in wrong is noticed on
+                                                         this list, a second after saving it. -->
+                                                    <Button Grid.Column="7"
+                                                            Style="{StaticResource Button.RowDanger}"
+                                                            VerticalAlignment="Center"
+                                                            Click="AddedRemove_Click" Tag="{Binding Id}"
+                                                            ToolTip="Remove this product from the shop">
+                                                        <Path Style="{StaticResource Icon.Small}"
+                                                              Data="{StaticResource Icon.Trash}"/>
+                                                    </Button>
                                                 </Grid>
                                             </Button>
 
@@ -167,22 +184,43 @@
                         </Button>
                     </Grid>
 
-                    <TextBlock Text="الباركود" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="290"/>
-                            <ColumnDefinition Width="10"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="AddBarcodeBox" Grid.Column="0" Height="40"
-                                 Style="{StaticResource TextBox.Field}" FontSize="14"
-                                 KeyDown="AddBarcode_KeyDown" TextChanged="AddBarcode_Changed"
-                                 PreviewMouseLeftButtonDown="AddBarcode_Click"/>
-                        <Button Grid.Column="2" Style="{StaticResource Button.PillMuted}" Height="40"
-                                Width="128" Content="No barcode" Click="AddNoBarcode_Click"
-                                ToolTip="Give it an in-store code instead"/>
-                    </Grid>
+                    <StackPanel x:Name="AddBarcodeRow">
+                        <TextBlock Text="BARCODE" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="290"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="AddBarcodeBox" Grid.Column="0" Height="40"
+                                     Style="{StaticResource TextBox.Field}" FontSize="14"
+                                     KeyDown="AddBarcode_KeyDown" TextChanged="AddBarcode_Changed"
+                                     PreviewMouseLeftButtonDown="AddBarcode_Click"/>
+                            <Button Grid.Column="2" Style="{StaticResource Button.PillMuted}" Height="40"
+                                    Width="128" Content="No barcode" Click="AddNoBarcode_Click"
+                                    ToolTip="Give it an in-store code instead"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Shown instead of the barcode row once the owner says there is no
+                         barcode. The in-store code is still made, at save; it is simply not
+                         put in front of somebody who has just said they have not got one. -->
+                    <Border x:Name="AddNoBarcodeNote" Style="{StaticResource Card.Inner}"
+                            Visibility="Collapsed">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center" TextWrapping="Wrap"
+                                       Style="{StaticResource Text.Muted}"
+                                       Text="No barcode. The shop gives it its own code when you save."/>
+                            <Button Grid.Column="1" Style="{StaticResource Button.SmallMuted}"
+                                    Content="It has one" Click="AddHasBarcode_Click"
+                                    ToolTip="Type or scan its barcode instead"/>
+                        </Grid>
+                    </Border>
 
                     <Grid Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
@@ -194,11 +232,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="الاسم" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                            <TextBlock Text="NAME" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
                             <TextBox x:Name="AddNameBox" Style="{StaticResource TextBox.Field}" Height="40"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="الفئة" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
+                            <TextBlock Text="CATEGORY" Style="{StaticResource Text.Eyebrow}" Margin="2,0,0,7"/>
                             <ComboBox x:Name="AddCategoryBox" Style="{StaticResource ComboBox.Form}"
                                       Height="40" IsEditable="True"/>
                         </StackPanel>
@@ -238,20 +276,17 @@
                     <TextBlock Text="SOLD" Style="{StaticResource Text.Eyebrow}" Margin="2,16,0,7"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="130"/>
-                            <ColumnDefinition Width="10"/>
-                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="300"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <RadioButton x:Name="AddPerUnit" Grid.Column="0" GroupName="addunit"
-                                     Style="{StaticResource Button.TogglePill}" Content="Per unit"
-                                     Margin="0" Height="40" HorizontalAlignment="Stretch"
-                                     HorizontalContentAlignment="Center" IsChecked="True"
-                                     Checked="AddUnit_Changed"/>
-                        <RadioButton x:Name="AddByWeight" Grid.Column="2" GroupName="addunit"
-                                     Style="{StaticResource Button.TogglePill}" Content="By weight (kg)"
-                                     Margin="0" Height="40" HorizontalAlignment="Stretch"
-                                     HorizontalContentAlignment="Center" Checked="AddUnit_Changed"/>
+                        <!-- One list rather than two pills: the shop buys the same goods by the
+                             piece, by the kilo and by the gram, and a dropdown says so without
+                             a row of buttons growing every time another way turns up. What is
+                             picked here is how the amount below is typed; the money is always
+                             per piece or per kilo. -->
+                        <ComboBox x:Name="AddUnitBox" Grid.Column="0"
+                                  Style="{StaticResource ComboBox.Form}" Height="40"
+                                  SelectionChanged="AddUnit_Changed"/>
                     </Grid>
 
                     <!-- Narrow on purpose: these hold four or five characters, and a wide

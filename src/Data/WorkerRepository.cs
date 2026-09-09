@@ -137,7 +137,7 @@ public static class WorkerRepository
         var id = Convert.ToInt32(command.ExecuteScalar());
 
         ActivityRepository.Record("added worker", "Worker", id, newValue: worker.Name,
-                                  detail: $"added {worker.RoleLabel.ToLowerInvariant()} {worker.Name}");
+                                  detail: ActivityRepository.Say("added worker {0}", worker.Name));
         return id;
     }
 
@@ -160,10 +160,10 @@ public static class WorkerRepository
         if (before is not null && before.Salary != worker.Salary)
             ActivityRepository.Record("changed salary", "Worker", worker.Id,
                 oldValue: $"{before.Salary:0.00} DH", newValue: $"{worker.Salary:0.00} DH",
-                detail: $"changed {worker.Name}'s salary");
+                detail: ActivityRepository.Say("changed {0}'s salary", worker.Name));
         else
             ActivityRepository.Record("edited worker", "Worker", worker.Id, newValue: worker.Name,
-                detail: $"edited worker {worker.Name}");
+                detail: ActivityRepository.Say("edited worker {0}", worker.Name));
     }
 
     public static void SetActive(int id, string name, bool active)
@@ -177,7 +177,7 @@ public static class WorkerRepository
         command.ExecuteNonQuery();
 
         ActivityRepository.Record(active ? "reactivated worker" : "deactivated worker",
-            "Worker", id, newValue: name, detail: $"{(active ? "reactivated" : "deactivated")} {name}");
+            "Worker", id, newValue: name, detail: ActivityRepository.Say(active ? "reactivated {0}" : "deactivated {0}", name));
     }
 
     private static void Bind(Microsoft.Data.Sqlite.SqliteCommand command, Worker w) =>
@@ -200,7 +200,7 @@ public static class WorkerRepository
         command.With("$hash", hash).With("$salt", salt).With("$id", id);
         command.ExecuteNonQuery();
 
-        ActivityRepository.Record("set a till PIN", "Worker", id, detail: "set a till PIN");
+        ActivityRepository.Record("set a till PIN", "Worker", id, detail: ActivityRepository.Say("set a till PIN"));
     }
 
     /// <summary>
@@ -328,7 +328,8 @@ public static class WorkerRepository
         command.ExecuteNonQuery();
 
         ActivityRepository.Record("paid a salary", "Worker", workerId, newValue: $"{amountPaid:0.00} DH",
-            detail: $"paid {workerName} {amountPaid:0.00} DH", connection: connection);
+            detail: ActivityRepository.Say("paid {0} {1}", workerName, $"{amountPaid:0.00} DH"),
+            connection: connection);
     }
 
     public static List<SalaryPayment> ListPayments(DateRange? range = null, int? workerId = null,

@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -59,6 +60,13 @@ public partial class MainWindow : Window
 
         Loaded += (_, _) => FocusBarcode();
         Activated += (_, _) => FocusBarcode();
+
+        // The on-screen keyboard, for a till with no keyboard on the counter. Started here
+        // rather than in App, because the diagnostics build this window without ever showing
+        // it — and a floating keyboard raised by a headless run is a window nobody asked for
+        // that nothing is left to close.
+        Loaded += (_, _) => TouchKeyboard.Start();
+        Closed += (_, _) => TouchKeyboard.Stop();
         PreviewMouseDown += Window_PreviewMouseDown;
         PreviewKeyDown += Window_PreviewKeyDown;
 
@@ -391,6 +399,23 @@ public partial class MainWindow : Window
         FocusBarcode();
     }
 
+    /// <summary>
+    /// Sets a weighed line to an amount the cashier pressed rather than typed.
+    ///
+    /// Only ever reaches a line already on the sale, and only changes how much of it there is
+    /// — the price per kilo is the product's and is not touched, so the line total follows
+    /// from the weight the way it does when the figure is typed.
+    /// </summary>
+    private void Weight_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string tag, DataContext: CartLine line }) return;
+        if (!decimal.TryParse(tag, NumberStyles.Number, CultureInfo.InvariantCulture, out var kilos)) return;
+
+        line.Quantity = kilos;
+        Vm.RefreshTotals();
+        FocusBarcode();
+    }
+
     private void CategoryBack_Click(object sender, RoutedEventArgs e)
     {
         Vm.CloseCategoryProducts();
@@ -447,31 +472,16 @@ public partial class MainWindow : Window
 
         ConfirmDetail.Text = $"{Loc.T("Ticket #{0}", Vm.LastInvoiceNumber)}  ·  {Loc.Ltr($"{total:N2} DH")}";
 
-        // Print before the animation so paper starts moving immediately; any failure is
-        // reported in the confirmation line rather than stopping the till, because the sale
-        // is already banked by this point.
         var paper = SaleRepository.FindByInvoiceNumber(Vm.LastInvoiceNumber);
-        string? printProblem = null;
 
-        if (AppSettings.Current.AutoPrintReceipts && paper is not null)
+        // Print directly to the configured printer without asking.
+        if (paper is not null)
         {
-            // Never silently routes to Print-to-PDF: PrintSilent refuses virtual printers
-            // and says so, rather than throwing a Save-As box at the cashier mid-queue.
-            printProblem = ReceiptPrinter.PrintSilent(paper, isDuplicate: false);
-            if (printProblem is not null) ConfirmDetail.Text = printProblem;
+            var problem = ReceiptPrinter.PrintSilent(paper, isDuplicate: false);
+            if (problem is not null) ConfirmDetail.Text = problem;
         }
 
         ((Storyboard)FindResource("PaymentConfirmed")).Begin(this);
-
-        // The customer still has to be handed something. With a printer attached the paper is
-        // already coming out and the counter must not be held up, so nothing more happens
-        // here. With no printer — or a printer that just refused — the receipt is put on
-        // screen instead: the sale is banked either way, and the shop can read the total back
-        // to the customer or print it from this window once the machine arrives.
-        var printerDidIt = AppSettings.Current.AutoPrintReceipts && printProblem is null;
-        if (paper is not null && !printerDidIt)
-            new ReceiptWindow(paper, allowReprint: true) { Owner = this }.ShowDialog();
-
         FocusBarcode();
     }
 
@@ -496,6 +506,20 @@ public partial class MainWindow : Window
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => CloseApp("Close the app?");
+
+    /// <summary>
+    /// Settings, from the till.
+    ///
+    /// No permission check and no admin password. Settings holds the language and nothing else
+    /// now — which is a display preference, not a business decision, and the person it matters
+    /// most to is the cashier standing at this screen for eight hours. Everything that was
+    /// worth protecting on this window is protected where it is done: the back office is behind
+    /// its own password, and the repositories refuse a write nobody is allowed to make.
+    ///
+    /// Nothing to refresh afterwards. A language arrives when windows are built, so the dialog
+    /// offers the restart itself and this window is gone by the time it matters.
+    /// </summary>
+    private void Settings_Click(object sender, RoutedEventArgs e) => SettingsWindow.Ask(this);
 
     /// <summary>
     /// The power icon does whichever of the two things is actually on the table. With somebody

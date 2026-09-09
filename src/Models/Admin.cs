@@ -411,20 +411,86 @@ public sealed class ActivityEntry
     {
         get
         {
-            var who = string.IsNullOrWhiteSpace(WorkerName) ? "Someone" : WorkerName;
-            var what = string.IsNullOrWhiteSpace(Detail) ? Action : Detail;
+            // "Owner" is not somebody's name — it is what the app calls the owner until they
+            // give one, and older entries have it written into them in English. That one word
+            // is the app's and is translated; a real name never is, which is why this compares
+            // against exactly it rather than putting every name through the translator.
+            var who = string.IsNullOrWhiteSpace(WorkerName)
+                ? Services.Loc.T("Someone")
+                : WorkerName == "Owner" ? Services.Loc.T("Owner") : WorkerName;
+
+            var what = string.IsNullOrWhiteSpace(Detail) ? Services.Loc.T(Action) : Said(Detail);
 
             // Only a change has a "from". Most entries carry a new value and no old one — the
             // detail already names it — and reading "from  to 250.00 DH" on all of those was
             // the sentence describing something that never happened.
             if (OldValue.Length > 0 && NewValue.Length > 0)
-                return $"{who} {what}, from {OldValue} to {NewValue}.";
+                return Services.Loc.T("{0} {1}, from {2} to {3}.", who, what, OldValue, NewValue);
             if (OldValue.Length > 0)
-                return $"{who} {what}, was {OldValue}.";
+                return Services.Loc.T("{0} {1}, was {2}.", who, what, OldValue);
 
-            return $"{who} {what}.";
+            return Services.Loc.T("{0} {1}.", who, what);
         }
     }
+
+    /// <summary>
+    /// Puts a stored detail back together in the shop's language.
+    ///
+    /// What is stored is a pattern and the shop's own words, kept apart — see
+    /// <c>ActivityRepository.Say</c>. The pattern is translated; the words in it are the shop's
+    /// and are never touched, because a product called "Pay" is a product, not a button.
+    ///
+    /// A detail with nothing to separate is an entry written before any of this existed. It is
+    /// shown exactly as it was recorded: an old row saying what it said on the day is the point
+    /// of a log, and rewriting history to make it prettier is the one thing this must not do.
+    /// </summary>
+    private static string Said(string stored)
+    {
+        var parts = stored.Split(Data.ActivityRepository.Apart);
+
+        if (parts.Length > 1)
+            return Services.Loc.T(parts[0], parts.Skip(1).Cast<object>().ToArray());
+
+        // An entry written before the log kept its words apart: one finished English sentence
+        // with the shop's own names already inside it. The pattern that built it is still
+        // known — it is a translation key — so the sentence is read back against every pattern
+        // the log can write, and the one that fits gives back both the words and the values.
+        foreach (var (shape, pattern) in Written.Value)
+        {
+            var fits = shape.Match(stored);
+            if (!fits.Success) continue;
+
+            return Services.Loc.T(pattern,
+                fits.Groups.Cast<System.Text.RegularExpressions.Group>()
+                    .Skip(1).Select(g => (object)g.Value).ToArray());
+        }
+
+        return stored;
+    }
+
+    /// <summary>
+    /// Every sentence the log knows how to write, as something an old entry can be read back
+    /// against. Most literal text first, so "deactivated category {0}" is tried before
+    /// "deactivated {0}" and the more exact of the two wins.
+    ///
+    /// Patterns that are nearly all placeholder are left out. "{0} {1}." would match almost
+    /// any sentence ever written and turn a perfectly good old entry into nonsense.
+    /// </summary>
+    private static readonly Lazy<(System.Text.RegularExpressions.Regex Shape, string Pattern)[]> Written =
+        new(() => Services.Translations.Table.Keys
+            .Where(key => key.Contains("{0}") && Literal(key).Length >= 4)
+            .OrderByDescending(key => Literal(key).Length)
+            .Select(key => (Shape(key), key))
+            .ToArray());
+
+    private static string Literal(string pattern) =>
+        System.Text.RegularExpressions.Regex.Replace(pattern, @"\{\d\}", string.Empty);
+
+    private static System.Text.RegularExpressions.Regex Shape(string pattern) =>
+        new("^" + string.Join("(.+?)",
+                System.Text.RegularExpressions.Regex.Split(pattern, @"\{\d\}")
+                    .Select(System.Text.RegularExpressions.Regex.Escape)) + "$",
+            System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 }
 
 /// <summary>A product row as the back office sees it — cost, stock and supplier included.</summary>

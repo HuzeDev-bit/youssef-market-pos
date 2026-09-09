@@ -1,4 +1,4 @@
-using MarketPos.Models;
+﻿using MarketPos.Models;
 using MarketPos.Services;
 
 namespace MarketPos.Data;
@@ -49,7 +49,7 @@ public static class CategoryRepository
         var id = Convert.ToInt32(command.ExecuteScalar());
 
         ActivityRepository.Record("added category", "Category", id, newValue: name,
-                                  detail: $"added category {name}");
+                                  detail: ActivityRepository.Say("added category {0}", name));
         return id;
     }
 
@@ -65,7 +65,7 @@ public static class CategoryRepository
         command.ExecuteNonQuery();
 
         ActivityRepository.Record("renamed category", "Category", id,
-            oldValue: oldName, newValue: newName, detail: "renamed a category");
+            oldValue: oldName, newValue: newName, detail: ActivityRepository.Say("renamed a category"));
     }
 
     /// <summary>
@@ -88,8 +88,13 @@ public static class CategoryRepository
             var count = Convert.ToInt32(check.ExecuteScalar());
             if (count > 0)
             {
-                problem = $"{name} still has {count} active product{(count == 1 ? string.Empty : "s")}. "
-                        + "Move them to another category first.";
+                // Said here rather than at the screen: two different pages show this refusal,
+                // and a sentence built out of an English plural would have reached both of
+                // them untranslated.
+                problem = Loc.T(count == 1
+                    ? "{0} still has {1} product in it. Move it to another category first."
+                    : "{0} still has {1} products in it. Move them to another category first.",
+                    name, count);
                 return false;
             }
         }
@@ -100,7 +105,8 @@ public static class CategoryRepository
         command.ExecuteNonQuery();
 
         ActivityRepository.Record(active ? "reactivated category" : "deactivated category",
-            "Category", id, newValue: name, detail: $"{(active ? "reactivated" : "deactivated")} category {name}");
+            "Category", id, newValue: name, detail: ActivityRepository.Say(active ? "reactivated category {0}"
+                                                : "deactivated category {0}", name));
         return true;
     }
 }

@@ -100,7 +100,7 @@ public partial class StaffSignInWindow : Window
             : "No admin password is set, so this opens on a press. Set one under Settings, "
             + "and give your staff their own under Workers.";
 
-        ConfirmButton.Content = needs ? "Sign in" : "Continue";
+        ConfirmButton.Content = Loc.T(needs ? "Sign in" : "Continue");
 
         if (!focus) return;
         if (needs) PasswordBox.Focus(); else ConfirmButton.Focus();
@@ -147,7 +147,7 @@ public partial class StaffSignInWindow : Window
 
     private void Fail(string message)
     {
-        ErrorText.Text = message;
+        ErrorText.Text = Loc.T(message);
         PasswordBox.Clear();
         PasswordBox.Focus();
     }

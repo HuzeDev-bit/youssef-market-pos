@@ -14,9 +14,6 @@ public sealed class AppSettings
     /// <summary>Windows printer name. Empty means "use the Windows default printer".</summary>
     public string ReceiptPrinterName { get; set; } = string.Empty;
 
-    /// <summary>Print the receipt automatically the moment a sale completes.</summary>
-    public bool AutoPrintReceipts { get; set; } = true;
-
     /// <summary>PBKDF2 hash and salt of the admin password. Never the password itself.</summary>
     /// <summary>
     /// What the owner is called. Typed at the lock the first time they sign in, and used
@@ -52,6 +49,23 @@ public sealed class AppSettings
 
     /// <summary>Where exports and backups are written. Empty means the user's Documents folder.</summary>
     public string ExportFolder { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether the app carries its own on-screen keyboard.
+    ///
+    /// Null is not "off" — it is "nobody has said", which is what every shop has until it
+    /// opens Settings, and most never will. The app then decides from the machine: a keyboard
+    /// on a touchscreen till, and nothing at all on a counter with a real one plugged into it.
+    /// Ticking or clearing the box in Settings writes a true or a false and settles it.
+    /// </summary>
+    public bool? OnScreenKeyboard { get; set; }
+
+    /// <summary>
+    /// How big the shop has made the on-screen keyboard, as a share of its natural size.
+    /// Null until somebody presses − or + on it. Kept here rather than in the window so a size
+    /// chosen once with a fingertip is not chosen again every morning.
+    /// </summary>
+    public double? KeyboardScale { get; set; }
 
     /// <summary>
     /// Which language the interface is in: "en", "fr" or "ar".

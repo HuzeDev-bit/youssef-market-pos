@@ -301,7 +301,8 @@ public static class SalesHistoryRepository
 
         ActivityRepository.Record("refunded a sale", "Sale", invoiceNumber,
             oldValue: $"{sale.Total:0.00} DH", newValue: $"{refundTotal:0.00} DH refunded",
-            detail: $"refunded {refundTotal:0.00} DH on sale #{invoiceNumber} ({reason})",
+            detail: ActivityRepository.Say("refunded {0} on sale #{1} ({2})",
+                                          $"{refundTotal:0.00} DH", invoiceNumber, reason),
             connection: connection);
 
         transaction.Commit();
@@ -339,7 +340,8 @@ public static class SalesHistoryRepository
 
         ActivityRepository.Record("cancelled a sale", "Sale", invoiceNumber,
             oldValue: $"{sale.Total:0.00} DH", newValue: "cancelled",
-            detail: $"cancelled sale #{invoiceNumber} ({reason})", connection: connection);
+            detail: ActivityRepository.Say("cancelled sale #{0} ({1})", invoiceNumber, reason),
+            connection: connection);
 
         transaction.Commit();
     }

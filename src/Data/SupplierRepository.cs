@@ -77,7 +77,7 @@ public static class SupplierRepository
         var id = Convert.ToInt32(command.ExecuteScalar());
 
         ActivityRepository.Record("added supplier", "Supplier", id, newValue: supplier.Name,
-                                  detail: $"added supplier {supplier.Name}");
+                                  detail: ActivityRepository.Say("added supplier {0}", supplier.Name));
         return id;
     }
 
@@ -97,7 +97,7 @@ public static class SupplierRepository
         command.ExecuteNonQuery();
 
         ActivityRepository.Record("edited supplier", "Supplier", supplier.Id,
-            newValue: supplier.Name, detail: $"edited supplier {supplier.Name}");
+            newValue: supplier.Name, detail: ActivityRepository.Say("edited supplier {0}", supplier.Name));
     }
 
     public static void SetActive(int id, string name, bool active)
@@ -111,7 +111,8 @@ public static class SupplierRepository
         command.ExecuteNonQuery();
 
         ActivityRepository.Record(active ? "reactivated supplier" : "deactivated supplier",
-            "Supplier", id, newValue: name, detail: $"{(active ? "reactivated" : "deactivated")} supplier {name}");
+            "Supplier", id, newValue: name, detail: ActivityRepository.Say(active ? "reactivated supplier {0}"
+                                                : "deactivated supplier {0}", name));
     }
 
     private static void Bind(Microsoft.Data.Sqlite.SqliteCommand command, Supplier s) =>
@@ -222,7 +223,8 @@ public static class SupplierRepository
 
             ActivityRepository.Record("changed a price", "Product", line.ProductId,
                 oldValue: $"{wasPrice:0.00}", newValue: $"{sellPrice:0.00}",
-                detail: $"repriced {line.Name} on a delivery", connection: connection);
+                detail: ActivityRepository.Say("repriced {0} on a delivery", line.Name),
+                connection: connection);
         }
 
         if (amountPaidNow > 0m)
@@ -231,7 +233,8 @@ public static class SupplierRepository
 
         ActivityRepository.Record("recorded supplier purchase", "Purchase", purchaseId,
             newValue: $"{total:0.00} DH",
-            detail: $"recorded a {total:0.00} DH purchase from {purchase.SupplierName}",
+            detail: ActivityRepository.Say("recorded a {0} purchase from {1}",
+                                          $"{total:0.00} DH", purchase.SupplierName),
             connection: connection);
 
         transaction.Commit();
@@ -477,7 +480,8 @@ public static class SupplierRepository
         }
 
         ActivityRepository.Record("cancelled supplier purchase", "Purchase", purchaseId,
-            newValue: reason, detail: $"cancelled purchase #{purchaseId}", connection: connection);
+            newValue: reason, detail: ActivityRepository.Say("cancelled purchase #{0}", purchaseId),
+            connection: connection);
 
         transaction.Commit();
     }
@@ -496,7 +500,8 @@ public static class SupplierRepository
 
         ActivityRepository.Record("recorded a supplier payment", "Supplier", supplierId,
             newValue: $"{amount:0.00} DH",
-            detail: $"recorded a {amount:0.00} DH payment to {supplierName}", connection: connection);
+            detail: ActivityRepository.Say("recorded a {0} payment to {1}",
+                                          $"{amount:0.00} DH", supplierName), connection: connection);
     }
 
     private static void InsertPayment(Microsoft.Data.Sqlite.SqliteConnection connection,

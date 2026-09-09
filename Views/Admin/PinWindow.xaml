@@ -38,7 +38,7 @@
                     <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}" Content="إلغاء"
+                <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}" Content="Cancel"
                         Click="Cancel_Click"/>
                 <Button Grid.Column="2" Style="{StaticResource Button.Pill}" Content="Set PIN"
                         Click="Save_Click"/>

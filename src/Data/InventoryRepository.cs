@@ -132,7 +132,8 @@ public static class InventoryRepository
         Move(productId, -quantity, reason, reference: "Loss", note: note);
         ActivityRepository.Record("recorded stock loss", "Product", productId,
             newValue: $"-{quantity:0.###}",
-            detail: $"recorded {quantity:0.###} of {productName} as {reason}");
+            detail: ActivityRepository.Say("recorded {0} of {1} as {2}",
+                                          $"{quantity:0.###}", productName, reason));
     }
 
     /// <summary>
@@ -159,7 +160,7 @@ public static class InventoryRepository
              connection: connection);
         ActivityRepository.Record("changed stock", "Product", productId,
             oldValue: before.ToString("0.###"), newValue: counted.ToString("0.###"),
-            detail: $"changed {productName} stock", connection: connection);
+            detail: ActivityRepository.Say("changed {0} stock", productName), connection: connection);
     }
 
     public static List<StockMovement> ListMovements(DateRange? range = null, int? productId = null,

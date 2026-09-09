@@ -83,20 +83,20 @@ public partial class AmountWindow : Window
         if (!decimal.TryParse(AmountBox.Text.Trim().Replace(',', '.'),
                               NumberStyles.Number, CultureInfo.InvariantCulture, out var amount))
         {
-            ErrorText.Text = "Enter an amount, like 250 or 250.50.";
+            ErrorText.Text = Loc.T("Enter an amount, like 250 or 250.50.");
             AmountBox.Focus();
             return;
         }
 
         if (amount == 0m)
         {
-            ErrorText.Text = "Enter an amount other than zero.";
+            ErrorText.Text = Loc.T("Enter an amount other than zero.");
             return;
         }
 
         if (amount < 0m && !_request.AllowNegative)
         {
-            ErrorText.Text = "The amount cannot be negative.";
+            ErrorText.Text = Loc.T("The amount cannot be negative.");
             return;
         }
 

@@ -171,6 +171,7 @@ public static class FlowTest
               movements.First().AfterQty, StockRepository.Find(productId)!.Stock);
 
         CheckTillCanAddProducts();
+        CheckRemovingAProductKeepsItsHistory(productId);
 
         Console.WriteLine(Log.ToString());
         Console.WriteLine(_failures == 0 ? "FLOW TEST PASSED" : $"{_failures} CHECKS FAILED");
@@ -666,6 +667,49 @@ public static class FlowTest
         after.SubmitBarcodeCommand.Execute(null);
         Check("an unknown barcode adds nothing either", after.Cart.Count, 0);
         Log.AppendLine($"      the till says: {after.StatusMessage}");
+    }
+
+    /// <summary>
+    /// Taking a product off the shelf, and the promise that goes with it.
+    ///
+    /// The Inventory page can now remove a product, which is the thing the shop asked for and
+    /// also the thing most likely to be implemented as a DELETE by whoever comes next. It must
+    /// not be. This product has a sale, a refund and a breakage against it, and its cost price
+    /// is what every one of those figures was worked out from — so removing it has to take it
+    /// off the shelf and leave the books exactly where they were.
+    ///
+    /// The barcode is the other half. A cashier holding a withdrawn line still has to be told
+    /// what it is, rather than that the shop has never heard of a thing it sold last week.
+    /// </summary>
+    private static void CheckRemovingAProductKeepsItsHistory(int productId)
+    {
+        var today = DateRange.For(DatePreset.Today);
+        var before = Finance.For(today);
+        var product = StockRepository.Find(productId)!;
+        var movements = InventoryRepository.ListMovements(today, productId).Count;
+
+        StockRepository.SetActive(productId, product.Name, active: false);
+
+        Check("a removed product leaves the stock list",
+              StockRepository.List().Count(i => i.Id == productId), 0);
+        Check("but is still there when asked for",
+              StockRepository.List(includeInactive: true).Count(i => i.Id == productId), 1);
+        Check("and still answers a scan of its barcode",
+              StockRepository.FindByBarcode(product.Barcode)?.Id ?? 0, productId);
+
+        // The whole reason it is hidden rather than deleted.
+        var after = Finance.For(today);
+        Check("revenue is untouched by removing it", after.Revenue, before.Revenue);
+        Check("COGS is untouched", after.Cogs, before.Cogs);
+        Check("net profit is untouched", after.NetProfit, before.NetProfit);
+        Check("its stock movements are all still there",
+              InventoryRepository.ListMovements(today, productId).Count, movements);
+
+        // And back again, which is what makes the button safe to press.
+        StockRepository.SetActive(productId, product.Name, active: true);
+        Check("putting it back puts it back on the shelf",
+              StockRepository.List().Count(i => i.Id == productId), 1);
+        Check("with its count intact", StockRepository.Find(productId)!.Stock, product.Stock);
     }
 
     private static void Check(string what, decimal actual, decimal expected)

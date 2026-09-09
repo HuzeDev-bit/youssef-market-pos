@@ -1,17 +1,18 @@
 using System.Windows;
 using System.Windows.Input;
-using MarketPos.Models;
 using MarketPos.Services;
-using System.Linq;
 
 namespace MarketPos.Views;
 
 /// <summary>
-/// The shop's own details, and how it prints.
+/// The one thing the shop changes after it is installed: which language the app is in.
 ///
-/// The name, phone, address and currency are on every receipt a customer takes away and at
-/// the top of every report — so they belong to the shop, not to the code. They were hard-coded
-/// defaults until now, which meant a Moroccan grocer's receipts said "Market".
+/// This screen used to hold the shop's name, phone, address, currency, receipt footer, the
+/// printer, auto-print and the back-office address. All of them are decided once, when the
+/// machine is set up, and every one of them was a way for an owner who opened this window to
+/// change the language to walk out having broken their own receipts. They keep whatever they
+/// were set to — see <see cref="AppSettings"/>, which still holds and saves every one — they
+/// are simply not editable from here any more.
 /// </summary>
 public partial class SettingsWindow : Window
 {
@@ -21,12 +22,14 @@ public partial class SettingsWindow : Window
     /// each item for a Name, so a box handed objects printed its own type declaration into
     /// itself — which is what the language list was doing, in the one screen a shop opens to
     /// change the language.
+    ///
+    /// Arabic and French, and no English. The shop is Moroccan and is run in those two; English
+    /// is the language the code is written in, not one anybody at this counter reads. It stays
+    /// as the source text every translation is keyed by, so nothing is lost by not offering it,
+    /// and a screen with a phrase still to be translated falls back to it exactly as before.
     /// </summary>
     private static readonly Models.Language[] Languages =
-        [Models.Language.Arabic, Models.Language.French, Models.Language.English];
-
-    private const string UseDefault = "(Windows default printer)";
-    private const string FileSuffix = "   — saves a file, not a receipt";
+        [Models.Language.Arabic, Models.Language.French];
 
     public SettingsWindow()
     {
@@ -34,188 +37,96 @@ public partial class SettingsWindow : Window
         Services.Localizer.Apply(this);
         Services.Responsive.Fit(this);
 
-        PrinterBox.Items.Add(UseDefault);
-        foreach (var name in ReceiptPrinter.InstalledPrinters())
-        {
-            // Marked, not hidden: the owner may genuinely want a PDF copy on a back-office
-            // machine, but they should never pick one for the till by accident.
-            PrinterBox.Items.Add(ReceiptPrinter.IsVirtualPrinter(name) ? name + FileSuffix : name);
-        }
-
-        var configured = AppSettings.Current.ReceiptPrinterName;
-        PrinterBox.SelectedItem = PrinterBox.Items.Cast<string>()
-            .FirstOrDefault(i => i.Replace(FileSuffix, string.Empty) == configured) ?? UseDefault;
-
-        var fallback = ReceiptPrinter.DefaultPrinterName();
-        DefaultHint.Text = fallback is null
-            ? Loc.T("Windows reports no default printer on this machine.")
-            : ReceiptPrinter.IsVirtualPrinter(fallback)
-                ? Loc.T("Windows default is \"{0}\", which saves a file instead of printing. "
-                      + "Receipts will NOT print automatically until a real receipt printer is "
-                      + "selected above.", fallback)
-                : Loc.T("Windows default is currently: {0}", fallback);
-
-        AutoPrintBox.IsChecked = AppSettings.Current.AutoPrintReceipts;
-
-        ShopNameBox.Text = AppSettings.Current.BusinessName;
-        ShopPhoneBox.Text = AppSettings.Current.BusinessPhone;
-        ShopAddressBox.Text = AppSettings.Current.BusinessAddress;
-        CurrencyBox.Text = AppSettings.Current.Currency;
-        FooterBox.Text = AppSettings.Current.ReceiptFooter;
-
         // Each language is offered in its own words: a list of languages is read by somebody
         // who does not yet have the app in theirs.
         LanguageBox.ItemsSource = Languages.Select(Loc.NativeName).ToList();
+
+        // A machine left on English by an older build lands on Arabic, which is the first of
+        // the two now offered and the shop's own language. It is not silently switched: the
+        // box says Arabic from the moment this opens, and nothing is written until Save.
         LanguageBox.SelectedIndex = Math.Max(0, Array.IndexOf(Languages, Loc.Current));
 
-        ServerBox.Text = AppSettings.Current.ServerAddress;
-        TillNameBox.Text = AppSettings.Current.TillLabel;
+        var printers = ReceiptPrinter.InstalledPrinters();
+        PrinterBox.ItemsSource = printers;
+        var currentPrinter = AppSettings.Current.ReceiptPrinterName;
+        if (!string.IsNullOrWhiteSpace(currentPrinter) && printers.Contains(currentPrinter))
+            PrinterBox.SelectedItem = currentPrinter;
+        else if (printers.Count > 0)
+        {
+            var preferred = printers.FirstOrDefault(p => !ReceiptPrinter.IsVirtualPrinter(p) && (p.Contains("pos", StringComparison.OrdinalIgnoreCase) || p.Contains("thermal", StringComparison.OrdinalIgnoreCase) || p.Contains("80", StringComparison.OrdinalIgnoreCase)))
+                         ?? printers.FirstOrDefault(p => !ReceiptPrinter.IsVirtualPrinter(p));
+            PrinterBox.SelectedItem = preferred ?? printers[0];
+        }
 
-        Loaded += (_, _) => { ShopNameBox.Focus(); ShopNameBox.SelectAll(); };
+        PrinterHint.Text = Loc.T("Receipts will print automatically to this printer.");
+
+        Loaded += (_, _) => LanguageBox.Focus();
     }
 
     /// <summary>Opens settings. True when something was saved.</summary>
     public static bool Ask(Window owner) =>
         new SettingsWindow { Owner = owner }.ShowDialog() == true;
 
-    private string SelectedPrinter =>
-        PrinterBox.SelectedItem as string is { } name && name != UseDefault
-            ? name.Replace(FileSuffix, string.Empty)
-            : string.Empty;
-
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        var name = ShopNameBox.Text.Trim();
-        if (name.Length == 0)
-        {
-            StatusText.Text = Loc.T("Give the shop a name — it goes on every receipt.");
-            ShopNameBox.Focus();
-            return;
-        }
-
-        var currency = CurrencyBox.Text.Trim();
-        if (currency.Length == 0)
-        {
-            StatusText.Text = Loc.T("Every amount needs a currency after it.");
-            CurrencyBox.Focus();
-            return;
-        }
-
-        AppSettings.Current.BusinessName = name;
-        AppSettings.Current.BusinessPhone = ShopPhoneBox.Text.Trim();
-        AppSettings.Current.BusinessAddress = ShopAddressBox.Text.Trim();
-        AppSettings.Current.Currency = currency;
-        AppSettings.Current.ReceiptFooter = FooterBox.Text.Trim();
-
-        AppSettings.Current.ReceiptPrinterName = SelectedPrinter;
-        AppSettings.Current.AutoPrintReceipts = AutoPrintBox.IsChecked == true;
-
-        AppSettings.Current.ServerAddress = Address;
-        AppSettings.Current.TillName = TillNameBox.Text.Trim();
-
         var chosen = LanguageBox.SelectedIndex >= 0
             ? Languages[LanguageBox.SelectedIndex]
             : Loc.Current;
-        var languageChanged = chosen != Loc.Current;
+
+        var changed = chosen != Loc.Current;
+
         AppSettings.Current.Language = Loc.Code(chosen);
+
+        if (PrinterBox.SelectedItem is string selectedPrinter)
+        {
+            AppSettings.Current.ReceiptPrinterName = selectedPrinter;
+        }
 
         AppSettings.Current.Save();
 
-        // A language is applied when windows are built, so the ones already open would keep
-        // the old one. Rather than leave the shop with half a translated app, offer the
-        // restart that actually finishes the job.
-        if (languageChanged && Restart()) return;
+        // A language is applied when windows are built, so the ones already open would keep the
+        // old one. Rather than leave the shop with half a translated app, offer the restart
+        // that actually finishes the job.
+        if (changed && Restart()) return;
 
         DialogResult = true;
         Close();
     }
 
-    /// <summary>
-    /// What was typed, made into an address. A shopkeeper reading an IP off another screen
-    /// types "192.168.1.20:5000", and refusing that for want of "http://" would be the
-    /// software being pedantic at somebody who did exactly the right thing.
-    /// </summary>
-    private string Address
-    {
-        get
-        {
-            var text = ServerBox.Text.Trim().TrimEnd('/');
-            if (text.Length == 0) return string.Empty;
-            return text.Contains("://") ? text : $"http://{text}";
-        }
-    }
-
-    /// <summary>
-    /// Asks the address whether there is a shop behind it, before the owner walks away
-    /// believing there is. Uses what is on screen, and saves nothing.
-    /// </summary>
-    private async void TestLink_Click(object sender, RoutedEventArgs e)
-    {
-        var typed = Address;
-        if (typed.Length == 0)
-        {
-            StatusText.Text = Loc.T("With no address this machine works on its own — which is right ")
-                            + "for a shop with one computer.";
-            return;
-        }
-
-        var previous = AppSettings.Current.ServerAddress;
-        AppSettings.Current.ServerAddress = typed;
-        StatusText.Text = $"Asking {typed}…";
-
-        try
-        {
-            StatusText.Text = await ShopLink.Ping()
-                ? $"Found {ShopLink.ShopName} at {typed}. This till will send its sales there."
-                : ShopLink.LastProblem;
-        }
-        finally
-        {
-            AppSettings.Current.ServerAddress = previous;   // nothing is saved until Save
-        }
-    }
-
-    /// <summary>
-    /// Prints a throwaway receipt so the printer can be proven before a real customer is
-    /// standing at the till. Uses a fake ticket number and never touches the database.
-    /// </summary>
     private void TestPrint_Click(object sender, RoutedEventArgs e)
     {
-        var previous = AppSettings.Current.ReceiptPrinterName;
-        AppSettings.Current.ReceiptPrinterName = SelectedPrinter;   // test what is on screen
-
-        var sample = new Receipt
+        var sample = new Models.Receipt
         {
             InvoiceNumber = 0,
             SoldAt = DateTime.Now,
-            Lines = new[]
-            {
-                new ReceiptLine { Name = "Test item", Quantity = 1m, Unit = Unit.Each, UnitPrice = 1m, LineTotal = 1m },
-            },
+            Lines =
+            [
+                new Models.ReceiptLine { Name = "Test item", Quantity = 1m, Unit = Models.Unit.Each, UnitPrice = 1m, LineTotal = 1m },
+            ],
             GrossBeforeDiscount = 1m,
-            DiscountKind = DiscountKind.None,
+            DiscountKind = Models.DiscountKind.None,
             DiscountValue = 0m,
             DiscountAmount = 0m,
             Subtotal = 1m,
             Tax = 0m,
             Total = 1m,
-            PaymentMethod = PaymentMethod.Cash,
+            PaymentMethod = Models.PaymentMethod.Cash,
             AmountTendered = 1m,
             ChangeGiven = 0m,
         };
 
-        // allowVirtual: a test print is deliberate, so Print-to-PDF is fair game here even
-        // though it is refused for real sales.
-        var target = SelectedPrinter;
-        if (string.IsNullOrWhiteSpace(target)) target = ReceiptPrinter.DefaultPrinterName() ?? "the default printer";
-
-        var error = ReceiptPrinter.PrintSilent(sample, isDuplicate: false, allowVirtual: true);
-        StatusText.Text = error
-            ?? (ReceiptPrinter.IsVirtualPrinter(target)
-                ? $"Sent to {target} — it will ask you where to save the file."
-                : $"Test sent to {target}.");
-
-        AppSettings.Current.ReceiptPrinterName = previous;   // nothing is saved until Save
+        var target = PrinterBox.SelectedItem as string ?? AppSettings.Current.ReceiptPrinterName;
+        var prev = AppSettings.Current.ReceiptPrinterName;
+        AppSettings.Current.ReceiptPrinterName = target;
+        try
+        {
+            var error = ReceiptPrinter.PrintSilent(sample, isDuplicate: false, allowVirtual: true);
+            PrinterHint.Text = error ?? Loc.T("Test receipt sent to {0}.", target);
+        }
+        finally
+        {
+            AppSettings.Current.ReceiptPrinterName = prev;
+        }
     }
 
     /// <summary>

@@ -103,12 +103,12 @@ public partial class PurchaseWindow : Window
 
         if (SupplierBox.SelectedItem is not Supplier supplier)
         {
-            ErrorText.Text = "Choose the supplier this delivery came from.";
+            ErrorText.Text = Loc.T("Choose the supplier this delivery came from.");
             return;
         }
         if (Editor.Lines.Count == 0)
         {
-            ErrorText.Text = "Add at least one product line.";
+            ErrorText.Text = Loc.T("Add at least one product line.");
             return;
         }
 
@@ -117,7 +117,7 @@ public partial class PurchaseWindow : Window
 
         if (paid < 0m)
         {
-            ErrorText.Text = "The amount paid cannot be negative.";
+            ErrorText.Text = Loc.T("The amount paid cannot be negative.");
             return;
         }
         if (paid > total)

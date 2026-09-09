@@ -99,7 +99,8 @@ public static class ExpenseRepository
 
         ActivityRepository.Record("recorded an expense", "Expense", id,
             newValue: $"{expense.Amount:0.00} DH",
-            detail: $"recorded a {expense.Amount:0.00} DH expense for {expense.Name}");
+            detail: ActivityRepository.Say("recorded a {0} expense for {1}",
+                                          $"{expense.Amount:0.00} DH", expense.Name));
         return id;
     }
 
@@ -127,7 +128,7 @@ public static class ExpenseRepository
         command.ExecuteNonQuery();
 
         ActivityRepository.Record("edited an expense", "Expense", expense.Id,
-            newValue: $"{expense.Amount:0.00} DH", detail: $"edited the expense {expense.Name}");
+            newValue: $"{expense.Amount:0.00} DH", detail: ActivityRepository.Say("edited the expense {0}", expense.Name));
     }
 
     /// <summary>Voids rather than deletes — a spent dirham that disappears is how books stop balancing.</summary>
@@ -142,7 +143,7 @@ public static class ExpenseRepository
         command.ExecuteNonQuery();
 
         ActivityRepository.Record("voided an expense", "Expense", id, newValue: reason,
-            detail: $"voided the expense {name}");
+            detail: ActivityRepository.Say("voided the expense {0}", name));
     }
 
     /// <summary>Totals per category for the period — feeds the Money Spent breakdown.</summary>

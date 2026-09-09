@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
+using MarketPos.Services;
 
 namespace MarketPos.Views.Admin;
 
@@ -21,7 +22,7 @@ public partial class PinWindow : Window
         Services.Localizer.Apply(this);
         Services.Responsive.Fit(this);
 
-        HeadingText.Text = hasPin ? "Change till PIN" : "Set a till PIN";
+        HeadingText.Text = Loc.T(hasPin ? "Change till PIN" : "Set a till PIN");
         SubText.Text = $"{workerName} types this to sign in at the till, so their sales and shifts "
                      + "are recorded against them."
                      + (hasPin ? " The old PIN stops working straight away." : string.Empty);
@@ -59,7 +60,7 @@ public partial class PinWindow : Window
 
     private void Fail(string message)
     {
-        ErrorText.Text = message;
+        ErrorText.Text = Loc.T(message);
         PinBox.Clear();
         ConfirmBox.Clear();
         PinBox.Focus();

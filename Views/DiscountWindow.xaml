@@ -17,21 +17,21 @@
         </Border.Effect>
 
         <StackPanel>
-            <TextBlock Text="الخصم" Style="{StaticResource Text.Title}" FontSize="20"/>
-            <TextBlock Text="خصم لعميل مميز" Style="{StaticResource Text.Muted}" Margin="0,4,0,16"/>
+            <TextBlock Text="Discount" Style="{StaticResource Text.Title}" FontSize="20"/>
+            <TextBlock Text="A discount for a regular customer" Style="{StaticResource Text.Muted}" Margin="0,4,0,16"/>
 
             <UniformGrid Columns="2" Rows="1" Margin="0,0,0,16">
                 <ToggleButton x:Name="PercentButton" Style="{StaticResource Button.TogglePill}"
                               IsChecked="True" Margin="0,0,5,0" Checked="Percent_Checked">
-                    <TextBlock Text="نسبة  %"/>
+                    <TextBlock Text="Percent  %"/>
                 </ToggleButton>
                 <ToggleButton x:Name="FixedButton" Style="{StaticResource Button.TogglePill}"
                               Margin="5,0,0,0" Checked="Fixed_Checked">
-                    <TextBlock Text="مبلغ  درهم"/>
+                    <TextBlock Text="Amount  DH"/>
                 </ToggleButton>
             </UniformGrid>
 
-            <TextBlock x:Name="FieldLabel" Text="نسبة الخصم" Style="{StaticResource Text.Muted}" Margin="0,0,0,6"/>
+            <TextBlock x:Name="FieldLabel" Text="Discount percentage" Style="{StaticResource Text.Muted}" Margin="0,0,0,6"/>
             <TextBox x:Name="ValueBox" Style="{StaticResource TextBox.Plain}" FontSize="24" Padding="16,12"
                      TextChanged="ValueBox_TextChanged" PreviewTextInput="ValueBox_PreviewTextInput"/>
 
@@ -42,7 +42,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="المجموع الجزئي" Style="{StaticResource Text.Muted}"/>
+                        <TextBlock Text="Subtotal" Style="{StaticResource Text.Muted}"/>
                         <TextBlock x:Name="GrossText" Grid.Column="1" Style="{StaticResource Text.Body}"/>
                     </Grid>
                     <Grid Margin="0,0,0,8">
@@ -50,7 +50,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock x:Name="DiscountLabelText" Text="الخصم" Style="{StaticResource Text.Muted}"/>
+                        <TextBlock x:Name="DiscountLabelText" Text="Discount" Style="{StaticResource Text.Muted}"/>
                         <TextBlock x:Name="DiscountText" Grid.Column="1" Style="{StaticResource Text.Body}"
                                    Foreground="{StaticResource Brush.Danger}"/>
                     </Grid>
@@ -60,7 +60,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="الإجمالي" Style="{StaticResource Text.Title}" FontSize="16"/>
+                        <TextBlock Text="Total" Style="{StaticResource Text.Title}" FontSize="16"/>
                         <TextBlock x:Name="TotalText" Grid.Column="1" Style="{StaticResource Text.Title}" FontSize="16"
                                    Foreground="{StaticResource Brush.Accent}"/>
                     </Grid>
@@ -75,10 +75,10 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" x:Name="RemoveButton" Style="{StaticResource Button.PillMuted}"
-                        Content="حذف" Margin="0,0,12,0" Click="Remove_Click"/>
-                <Button Grid.Column="1" Style="{StaticResource Button.PillMuted}" Content="إلغاء" Click="Cancel_Click"/>
+                        Content="Remove" Margin="0,0,12,0" Click="Remove_Click"/>
+                <Button Grid.Column="1" Style="{StaticResource Button.PillMuted}" Content="Cancel" Click="Cancel_Click"/>
                 <Button Grid.Column="3" x:Name="ApplyButton" Style="{StaticResource Button.Pill}"
-                        Content="تطبيق" Click="Apply_Click"/>
+                        Content="Apply" Click="Apply_Click"/>
             </Grid>
         </StackPanel>
     </Border>

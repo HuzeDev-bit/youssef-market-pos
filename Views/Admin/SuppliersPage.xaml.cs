@@ -92,7 +92,7 @@ public partial class SuppliersPage : AdminPageBase
             : Loc.T(owing == 1 ? "to {0} supplier" : "to {0} suppliers", owing);
 
         BoughtValue.Text = Money(bought);
-        BoughtNote.Text = "stock received, all time";
+        BoughtNote.Text = Loc.T("stock received, all time");
 
         PaidValue.Text = Money(paid);
         PaidNote.Text = bought <= 0m
@@ -115,7 +115,7 @@ public partial class SuppliersPage : AdminPageBase
         Empty.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         if (_rows.Count > 0) return;
 
-        EmptyTitle.Text = filtered ? "Nothing matches" : "No suppliers yet";
+        EmptyTitle.Text = Loc.T(filtered ? "Nothing matches" : "No suppliers yet");
         EmptyBody.Text = filtered
             ? "Try a different name, or clear the filter."
             : "Add the wholesalers the shop buys from. Once a delivery is recorded against one, "

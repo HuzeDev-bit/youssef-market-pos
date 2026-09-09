@@ -87,7 +87,7 @@ public partial class SupplierWindow : Window
         var name = NameBox.Text.Trim();
         if (name.Length == 0)
         {
-            ErrorText.Text = "Give the supplier a name.";
+            ErrorText.Text = Loc.T("Give the supplier a name.");
             NameBox.Focus();
             return;
         }
@@ -111,7 +111,7 @@ public partial class SupplierWindow : Window
             var total = lines.Sum(l => l.LineTotal);
             if (paid < 0m)
             {
-                ErrorText.Text = "The amount paid cannot be negative.";
+                ErrorText.Text = Loc.T("The amount paid cannot be negative.");
                 return;
             }
             if (paid > total)

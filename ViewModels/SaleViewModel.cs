@@ -15,6 +15,26 @@ public sealed class SaleViewModel : ViewModelBase
     public ObservableCollection<HeldTicket> HeldTickets { get; } = new();
 
     public ObservableCollection<string> Categories { get; } = new(Catalog.Categories);
+
+    /// <summary>
+    /// The same categories, as something the first screen can draw as pressable boxes and
+    /// light up one of. Pressing one narrows the grid below it; that is the whole of what a
+    /// category does at the till.
+    /// </summary>
+    public ObservableCollection<CategoryChoice> CategoryChoices { get; } = new();
+
+    /// <summary>Rebuilds the boxes from the category list, keeping whichever is chosen lit.</summary>
+    private void FillCategoryChoices()
+    {
+        CategoryChoices.Clear();
+        foreach (var name in Categories)
+            CategoryChoices.Add(new CategoryChoice { Name = name, IsChosen = name == SelectedCategory });
+    }
+
+    private void MarkChosenCategory()
+    {
+        foreach (var choice in CategoryChoices) choice.IsChosen = choice.Name == SelectedCategory;
+    }
     public IReadOnlyList<string> SortOptions { get; } = new[] { "Name", "Price: Low to High", "Price: High to Low" };
 
     /// <summary>Backing list for the product grid; filtered and sorted live via a CollectionView.</summary>
@@ -26,8 +46,10 @@ public sealed class SaleViewModel : ViewModelBase
         get => _selectedCategory;
         set
         {
-            if (SetField(ref _selectedCategory, value))
-                RefreshProducts();
+            if (!SetField(ref _selectedCategory, value)) return;
+
+            MarkChosenCategory();
+            RefreshProducts();
         }
     }
 
@@ -452,7 +474,16 @@ public sealed class SaleViewModel : ViewModelBase
     public string ItemCountLabel => ItemCount == 1 ? "1 item" : $"{ItemCount} items";
 
     public RelayCommand SubmitBarcodeCommand { get; }
+    /// <summary>
+    /// Recomputes the sale after a line's quantity was set from the screen — a pressed weight,
+    /// say. The totals are worked out from the lines, so they have to be asked to look again.
+    /// </summary>
+    public void RefreshTotals() => RaiseTotalsChanged();
+
     public RelayCommand AddProductCommand { get; }
+
+    /// <summary>Narrows the grid to one category. Never adds anything to the sale.</summary>
+    public RelayCommand ChooseCategoryCommand { get; }
     public RelayCommand IncrementCommand { get; }
     public RelayCommand DecrementCommand { get; }
     public RelayCommand RemoveLineCommand { get; }
@@ -480,9 +511,18 @@ public sealed class SaleViewModel : ViewModelBase
     public SaleViewModel()
     {
         ProductsView = BuildProductsView();
+        FillCategoryChoices();
 
         SubmitBarcodeCommand = new RelayCommand(_ => SubmitBarcode());
         AddProductCommand = new RelayCommand(p => { if (p is Product product) AddProduct(product); });
+
+        // A category narrows the grid and never sells anything. Bound to its own command
+        // rather than sharing AddProductCommand with a different parameter type, so there is
+        // no arrangement of bindings that could put a category on the sale.
+        ChooseCategoryCommand = new RelayCommand(c =>
+        {
+            if (c is CategoryChoice choice) SelectedCategory = choice.Name;
+        });
         IncrementCommand = new RelayCommand(l => { if (l is CartLine line) line.Quantity += line.Step; RaiseTotalsChanged(); });
         DecrementCommand = new RelayCommand(l => { if (l is CartLine line) Decrement(line); });
         RemoveLineCommand = new RelayCommand(l => { if (l is CartLine line) RemoveLine(line); });
@@ -522,6 +562,7 @@ public sealed class SaleViewModel : ViewModelBase
         Categories.Clear();
         foreach (var category in Catalog.Categories) Categories.Add(category);
         SelectedCategory = Categories.Contains(selected) ? selected : "All";
+        FillCategoryChoices();
 
         if (Page == PageKind.Products) LoadCategories();
         ApplySort();

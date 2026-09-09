@@ -1,5 +1,7 @@
 using System.Globalization;
+using System.IO;
 using System.Printing;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -43,6 +45,20 @@ public static class ReceiptPrinter
     public static bool IsVirtualPrinter(string? name) =>
         name is not null && VirtualPrinterMarkers.Any(m => name.Contains(m, StringComparison.OrdinalIgnoreCase));
 
+    public static bool IsThermalPrinter(PrintQueue queue)
+    {
+        var name = queue.Name;
+        var driver = queue.QueueDriver?.Name ?? string.Empty;
+        return name.Contains("pos", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("thermal", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("receipt", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("80", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("58", StringComparison.OrdinalIgnoreCase)
+            || driver.Contains("generic", StringComparison.OrdinalIgnoreCase)
+            || driver.Contains("text", StringComparison.OrdinalIgnoreCase)
+            || driver.Contains("pos", StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <summary>
     /// Sends the receipt straight to the configured printer with no dialog — the cashier must
     /// never pick a printer, and must never be handed a Save-As box, mid-queue.
@@ -63,8 +79,8 @@ public static class ReceiptPrinter
             using var server = new LocalPrintServer();
             var configured = AppSettings.Current.ReceiptPrinterName;
 
-            PrintQueue queue;
-            if (!string.IsNullOrWhiteSpace(configured))
+            PrintQueue? queue = null;
+            if (!string.IsNullOrWhiteSpace(configured) && (allowVirtual || !IsVirtualPrinter(configured)))
             {
                 try
                 {
@@ -72,19 +88,47 @@ public static class ReceiptPrinter
                 }
                 catch
                 {
-                    return $"Printer \"{configured}\" not found — check Settings";
+                    queue = null;
                 }
             }
-            else
-            {
-                queue = LocalPrintServer.GetDefaultPrintQueue();
-                if (queue is null)
-                    return "No receipt printer set — choose one in Settings";
 
-                // Refuse to fall back onto Print-to-PDF and friends for a real sale: it would
-                // pop a Save-As dialog every time and produce a file instead of a receipt.
-                if (IsVirtualPrinter(queue.Name) && !allowVirtual)
-                    return $"No thermal printer set. Windows default is \"{queue.Name}\" (a file printer) — pick the real one in Settings";
+            if (queue is null)
+            {
+                // Auto-detect a real thermal / hardware printer
+                var all = server.GetPrintQueues().ToList();
+                queue = all.FirstOrDefault(q => !IsVirtualPrinter(q.Name) && IsThermalPrinter(q))
+                     ?? all.FirstOrDefault(q => !IsVirtualPrinter(q.Name));
+
+                if (queue is null && allowVirtual)
+                {
+                    queue = LocalPrintServer.GetDefaultPrintQueue();
+                }
+
+                if (queue is null)
+                {
+                    return "No receipt printer found — please connect your receipt printer";
+                }
+
+                if (!IsVirtualPrinter(queue.Name))
+                {
+                    AppSettings.Current.ReceiptPrinterName = queue.Name;
+                    AppSettings.Current.Save();
+                }
+            }
+
+            if (IsVirtualPrinter(queue.Name) && !allowVirtual)
+            {
+                return $"Configured printer \"{queue.Name}\" is a file printer — pick a real thermal printer";
+            }
+
+            // For thermal/POS receipt printers, use direct ESC/POS raw raster printing
+            // with automatic paper cutting and zero dialogs.
+            if (IsThermalPrinter(queue))
+            {
+                if (TryPrintEscPos(queue.Name, receipt, isDuplicate))
+                {
+                    return null;
+                }
             }
 
             var dialog = new PrintDialog { PrintQueue = queue };
@@ -101,6 +145,243 @@ public static class ReceiptPrinter
         catch (Exception ex)
         {
             return "Could not print: " + ex.Message;
+        }
+    }
+
+    private static bool TryPrintEscPos(string printerName, Receipt receipt, bool isDuplicate)
+    {
+        try
+        {
+            var doc = Build(receipt, isDuplicate);
+            doc.PageWidth = RollWidth;
+            doc.ColumnWidth = RollWidth;
+            doc.PageHeight = double.NaN;
+            doc.PagePadding = new Thickness(8);
+            doc.Background = Brushes.White;
+            doc.Foreground = Brushes.Black;
+
+            var paginator = ((IDocumentPaginatorSource)doc).DocumentPaginator;
+            paginator.PageSize = new Size(RollWidth, 10000);
+            var page = paginator.GetPage(0);
+            if (page?.Visual is null) return false;
+
+            double bottom = 0;
+            if (VisualTreeHelper.GetChildrenCount(page.Visual) > 0 &&
+                VisualTreeHelper.GetChild(page.Visual, 0) is Visual child)
+            {
+                var bounds = VisualTreeHelper.GetDescendantBounds(child);
+                if (!bounds.IsEmpty && bounds.Height > 0)
+                {
+                    bottom = bounds.Bottom;
+                }
+            }
+
+            const double dpi = 203.0;
+            const double scale = dpi / 96.0;
+            const int pixelWidth = 576; // 80mm roll standard printable dots (72mm)
+            var contentHeight = bottom > 0 ? bottom + 16 : 400;
+            var pixelHeight = (int)Math.Ceiling(contentHeight * scale);
+            if (pixelHeight <= 0) return false;
+
+            var rtb = new RenderTargetBitmap(pixelWidth, pixelHeight, dpi, dpi, PixelFormats.Pbgra32);
+            rtb.Render(page.Visual);
+
+            var stride = pixelWidth * 4;
+            var pixels = new byte[stride * pixelHeight];
+            rtb.CopyPixels(pixels, stride, 0);
+
+            var escPosBytes = BitmapToEscPosRaster(pixels, pixelWidth, pixelHeight);
+            return RawPrinterHelper.SendBytes(printerName, escPosBytes);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static byte[] BitmapToEscPosRaster(byte[] bgraPixels, int width, int height)
+    {
+        var widthBytes = (width + 7) / 8;
+        var list = new List<byte>(height * widthBytes + 32)
+        {
+            // ESC @ (Initialize printer)
+            0x1B, 0x40,
+            // GS v 0 0 xL xH yL yH (Print raster bit image)
+            0x1D, 0x76, 0x30, 0x00,
+            (byte)(widthBytes % 256),
+            (byte)(widthBytes / 256),
+            (byte)(height % 256),
+            (byte)(height / 256)
+        };
+
+        var stride = width * 4;
+        for (var y = 0; y < height; y++)
+        {
+            var rowOffset = y * stride;
+            for (var x = 0; x < widthBytes; x++)
+            {
+                byte b = 0;
+                for (var bit = 0; bit < 8; bit++)
+                {
+                    var px = x * 8 + bit;
+                    if (px < width)
+                    {
+                        var idx = rowOffset + px * 4;
+                        var blue = bgraPixels[idx];
+                        var green = bgraPixels[idx + 1];
+                        var red = bgraPixels[idx + 2];
+                        var alpha = bgraPixels[idx + 3];
+
+                        var lum = (int)(0.299 * red + 0.587 * green + 0.114 * blue);
+                        if (lum < 180 && alpha > 50)
+                        {
+                            b |= (byte)(0x80 >> bit);
+                        }
+                    }
+                }
+                list.Add(b);
+            }
+        }
+
+        // Feed 5 lines: ESC d 5
+        list.Add(0x1B);
+        list.Add(0x64);
+        list.Add(0x05);
+
+        // Cut paper: GS V 1 (Partial cut)
+        list.Add(0x1D);
+        list.Add(0x56);
+        list.Add(0x01);
+
+        return list.ToArray();
+    }
+
+    private static class RawPrinterHelper
+    {
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public class DOCINFOA
+        {
+            [MarshalAs(UnmanagedType.LPStr)] public string pDocName = "Receipt";
+            [MarshalAs(UnmanagedType.LPStr)] public string? pOutputFile = null;
+            [MarshalAs(UnmanagedType.LPStr)] public string pDataType = "RAW";
+        }
+
+        [DllImport("winspool.Drv", EntryPoint = "OpenPrinterA", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+        public static extern bool OpenPrinter([MarshalAs(UnmanagedType.LPStr)] string szPrinter, out IntPtr hPrinter, IntPtr pd);
+
+        [DllImport("winspool.Drv", EntryPoint = "ClosePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+        public static extern bool ClosePrinter(IntPtr hPrinter);
+
+        [DllImport("winspool.Drv", EntryPoint = "StartDocPrinterA", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+        public static extern bool StartDocPrinter(IntPtr hPrinter, int level, [In, MarshalAs(UnmanagedType.LPStruct)] DOCINFOA di);
+
+        [DllImport("winspool.Drv", EntryPoint = "EndDocPrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+        public static extern bool EndDocPrinter(IntPtr hPrinter);
+
+        [DllImport("winspool.Drv", EntryPoint = "StartPagePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+        public static extern bool StartPagePrinter(IntPtr hPrinter);
+
+        [DllImport("winspool.Drv", EntryPoint = "EndPagePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+        public static extern bool EndPagePrinter(IntPtr hPrinter);
+
+        [DllImport("winspool.Drv", EntryPoint = "WritePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+        public static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, int dwCount, out int dwWritten);
+
+        public static bool SendBytes(string printerName, byte[] bytes)
+        {
+            if (!OpenPrinter(printerName, out var hPrinter, IntPtr.Zero)) return false;
+            try
+            {
+                var di = new DOCINFOA();
+                if (!StartDocPrinter(hPrinter, 1, di)) return false;
+                try
+                {
+                    if (!StartPagePrinter(hPrinter)) return false;
+                    try
+                    {
+                        var p = Marshal.AllocCoTaskMem(bytes.Length);
+                        try
+                        {
+                            Marshal.Copy(bytes, 0, p, bytes.Length);
+                            return WritePrinter(hPrinter, p, bytes.Length, out _);
+                        }
+                        finally
+                        {
+                            Marshal.FreeCoTaskMem(p);
+                        }
+                    }
+                    finally
+                    {
+                        EndPagePrinter(hPrinter);
+                    }
+                }
+                finally
+                {
+                    EndDocPrinter(hPrinter);
+                }
+            }
+            finally
+            {
+                ClosePrinter(hPrinter);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Prints after letting Windows ask which printer, and remembers the answer.
+    ///
+    /// The fallback for the one case <see cref="PrintSilent"/> refuses to guess at: no printer
+    /// chosen yet, or the one Windows would have used writes a file instead of putting ink on
+    /// paper. Most machines leave "Microsoft Print to PDF" as the Windows default, so a shop
+    /// that has just plugged a thermal printer in would otherwise be told there is nowhere to
+    /// print and given no way to say where.
+    ///
+    /// Asked once. What comes back is saved, so every sale after this one goes straight to the
+    /// roll with no dialog — which is the only thing that matters with a customer waiting.
+    ///
+    /// Returns null when it printed, or when the shop closed the dialog and asked for nothing.
+    /// </summary>
+    public static string? PrintChosen(Receipt receipt, bool isDuplicate)
+    {
+        try
+        {
+            var dialog = new PrintDialog();
+
+            // Opens on the one already chosen, when there is one and it still exists.
+            var configured = AppSettings.Current.ReceiptPrinterName;
+            if (!string.IsNullOrWhiteSpace(configured))
+            {
+                try
+                {
+                    using var server = new LocalPrintServer();
+                    dialog.PrintQueue = server.GetPrintQueue(configured);
+                }
+                catch
+                {
+                    // Unplugged or renamed since. Windows opens on its own default instead.
+                }
+            }
+
+            if (dialog.ShowDialog() != true) return null;
+
+            if (dialog.PrintQueue?.Name is { Length: > 0 } picked)
+            {
+                AppSettings.Current.ReceiptPrinterName = picked;
+                AppSettings.Current.Save();
+            }
+
+            var document = Build(receipt, isDuplicate);
+            document.PageWidth = RollWidth;
+            document.PageHeight = dialog.PrintableAreaHeight;
+            document.ColumnWidth = RollWidth;
+
+            dialog.PrintDocument(((IDocumentPaginatorSource)document).DocumentPaginator,
+                $"Receipt {receipt.InvoiceNumber}{(isDuplicate ? " (duplicate)" : string.Empty)}");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return Loc.T("Could not print: {0}", ex.Message);
         }
     }
 

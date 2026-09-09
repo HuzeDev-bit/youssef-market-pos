@@ -219,7 +219,7 @@ public partial class ExpensesPage : AdminPageBase
         Empty.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         if (_rows.Count > 0) return;
 
-        EmptyTitle.Text = filtered ? "Nothing matches" : "No bills recorded";
+        EmptyTitle.Text = Loc.T(filtered ? "Nothing matches" : "No bills recorded");
         EmptyBody.Text = filtered
             ? "Try a different search, or another kind."
             : Loc.T("Put in the rent, the light, the water and the internet. Mark the ones "
