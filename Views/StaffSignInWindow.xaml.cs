@@ -38,10 +38,8 @@ public partial class StaffSignInWindow : Window
         Services.Localizer.Apply(this);
         Services.Responsive.Fit(this);
 
-        _choices = WorkerRepository.List()
-            .Where(w => w.HasPin)
-            .Select(w => new Choice(w.Name, w))
-            .ToList();
+        // Asked of the shop on a till, which is the only machine that knows who works here.
+        _choices = WhoMaySignIn();
 
         // The owner comes first and is always there, password set or not.
         _choices.Insert(0, new Choice(Session.OwnerLabel, null));
@@ -72,6 +70,59 @@ public partial class StaffSignInWindow : Window
         if (asking.Owner is null) asking.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
         return asking.ShowDialog() == true;
+    }
+
+    /// <summary>
+    /// Who the shop says may sign in at this till.
+    ///
+    /// On the shop's own machine that is a question for its own staff table. On a cashier's
+    /// machine it is a question for the shop: this computer has no staff list, and one kept
+    /// here would be a copy of every cashier's password hash sitting on the counter.
+    /// </summary>
+    private List<Choice> WhoMaySignIn()
+    {
+        if (!Catalog.BelongsToAServer)
+        {
+            return WorkerRepository.List()
+                .Where(w => w.HasPin)
+                .Select(w => new Choice(w.Name, w))
+                .ToList();
+        }
+
+        var staff = ShopLink.Now(() => ShopLink.Staff());
+
+        // With no answer the list is the owner alone, which is the one sign-in this machine can
+        // still check for itself. Nobody is quietly let in.
+        return (staff ?? new List<Link.StaffMember>())
+            .Where(w => w.IsActive && w.PinHash.Length > 0)
+            .Select(w => new Choice(w.Name, new Worker
+            {
+                Id = w.Id,
+                Name = w.Name,
+                Role = Enum.TryParse<WorkerRole>(w.Role, out var role) ? role : WorkerRole.Cashier,
+                IsActive = w.IsActive,
+                HasPin = true,
+            }))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Asks the shop whether this password is right. The answer is never worked out here.
+    /// </summary>
+    private static Worker? AskTheShop(Worker who, string password)
+    {
+        var signedIn = ShopLink.Now(() => ShopLink.SignIn(who.Id, password));
+
+        return signedIn is null
+            ? null
+            : new Worker
+            {
+                Id = signedIn.WorkerId,
+                Name = signedIn.Name,
+                Role = Enum.TryParse<WorkerRole>(signedIn.Role, out var role) ? role : WorkerRole.Cashier,
+                IsActive = true,
+                HasPin = true,
+            };
     }
 
     /// <summary>
@@ -127,7 +178,10 @@ public partial class StaffSignInWindow : Window
 
         if (who.Worker is not null)
         {
-            var worker = WorkerRepository.SignIn(who.Worker.Id, PasswordBox.Password);
+            var worker = Catalog.BelongsToAServer
+                ? AskTheShop(who.Worker, PasswordBox.Password)
+                : WorkerRepository.SignIn(who.Worker.Id, PasswordBox.Password);
+
             if (worker is null) { Fail("Wrong password."); return; }
 
             Session.SignIn(worker);

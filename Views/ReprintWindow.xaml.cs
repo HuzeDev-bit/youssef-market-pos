@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -32,7 +32,7 @@ public partial class ReprintWindow : Window
 
     private void LoadRecent()
     {
-        var recent = SaleRepository.RecentInvoiceNumbers();
+        var recent = Receipts.Recent();
         RecentList.Items.Clear();
 
         foreach (var number in recent)
@@ -64,7 +64,7 @@ public partial class ReprintWindow : Window
     private void Load(int invoiceNumber)
     {
         NumberBox.Text = invoiceNumber.ToString();
-        _receipt = SaleRepository.FindByInvoiceNumber(invoiceNumber);
+        _receipt = Receipts.Find(invoiceNumber);
 
         if (_receipt is null)
         {

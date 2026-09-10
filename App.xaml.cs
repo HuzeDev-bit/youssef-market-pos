@@ -34,6 +34,16 @@ public partial class App : Application
         Loc.Load();
         Localizer.Start();
 
+        // What this copy is, before anything reads or writes a database.
+        //
+        // It used to be worked out further down, after the catalogue had been loaded and the
+        // shop's settings moved into the database — both of which a till must not do. Deciding
+        // late meant a cashier's machine did a shop's work on the way past and left the shop's
+        // settings sitting in its own file. Nothing about the answer needs a database, so it is
+        // taken here and everything downstream can rely on it.
+        CurrentJob = WhatThisOneIs(e.Args);
+        Catalog.BelongsToAServer = CurrentJob == Job.Till;
+
         if (e.Args.Contains("--flowtest"))
         {
             // Runs before Catalog.Load so the scratch database is not seeded with demo
@@ -101,8 +111,10 @@ public partial class App : Application
         }
 
         // The shop's own settings belong with the shop, so a machine upgrading from an older
-        // build hands them over now that the database is open.
-        AppSettings.MoveShopSettingsIntoTheDatabase();
+        // build hands them over now that the database is open. Not on a till: those settings
+        // are the shop's, this machine only reads them over the wire, and writing them here
+        // would leave a cashier's computer holding a copy of the business.
+        if (!Catalog.BelongsToAServer) AppSettings.MoveShopSettingsIntoTheDatabase();
 
         // Ends here, like every other diagnostic mode. It used to ask the application to
         // shut down and then fall through to opening the till, which left the run alive with
@@ -118,18 +130,14 @@ public partial class App : Application
         // Once, and only on an install that has never had one — see AdminAccount.
         AdminAccount.StartWithTheDefault();
 
-        CurrentJob = WhatThisOneIs(e.Args);
-
         // The till machine does not serve anybody. Leaving the server running on it would put a
         // second shop on the network, listening on the same port, answering with a catalogue
         // that is only ever a copy — and whichever machine a till found first would be the one
         // it believed.
         if (CurrentJob != Job.Till) ShopServer.Start();
 
-        // A till's products belong to the shop's server and are never read off this computer.
-        // Whatever the load above put in memory came from this machine's own database, so it
-        // is dropped here and the shelves stay empty until the server answers.
-        Catalog.BelongsToAServer = CurrentJob == Job.Till;
+        // Whatever the catalogue load put in memory on a till came from this machine's own
+        // database, so it is dropped and the shelves stay empty until the shop answers.
         if (Catalog.BelongsToAServer) Catalog.NothingToSell();
 
         // ---------------------------------------------------------------- what to put on screen

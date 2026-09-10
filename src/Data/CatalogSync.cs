@@ -127,9 +127,19 @@ public static class CatalogSync
     /// </summary>
     public static string Stamp
     {
-        get => Meta.Get("catalog_stamp");
-        set => Meta.Set("catalog_stamp", value);
+        get => Services.Catalog.BelongsToAServer ? _inMemoryStamp : Meta.Get("catalog_stamp");
+        set
+        {
+            // A till remembers what it last saw for as long as it is open, and writes nothing
+            // down. The stamp describes a copy that lives in memory and dies with the app;
+            // storing it would have the till tell the server it was up to date about a
+            // catalogue it no longer has.
+            if (Services.Catalog.BelongsToAServer) _inMemoryStamp = value;
+            else Meta.Set("catalog_stamp", value);
+        }
     }
+
+    private static string _inMemoryStamp = string.Empty;
 
     /// <summary>Whether this database has ever been handed a catalogue by a server.</summary>
     public static bool HasEverSynced => Stamp.Length > 0;

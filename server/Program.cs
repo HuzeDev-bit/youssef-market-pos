@@ -173,6 +173,33 @@ app.MapPost("/products", (NewProduct arriving) =>
     return Results.Ok(new ProductAccepted(id, barcode, arriving.Name.Trim(), false));
 });
 
+// ---------------------------------------------------------------- what a till asks for
+//
+// A cashier's machine holds no books, so everything on its screen is asked for here. The
+// answers themselves live in ShopData, written once, so this server and the all-in-one cannot
+// tell a till two different things about the same shop.
+
+// What is this and what does it cost. Never touches the sale.
+app.MapGet("/pricecheck", (string? q, bool? owner) =>
+    Results.Ok(ShopData.PriceCheck(q ?? string.Empty, owner == true)));
+
+// The ticket list, today's takings, and the numbers a reprint offers.
+app.MapGet("/tickets", (string? search) => Results.Ok(ShopData.Tickets(search)));
+
+// One ticket, whole, for printing and reprinting.
+app.MapGet("/tickets/{invoice:int}", (int invoice) =>
+    ShopData.Ticket(invoice) is { } ticket
+        ? Results.Ok(ticket)
+        : Results.NotFound(new { problem = $"There is no ticket #{invoice}." }));
+
+// The settings every till shares. Machine settings - printer, server address, till name -
+// are deliberately not here: they are true of a computer, not of a business.
+app.MapGet("/settings", () => Results.Ok(ShopData.Settings()));
+
+// The shop's own filing, for a till filling in a product it has just scanned.
+app.MapGet("/categories", () => Results.Ok(ShopData.Categories()));
+app.MapGet("/suppliers", () => Results.Ok(ShopData.Suppliers()));
+
 // ---------------------------------------------------------------- is the shop up
 
 // Asked by anything that wants to know whether the shop is answering before it commits to

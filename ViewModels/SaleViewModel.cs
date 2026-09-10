@@ -391,6 +391,46 @@ public sealed class SaleViewModel : ViewModelBase
     public void LoadTickets()
     {
         Tickets.Clear();
+
+        // A till asks the shop for its tickets. They are the shop's sales, not this machine's:
+        // a ticket rung up on the other counter belongs on this list too, and a ticket this
+        // counter rang up half an hour ago lives on the machine that banked it.
+        if (Catalog.BelongsToAServer)
+        {
+            var list = ShopLink.Now(() => ShopLink.Tickets(SearchText));
+
+            if (list is null)
+            {
+                // Nothing shown rather than something stale. A list of yesterday's sales
+                // presented as today's is worse than an empty one with a reason under it.
+                TicketsHeadline = Loc.T("Cannot reach the shop's server. {0}", ShopLink.LastProblem);
+                OnPropertyChanged(nameof(HasTickets));
+                return;
+            }
+
+            foreach (var ticket in list.Tickets)
+            {
+                Tickets.Add(new SaleSummary
+                {
+                    InvoiceNumber = ticket.InvoiceNumber,
+                    SoldAt = ticket.SoldAt,
+                    Total = ticket.Total,
+                    DiscountAmount = ticket.DiscountAmount,
+                    PaymentMethod = Enum.TryParse<PaymentMethod>(ticket.PaymentMethod, out var how)
+                        ? how
+                        : PaymentMethod.Cash,
+                    LineCount = ticket.LineCount,
+                });
+            }
+
+            TicketsHeadline = list.TodayCount == 0
+                ? "No sales today yet"
+                : $"{list.TodayCount} {(list.TodayCount == 1 ? "sale" : "sales")} today  ·  {list.TodayTotal:N2} DH";
+
+            OnPropertyChanged(nameof(HasTickets));
+            return;
+        }
+
         foreach (var sale in SaleRepository.ListSales(SearchText))
             Tickets.Add(sale);
 

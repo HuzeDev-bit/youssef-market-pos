@@ -205,6 +205,12 @@ public static class ShopLink
             if (staff is null) return 0;
 
             Succeed();
+
+            // A till is handed the staff list every time it needs one and writes none of it
+            // down. Storing it locally put a copy of every cashier's password hash on the
+            // cashier's own machine, to answer a question the shop is there to answer.
+            if (Catalog.BelongsToAServer) return staff.Count;
+
             return WorkerRepository.ReplaceFromServer(staff);
         }
         catch (Exception error)
@@ -350,6 +356,185 @@ public static class ShopLink
             return new CheckoutDone(false, 0, false, LastProblem);
         }
     }
+
+    // ---------------------------------------------------------------- what a till asks for
+    //
+    // Each of these is a question a till used to answer out of a database on the cashier's own
+    // machine. It has no such database — its catalogue is a copy the shop sends and is thrown
+    // away when the app closes — so every one of them is asked of the shop instead. They all
+    // fail the same way: null, with the reason on the link's status, and never a stale answer
+    // dressed up as a current one.
+
+    /// <summary>What a scanned or typed thing is, and what it costs.</summary>
+    public static async Task<PriceAnswer?> PriceCheck(string query, bool forTheOwner)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var answer = await Http.GetFromJsonAsync<PriceAnswer>(
+                $"{Address}/pricecheck?q={Uri.EscapeDataString(query)}&owner={forTheOwner}", Json);
+
+            if (answer is not null) Succeed();
+            return answer;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>The shop's tickets, today's takings, and the numbers a reprint may offer.</summary>
+    public static async Task<TicketList?> Tickets(string? search)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var where = $"{Address}/tickets";
+            if (!string.IsNullOrWhiteSpace(search))
+                where += $"?search={Uri.EscapeDataString(search)}";
+
+            var list = await Http.GetFromJsonAsync<TicketList>(where, Json);
+            if (list is not null) Succeed();
+            return list;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>One whole ticket, for printing or reprinting. Null when the shop has no such sale.</summary>
+    public static async Task<TicketDetail?> Ticket(int invoiceNumber)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var response = await Http.GetAsync($"{Address}/tickets/{invoiceNumber}");
+
+            // A ticket that is not there is an answer, and the shop gave it: the link is fine.
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                Succeed();
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            var ticket = await response.Content.ReadFromJsonAsync<TicketDetail>(Json);
+            if (ticket is not null) Succeed();
+            return ticket;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>The settings the whole shop shares.</summary>
+    public static async Task<ShopWideSettings?> Settings()
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var settings = await Http.GetFromJsonAsync<ShopWideSettings>($"{Address}/settings", Json);
+            if (settings is not null) Succeed();
+            return settings;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>The shop's categories.</summary>
+    public static async Task<List<CategoryName>?> Categories() => await Ask<List<CategoryName>>("categories");
+
+    /// <summary>The shop's suppliers.</summary>
+    public static async Task<List<SupplierName>?> Suppliers() => await Ask<List<SupplierName>>("suppliers");
+
+    /// <summary>One plain GET, for the answers that are just a list.</summary>
+    private static async Task<T?> Ask<T>(string what) where T : class
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var answer = await Http.GetFromJsonAsync<T>($"{Address}/{what}", Json);
+            if (answer is not null) Succeed();
+            return answer;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>Who may sign in at a till, as the shop knows them.</summary>
+    public static async Task<List<StaffMember>?> Staff()
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var staff = await Http.GetFromJsonAsync<List<StaffMember>>($"{Address}/staff", Json);
+            if (staff is not null) Succeed();
+            return staff;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Checks a cashier's password, on the shop's machine.
+    ///
+    /// The password never leaves this method, and the answer never comes from this machine:
+    /// a till that decided for itself who was allowed to sign in would be a till anybody could
+    /// let themselves into by unplugging the network.
+    /// </summary>
+    public static async Task<SignedIn?> SignIn(int workerId, string password)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/signin",
+                new SignInRequest(workerId, password), Json);
+
+            // A wrong password is an answer, not a failure of the link.
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                Succeed();
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            var who = await response.Content.ReadFromJsonAsync<SignedIn>(Json);
+            if (who is not null) Succeed();
+            return who;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>Waits for one of the calls above on a thread that is not the one drawing the till.</summary>
+    public static T Now<T>(Func<Task<T>> ask) =>
+        Task.Run(ask).GetAwaiter().GetResult();
 
     /// <summary>Whether the shop's server is answering, and what it says it is serving.</summary>
     public static async Task<Health?> Ask()

@@ -1,4 +1,4 @@
-using MarketPos.Data;
+﻿using MarketPos.Data;
 using MarketPos.Models;
 
 namespace MarketPos.Services;
@@ -26,6 +26,14 @@ public sealed class PriceCheck
 
     /// <summary>How many products the text matched. More than one means it was a name, not a code.</summary>
     public int Matches { get; init; }
+
+    /// <summary>
+    /// True when the shop could not be asked at all — as opposed to being asked and answering
+    /// that it does not sell this. A till must never quote a price it made up locally, and it
+    /// must never tell a customer the shop has no such thing when the truth is that the wire
+    /// is down.
+    /// </summary>
+    public bool Unreachable { get; init; }
 
     public bool Found => Item is not null;
 
@@ -85,7 +93,10 @@ public sealed class PriceCheck
                 Loc.Ltr($"{Item.MarginPercent:0.#}"));
 
     /// <summary>What to say when there is nothing to show.</summary>
-    public string MissText => Matches > 1
+    public string MissText => Unreachable
+        ? Loc.T("Cannot reach the shop's server, so there is no price to show. {0}",
+                ShopLink.LastProblem)
+        : Matches > 1
         ? Loc.T("{0} products match “{1}” — scan it, or type more of the name", Matches, Query)
         : WasScanned
             ? Loc.T("The shop does not sell this yet. Add it in the back office and it will scan next time.")
@@ -101,6 +112,11 @@ public sealed class PriceCheck
         query = query.Trim();
         if (query.Length == 0) return new PriceCheck { Query = query, Matches = 0 };
 
+        // A till asks the shop. It has no database of its own to look in, and the answer a
+        // customer is waiting for must be the shop's current price rather than whatever this
+        // machine last happened to hear.
+        if (Catalog.BelongsToAServer) return FromTheShop(query);
+
         var scanned = StockRepository.FindByBarcode(query);
         if (scanned is not null)
             return new PriceCheck { Query = query, Item = scanned, Matches = 1 };
@@ -113,6 +129,48 @@ public sealed class PriceCheck
             Query = query,
             Item = matches.Count == 1 ? matches[0] : null,
             Matches = matches.Count,
+        };
+    }
+
+    /// <summary>
+    /// The same question, asked over the wire.
+    ///
+    /// <para>
+    /// The answer is rebuilt into the same shape the screen already binds to, so the price
+    /// card does not know or care which machine answered. What it cannot do is invent one: a
+    /// shop that cannot be reached says so, and <see cref="Unreachable"/> is what the till
+    /// shows instead of a price. Quoting a customer a price out of a stale local copy is how a
+    /// shop sells at last month's price.
+    /// </para>
+    /// </summary>
+    private static PriceCheck FromTheShop(string query)
+    {
+        var owner = Session.Can(Permission.SeeFinancials);
+        var answer = ShopLink.Now(() => ShopLink.PriceCheck(query, owner));
+
+        if (answer is null)
+            return new PriceCheck { Query = query, Matches = 0, Unreachable = true };
+
+        if (!answer.Found)
+            return new PriceCheck { Query = query, Matches = answer.Matches };
+
+        return new PriceCheck
+        {
+            Query = query,
+            Matches = answer.Matches,
+            Item = new Models.StockItem
+            {
+                Id = answer.ProductId,
+                Barcode = answer.Barcode ?? string.Empty,
+                Name = answer.Name,
+                Category = answer.Category,
+                Shelf = answer.Shelf,
+                Price = answer.Price,
+                Cost = answer.Cost,
+                Stock = answer.Stock,
+                Unit = answer.Unit == nameof(Models.Unit.Kg) ? Models.Unit.Kg : Models.Unit.Each,
+                IsActive = answer.IsActive,
+            },
         };
     }
 }

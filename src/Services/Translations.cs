@@ -238,9 +238,15 @@ public static class Translations
             ["Cancel sale"] =
                 ("Annuler la vente",
                  "إلغاء البيع"),
+            ["Cannot reach the shop's server, so there is no price to show. {0}"] =
+                ("Impossible de joindre le serveur du magasin, aucun prix à afficher. {0}",
+                 "تعذر الوصول إلى خادم المتجر، لا يوجد سعر لعرضه. {0}"),
             ["Cannot reach the shop's server, so this barcode cannot be looked up. {0}"] =
                 ("Impossible de joindre le serveur du magasin, ce code-barres ne peut pas être vérifié. {0}",
                  "تعذر الوصول إلى خادم المتجر، لذا لا يمكن البحث عن هذا الباركود. {0}"),
+            ["Cannot reach the shop's server. {0}"] =
+                ("Impossible de joindre le serveur du magasin. {0}",
+                 "تعذر الوصول إلى خادم المتجر. {0}"),
             ["Cannot see profit, salaries, supplier debt or settings."] =
                 ("Ne voit ni le bénéfice, ni les salaires, ni la dette fournisseurs, ni les réglages.",
                  "لا يرى الأرباح ولا الرواتب ولا ديون الموردين ولا الإعدادات."),
@@ -1153,6 +1159,9 @@ public static class Translations
             ["Products are added in the back office, under Add product. Once they are in, they show up here and scan at the counter."] =
                 ("Les produits s'ajoutent dans l'arrière-boutique, sous Ajouter un produit. Une fois saisis, ils apparaissent ici et se scannent au comptoir.",
                  "تُضاف المنتجات من الإدارة، تحت إضافة منتج. وبمجرد إدخالها تظهر هنا وتُمسح ضوئياً عند المنضدة."),
+            ["Products are changed on the shop's own computer."] =
+                ("Les produits se modifient sur l'ordinateur du magasin.",
+                 "تُعدَّل المنتجات على حاسوب المتجر نفسه."),
             ["Products in this category"] =
                 ("Produits de cette catégorie",
                  "منتجات هذه الفئة"),
@@ -1612,6 +1621,9 @@ public static class Translations
             ["The amount paid cannot be negative."] =
                 ("Le montant payé ne peut pas être négatif.",
                  "لا يمكن أن يكون المبلغ المدفوع سالباً."),
+            ["The back office is on the shop's own computer."] =
+                ("L'administration est sur l'ordinateur du magasin.",
+                 "لوحة الإدارة على حاسوب المتجر نفسه."),
             ["The language the app speaks"] =
                 ("La langue de l'application",
                  "لغة التطبيق"),
@@ -1690,6 +1702,9 @@ public static class Translations
             ["This computer is the only one. Work alone, with its own database."] =
                 ("Cet ordinateur est le seul. Travailler seul, avec sa propre base de données.",
                  "هذا الحاسوب هو الوحيد. اعمل وحده، مع قاعدة بيانات خاصة به."),
+            ["This is a cashier's till. Stock, suppliers, expenses, staff and reports are kept on the machine that holds the shop's database — open Market POS there."] =
+                ("Ceci est une caisse. Le stock, les fournisseurs, les dépenses, le personnel et les rapports sont sur la machine qui contient la base de données — ouvrez Market POS là-bas.",
+                 "هذا صندوق كاشير. المخزون والموردون والمصاريف والموظفون والتقارير موجودة على الجهاز الذي يحتوي قاعدة بيانات المتجر — افتح Market POS هناك."),
             ["This machine is a cashier's till. Every sale taken here is sent to the shop's database, which lives on another computer. Tell it where that computer is — or let this app find it."] =
                 ("Cette machine est une caisse. Chaque vente faite ici est envoyée à la base de données du magasin, qui vit sur un autre ordinateur. Indiquez où se trouve cet ordinateur — ou laissez l'application le trouver.",
                  "هذا الجهاز صندوقُ كاشير. كل عملية بيع تتم هنا تُرسَل إلى قاعدة بيانات المتجر الموجودة على حاسوب آخر. أخبره أين يوجد ذلك الحاسوب — أو دع التطبيق يجدها له."),

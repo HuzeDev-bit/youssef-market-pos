@@ -1,4 +1,4 @@
-using MarketPos.Data;
+﻿using MarketPos.Data;
 
 namespace MarketPos.Services;
 
@@ -32,6 +32,32 @@ public static class ShopSettings
     private static Dictionary<string, string>? _known;
     private static readonly object Lock = new();
 
+    /// <summary>
+    /// Reads the shop's settings from the shop, over the wire, for a machine that has no
+    /// database to read them from.
+    ///
+    /// Held in the same cache as the local ones, and asked for once. What a till must never do
+    /// is fall back to its own file: a receipt printed with a shop name this machine remembered
+    /// from a week ago is a receipt with the wrong shop on it, and the customer keeps it.
+    /// </summary>
+    private static Dictionary<string, string> AskTheShop()
+    {
+        var settings = ShopLink.Now(() => ShopLink.Settings());
+        if (settings is null) return new Dictionary<string, string>(StringComparer.Ordinal);
+
+        return new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [BusinessName] = settings.BusinessName,
+            [BusinessAddress] = settings.BusinessAddress,
+            [BusinessPhone] = settings.BusinessPhone,
+            [TaxId] = settings.TaxId,
+            [Currency] = settings.Currency,
+            [ReceiptFooter] = settings.ReceiptFooter,
+            [DefaultLowStock] = settings.DefaultLowStock.ToString(
+                System.Globalization.CultureInfo.InvariantCulture),
+        };
+    }
+
     /// <summary>Reads a shop-wide setting, or the given fallback when it has never been set.</summary>
     public static string Get(string key, string fallback)
     {
@@ -39,7 +65,7 @@ public static class ShopSettings
         {
             lock (Lock)
             {
-                _known ??= ReadAll();
+                _known ??= Catalog.BelongsToAServer ? AskTheShop() : ReadAll();
                 return _known.TryGetValue(key, out var value) && value.Length > 0 ? value : fallback;
             }
         }
@@ -61,6 +87,10 @@ public static class ShopSettings
     /// <summary>Writes a shop-wide setting. Every machine sees it on its next read.</summary>
     public static void Set(string key, string value)
     {
+        // A till changes nothing about the shop. These are the shop's settings, they live on
+        // the shop's machine, and they are changed in the back office there.
+        if (Catalog.BelongsToAServer) return;
+
         try
         {
             using var connection = Database.Open();

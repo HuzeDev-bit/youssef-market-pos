@@ -45,10 +45,18 @@ public partial class ProductWindow : Window
 
         UnitBox.ItemsSource = new[] { Loc.T("Each / piece"), Loc.T("Kilogram") };
         TaxBox.ItemsSource = TaxRates.Select(t => t.Label).ToList();
-        CategoryBox.ItemsSource = CategoryRepository.List().Select(c => c.Name).ToList();
+        // Asked of the shop on a till. This machine has no categories of its own, and a
+        // dropdown filled from an empty local table would file every product under nothing.
+        CategoryBox.ItemsSource = Catalog.BelongsToAServer
+            ? (ShopLink.Now(() => ShopLink.Categories()) ?? new List<Link.CategoryName>())
+                .Select(c => c.Name).ToList()
+            : CategoryRepository.List().Select(c => c.Name).ToList();
 
         _suppliers = new List<Supplier> { new() { Id = 0, Name = Loc.T("No supplier") } };
-        _suppliers.AddRange(SupplierRepository.List());
+        _suppliers.AddRange(Catalog.BelongsToAServer
+            ? (ShopLink.Now(() => ShopLink.Suppliers()) ?? new List<Link.SupplierName>())
+                .Select(s => new Supplier { Id = s.Id, Name = s.Name })
+            : SupplierRepository.List());
         SupplierBox.ItemsSource = _suppliers;
 
         if (existing is null) FillForNew(); else FillFrom(existing);
@@ -167,7 +175,10 @@ public partial class ProductWindow : Window
             return;
         }
 
-        if (StockRepository.BarcodeTaken(barcode, _existing?.Id ?? 0))
+        // On a till the shop settles this, not the machine: the barcode is sent with the
+        // product and the server answers whether it already has one, which is the only answer
+        // that can be right when two counters are adding stock at once.
+        if (!Catalog.BelongsToAServer && StockRepository.BarcodeTaken(barcode, _existing?.Id ?? 0))
         {
             Fail("Another product already uses that barcode.", BarcodeBox);
             return;
@@ -205,7 +216,7 @@ public partial class ProductWindow : Window
             // copy would be overwritten by the server on the next sync, so it goes to the
             // server — which is also the only place the back office, the stock list and the
             // other till will ever look for it.
-            if (_existing is null && ShopLink.IsConfigured)
+            if (_existing is null && Catalog.BelongsToAServer)
             {
                 var made = await ShopLink.AddProduct(new Link.NewProduct(
                     barcode, name, category, price, cost, item.TaxRate,
@@ -226,6 +237,14 @@ public partial class ProductWindow : Window
                 // Straight back down again, so the thing just added is on this till's own
                 // screen before the cashier looks up.
                 await ShopLink.PullCatalogue();
+            }
+            else if (Catalog.BelongsToAServer)
+            {
+                // A till reaching here is a till being asked to change a product it does not
+                // own. There is no local write to fall back to and there must not be one: a
+                // product edited into this machine's database would be edited nowhere.
+                ErrorText.Text = Loc.T("Products are changed on the shop's own computer.");
+                return;
             }
             else if (_existing is null)
             {

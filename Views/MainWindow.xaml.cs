@@ -110,11 +110,9 @@ public partial class MainWindow : Window
         // server this time, or it is not on this screen. If the server cannot be reached the
         // till says so in red and has nothing to sell, which is the truth: this machine does
         // not have a shop on it.
-        if (CatalogSync.ForgetEverything() > 0)
-        {
-            Catalog.Reload();
-            Vm.ReloadProducts();
-        }
+        // Nothing is done to this machine's database, because nothing on this machine's
+        // database is ever read. A till's catalogue lives in memory, put there by the shop's
+        // answer and gone when the app closes.
 
         if (!ShopLink.IsConfigured)
         {
@@ -635,7 +633,7 @@ public partial class MainWindow : Window
     {
         if (sender is not Button { Tag: int invoiceNumber }) return;
 
-        var receipt = SaleRepository.FindByInvoiceNumber(invoiceNumber);
+        var receipt = Receipts.Find(invoiceNumber);
         if (receipt is null) return;
 
         new ReceiptWindow(receipt, allowReprint: true).By(this).ShowDialog();
@@ -680,7 +678,7 @@ public partial class MainWindow : Window
 
         ConfirmDetail.Text = $"{Loc.T("Ticket #{0}", Vm.LastInvoiceNumber)}  ·  {Loc.Ltr($"{total:N2} DH")}";
 
-        var paper = SaleRepository.FindByInvoiceNumber(Vm.LastInvoiceNumber);
+        var paper = Receipts.Find(Vm.LastInvoiceNumber);
 
         // Print directly to the configured printer without asking.
         if (paper is not null)
