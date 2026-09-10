@@ -112,6 +112,14 @@
     <Duration x:Key="Anim.Fast">0:0:0.15</Duration>
     <CubicEase x:Key="Ease.Out" EasingMode="EaseOut"/>
 
+    <!-- Touch screen fluid panning for all scrollable views -->
+    <Style TargetType="ScrollViewer">
+        <Setter Property="PanningMode" Value="Both"/>
+        <Setter Property="PanningDeceleration" Value="0.002"/>
+        <Setter Property="PanningRatio" Value="1"/>
+        <Setter Property="IsManipulationEnabled" Value="True"/>
+    </Style>
+
     <!-- ===================== Type ===================== -->
 
     <!-- A title is the brand speaking, so it is set in the brand's face. Everything smaller

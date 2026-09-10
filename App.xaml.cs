@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using MarketPos.Services;
 
 namespace MarketPos;
@@ -8,6 +8,8 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        EventManager.RegisterClassHandler(typeof(Window), UIElement.ManipulationBoundaryFeedbackEvent,
+            new EventHandler<System.Windows.Input.ManipulationBoundaryFeedbackEventArgs>((_, args) => args.Handled = true));
 
         // Surface crashes instead of letting the window vanish silently.
         DispatcherUnhandledException += (_, args) =>

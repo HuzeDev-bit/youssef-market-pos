@@ -379,6 +379,20 @@ app.MapPost("/auth/owner/signin", (OwnerSignIn who) =>
     return said.Ok ? Results.Ok(said) : Results.Json(said, statusCode: 401);
 });
 
+app.MapPost("/auth/owner/change-password", (ChangeOwnerPasswordRequest who) =>
+{
+    var res = ShopAuthApi.ChangeOwnerPassword(who.NewPassword);
+    Note("the owner password was changed");
+    return Results.Ok(res);
+});
+
+app.MapPost("/auth/owner/reset-password", (ResetOwnerPasswordRequest who) =>
+{
+    var res = ShopAuthApi.ResetOwnerPassword(who.RecoveryKey);
+    Note(res.Ok ? "the owner password was reset to default" : "an owner password reset was refused");
+    return res.Ok ? Results.Ok(res) : Results.BadRequest(res.Problem);
+});
+
 app.MapPost("/auth/staff/signin", (SignInRequest who) =>
 {
     var said = ShopAuthApi.StaffSignIn(who.WorkerId, who.Password);

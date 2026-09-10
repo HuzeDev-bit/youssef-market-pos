@@ -1,4 +1,4 @@
-﻿using MarketPos.Data;
+using MarketPos.Data;
 using MarketPos.Models;
 
 namespace MarketPos.Link;
@@ -210,7 +210,7 @@ public sealed record AdjustStock(decimal Delta, string Reason, string Reference,
 public sealed record LossLine(StockReason Reason, decimal Quantity, decimal Value);
 
 /// <summary>A plain yes or no from the shop.</summary>
-public sealed record Answered(bool Ok);
+public sealed record Answered(bool Ok, string Problem = "");
 
 /// <summary>What the shop made of a write: the row, or the refusal and what kind it was.</summary>
 public sealed record StockSaved(bool Ok, int Id, string Problem, string Refusal);

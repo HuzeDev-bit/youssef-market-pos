@@ -1,4 +1,4 @@
-﻿using MarketPos.Views;
+using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -172,6 +172,13 @@ public partial class ProductWindow : Window
             return;
         }
 
+        var existingByBarcode = Catalog.FindByBarcode(barcode);
+        if (existingByBarcode != null && (_existing == null || existingByBarcode.Id != _existing.Id))
+        {
+            Fail(string.Format(Loc.T("This product is already in inventory: {0}"), existingByBarcode.Name), BarcodeBox);
+            return;
+        }
+
         // On a till the shop settles this, not the machine: the barcode is sent with the
         // product and the server answers whether it already has one, which is the only answer
         // that can be right when two counters are adding stock at once.
@@ -228,6 +235,12 @@ public partial class ProductWindow : Window
                     // the shelves are counted.
                     ErrorText.Text = Loc.T("The shop's server did not take it: {0}",
                                            ShopLink.LastProblem);
+                    return;
+                }
+
+                if (made.AlreadyHad)
+                {
+                    Fail(string.Format(Loc.T("This product is already in inventory: {0}"), made.Name), BarcodeBox);
                     return;
                 }
 
@@ -399,7 +412,27 @@ public partial class ProductWindow : Window
 
     private void Barcode_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (IsLoaded) ShowPicture();
+        if (IsLoaded)
+        {
+            ShowPicture();
+            var code = BarcodeBox.Text.Trim();
+            if (code.Length > 0)
+            {
+                var already = Catalog.FindByBarcode(code);
+                if (already != null && (_existing == null || already.Id != _existing.Id))
+                {
+                    ErrorText.Text = string.Format(Loc.T("This product is already in inventory: {0}"), already.Name);
+                }
+                else if (ErrorText.Text.StartsWith(Loc.T("This product is already in inventory: {0}").Split('{')[0]))
+                {
+                    ErrorText.Text = string.Empty;
+                }
+            }
+            else if (ErrorText.Text.StartsWith(Loc.T("This product is already in inventory: {0}").Split('{')[0]))
+            {
+                ErrorText.Text = string.Empty;
+            }
+        }
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)

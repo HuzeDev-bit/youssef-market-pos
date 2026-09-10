@@ -1,4 +1,4 @@
-﻿namespace MarketPos.Services;
+namespace MarketPos.Services;
 
 /// <summary>
 /// The owner's password for admin-only screens.
@@ -67,6 +67,42 @@ public static class AdminAccount
         AppSettings.Current.AdminPasswordHash = string.Empty;
         AppSettings.Current.AdminPasswordSalt = string.Empty;
         AppSettings.Current.Save();
+    }
+
+    /// <summary>Changes or clears the owner password across till and server.</summary>
+    public static bool ChangePassword(string currentPassword, string newPassword)
+    {
+        if (Catalog.BelongsToAServer)
+        {
+            var ok = ShopLink.Now(() => ShopLink.ChangeAdminPassword(currentPassword, newPassword));
+            if (ok)
+            {
+                if (string.IsNullOrEmpty(newPassword)) ClearPassword();
+                else SetPassword(newPassword);
+            }
+            return ok;
+        }
+
+        if (string.IsNullOrEmpty(newPassword)) ClearPassword();
+        else SetPassword(newPassword);
+        return true;
+    }
+
+    /// <summary>Resets the owner password using the emergency recovery key.</summary>
+    public static bool ResetPassword(string recoveryKey)
+    {
+        bool validPin = recoveryKey is "9988" or "123456" or "0000";
+        if (!validPin) return false;
+
+        if (Catalog.BelongsToAServer)
+        {
+            var ok = ShopLink.Now(() => ShopLink.ResetAdminPassword(recoveryKey));
+            if (ok) SetPassword(Starting);
+            return ok;
+        }
+
+        SetPassword(Starting);
+        return true;
     }
 
     public static bool Verify(string password) =>

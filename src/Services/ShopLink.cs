@@ -544,6 +544,52 @@ public static class ShopLink
         }
     }
 
+    /// <summary>Asks the shop's server to change the owner password.</summary>
+    public static async Task<bool> ChangeAdminPassword(string currentPassword, string newPassword)
+    {
+        if (!IsConfigured) return false;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/auth/owner/change-password",
+                new Link.ChangeOwnerPasswordRequest(currentPassword, newPassword), Json);
+            if (response.IsSuccessStatusCode)
+            {
+                Succeed();
+                return true;
+            }
+            return false;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return false;
+        }
+    }
+
+    /// <summary>Asks the shop's server to reset the owner password using the recovery key.</summary>
+    public static async Task<bool> ResetAdminPassword(string recoveryKey)
+    {
+        if (!IsConfigured) return false;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/auth/owner/reset-password",
+                new Link.ResetOwnerPasswordRequest(recoveryKey), Json);
+            if (response.IsSuccessStatusCode)
+            {
+                Succeed();
+                return true;
+            }
+            return false;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return false;
+        }
+    }
+
     /// <summary>The shop's categories.</summary>
     public static async Task<List<CategoryName>?> Categories() => await Ask<List<CategoryName>>("categories");
 

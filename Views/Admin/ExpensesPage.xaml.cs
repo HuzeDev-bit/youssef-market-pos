@@ -72,32 +72,26 @@ public partial class ExpensesPage : AdminPageBase
 
     // ============================== Filter ==============================
 
+    private sealed record KindChoice(int? Id, string Display);
+
     private void FillKindFilter()
     {
         if (KindFilter.ItemsSource is not null) return;
 
         _building = true;
 
-        var kinds = new List<string> { Loc.T("Every kind") };
-        kinds.AddRange(Link.Shop.Expenses.Categories().Select(c => c.Name));
+        var kinds = new List<KindChoice> { new(null, Loc.T("Every kind")) };
+        kinds.AddRange(Link.Shop.Expenses.Categories().Select(c => new KindChoice(c.Id, Loc.T(c.Name))));
 
+        KindFilter.DisplayMemberPath = nameof(KindChoice.Display);
+        KindFilter.SelectedValuePath = nameof(KindChoice.Id);
         KindFilter.ItemsSource = kinds;
         KindFilter.SelectedIndex = 0;
 
         _building = false;
     }
 
-    private int? SelectedKindId
-    {
-        get
-        {
-            if (KindFilter.SelectedIndex <= 0) return null;
-
-            var name = KindFilter.SelectedItem as string;
-            return Link.Shop.Expenses.Categories()
-                .FirstOrDefault(c => c.Name == name) is { Id: > 0 } found ? found.Id : null;
-        }
-    }
+    private int? SelectedKindId => KindFilter.SelectedValue as int?;
 
     private void Filter_Changed(object sender, RoutedEventArgs e)
     {
@@ -117,7 +111,7 @@ public partial class ExpensesPage : AdminPageBase
 
         var bars = kinds.Select(k => new KindBar
         {
-            Kind = k.Category,
+            Kind = Loc.T(k.Category),
             Amount = Math.Round(k.Amount, 2),
             Share = total <= 0m ? 0m : k.Amount / total,
             // Against the biggest, not the total: the point of the chart is which bill is

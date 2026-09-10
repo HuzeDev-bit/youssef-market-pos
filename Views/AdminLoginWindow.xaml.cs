@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Input;
 using MarketPos.Services;
 
@@ -61,6 +61,11 @@ public partial class AdminLoginWindow : Window
             SubmitButton.Content = Loc.T("Unlock");
         }
 
+        if (_isChangingPassword || _isOpen)
+        {
+            ForgotPasswordButton.Visibility = Visibility.Collapsed;
+        }
+
         Loaded += (_, _) =>
         {
             if (_isOpen) SubmitButton.Focus();
@@ -95,7 +100,7 @@ public partial class AdminLoginWindow : Window
                         + "and salaries, and clear the sales history."))
                     return;
 
-                AdminAccount.ClearPassword();
+                AdminAccount.ChangePassword(string.Empty, string.Empty);
                 DialogResult = true;
                 Close();
                 return;
@@ -112,7 +117,12 @@ public partial class AdminLoginWindow : Window
                 return;
             }
 
-            AdminAccount.SetPassword(password);
+            if (!AdminAccount.ChangePassword(string.Empty, password))
+            {
+                Fail(Loc.T("Cannot change password: {0}", ShopLink.LastProblem));
+                return;
+            }
+
             DialogResult = true;
             Close();
             return;
@@ -142,6 +152,25 @@ public partial class AdminLoginWindow : Window
         PasswordBox.Clear();
         ConfirmBox.Clear();
         PasswordBox.Focus();
+    }
+
+    private void ForgotPassword_Click(object sender, RoutedEventArgs e)
+    {
+        if (!ConfirmWindow.Ask(this,
+                Loc.T("Reset admin password?"),
+                Loc.T("This will reset the admin password back to the default {0}. You can then unlock and set a new one.", AdminAccount.Starting)))
+            return;
+
+        if (AdminAccount.ResetPassword("9988"))
+        {
+            PasswordBox.Password = AdminAccount.Starting;
+            ErrorText.Text = Loc.T("Password reset to {0}. Press Unlock to continue.", AdminAccount.Starting);
+            ErrorText.Foreground = (System.Windows.Media.Brush)FindResource("Brush.Accent");
+        }
+        else
+        {
+            Fail(Loc.T("Could not reset password: {0}", ShopLink.LastProblem));
+        }
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)

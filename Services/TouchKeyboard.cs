@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -151,19 +151,17 @@ public static class TouchKeyboard
     {
         foreach (var box in new[] { typeof(TextBoxBase), typeof(PasswordBox) })
         {
-            // Pressing a box is what raises the keys. Not focus — the till puts the cursor
-            // back in the barcode box every time the window is activated, and a keyboard that
-            // came up for that would sit over the product grid from the moment the shop opened.
-            // Pressing one is the shop saying it wants to type; focus is only the app tidying
-            // up after itself.
+            // Tapping a box wakes the button up so the cashier sees it is ready,
+            // but does NOT pop the keyboard up automatically in front of the user's face.
+            // The keyboard will only show when the user explicitly presses the keyboard button.
             EventManager.RegisterClassHandler(box, UIElement.PreviewMouseLeftButtonDownEvent,
-                new MouseButtonEventHandler((sender, _) => { if (TypedInto(sender)) Open(sender); }));
+                new MouseButtonEventHandler((sender, _) => { if (TypedInto(sender)) _button?.Wake(); }));
 
             EventManager.RegisterClassHandler(box, UIElement.PreviewTouchDownEvent,
-                new EventHandler<TouchEventArgs>((sender, _) => { if (TypedInto(sender)) Open(sender); }));
+                new EventHandler<TouchEventArgs>((sender, _) => { if (TypedInto(sender)) _button?.Wake(); }));
 
             EventManager.RegisterClassHandler(box, UIElement.PreviewStylusDownEvent,
-                new StylusDownEventHandler((sender, _) => { if (TypedInto(sender)) Open(sender); }));
+                new StylusDownEventHandler((sender, _) => { if (TypedInto(sender)) _button?.Wake(); }));
 
             // The button lights up for any focus at all, pressed or not, so it is obvious where
             // the keys come from on the one screen where they did not appear by themselves.

@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using MarketPos.Models;
 using MarketPos.Services;
 
@@ -121,58 +121,25 @@ public static class CategoryRepository
         problem = string.Empty;
 
         using var connection = Database.Open();
-
-        using var check = connection.CreateCommand();
-        check.CommandText = "SELECT COUNT(*) FROM products WHERE category_id = $id AND is_active = 1;";
-        check.With("$id", id);
-        var count = Convert.ToInt32(check.ExecuteScalar());
-        if (count > 0)
-        {
-            problem = Loc.T(count == 1
-                ? "{0} still has {1} product in it. Move it to another category first."
-                : "{0} still has {1} products in it. Move them to another category first.",
-                name, count);
-            return false;
-        }
-
         using var work = connection.BeginTransaction();
         try
         {
-            // A product that has ever been sold stays, and is filed under Other.
-            //
-            // This used to delete every off-the-shelf product in the category, which the
-            // database refused the moment a receipt pointed at one -- and refusing the delete
-            // took the whole category with it, so an owner who had once sold a thing could
-            // never tidy the category away again. The receipts are the part that must not
-            // move; the category is not. So the sold ones are re-filed and the rest go.
+            // If any products are currently filed under this category,
+            // move them to 'Other' so stock and receipts are preserved without blocking category deletion.
             using var counting = connection.CreateCommand();
             counting.Transaction = work;
-            counting.CommandText =
-                "SELECT COUNT(*) FROM products WHERE category_id = $id"
-                + " AND id IN (SELECT product_id FROM sale_lines);";
+            counting.CommandText = "SELECT COUNT(*) FROM products WHERE category_id = $id;";
             counting.With("$id", id);
 
-            // Only when there is something to re-file. Asking for somewhere to put nothing
-            // would create an Other category on a shop that had never needed one, so deleting
-            // an empty category would leave the shop with one more than it started with.
             if (Convert.ToInt32(counting.ExecuteScalar()) > 0)
             {
                 var elsewhere = Somewhere(connection, work, exceptId: id);
 
-                using var keep = connection.CreateCommand();
-                keep.Transaction = work;
-                keep.CommandText =
-                    "UPDATE products SET category_id = $other WHERE category_id = $id"
-                    + " AND id IN (SELECT product_id FROM sale_lines);";
-                keep.With("$id", id).With("$other", elsewhere).ExecuteNonQuery();
+                using var move = connection.CreateCommand();
+                move.Transaction = work;
+                move.CommandText = "UPDATE products SET category_id = $other WHERE category_id = $id;";
+                move.With("$id", id).With("$other", elsewhere).ExecuteNonQuery();
             }
-
-            // The rest were never sold and are already off the shelves, so they leave with the
-            // category they were filed under.
-            using var sweep = connection.CreateCommand();
-            sweep.Transaction = work;
-            sweep.CommandText = "DELETE FROM products WHERE category_id = $id AND is_active = 0;";
-            sweep.With("$id", id).ExecuteNonQuery();
 
             using var drop = connection.CreateCommand();
             drop.Transaction = work;

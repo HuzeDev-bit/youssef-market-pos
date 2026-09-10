@@ -1,4 +1,4 @@
-﻿using MarketPos.Views;
+using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -27,7 +27,7 @@ public partial class ExpenseWindow : Window
         Services.Responsive.Fit(this);
         _existing = existing;
 
-        CategoryBox.ItemsSource = Link.Shop.Expenses.Categories().Select(c => c.Name).ToList();
+        CategoryBox.ItemsSource = Link.Shop.Expenses.Categories().Select(c => Loc.T(c.Name)).ToList();
         MethodBox.ItemsSource = new[]
         {
             Loc.T("Cash"), Loc.T("Bank transfer"), Loc.T("Cheque"),

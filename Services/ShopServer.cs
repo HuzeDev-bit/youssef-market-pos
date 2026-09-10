@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -270,6 +270,18 @@ public static class ShopServer
             {
                 var said = ShopAuthApi.OwnerSignIn(who.Password);
                 return said.Ok ? Results.Ok(said) : Results.Json(said, statusCode: 401);
+            });
+
+            app.MapPost("/auth/owner/change-password", (ChangeOwnerPasswordRequest who) =>
+            {
+                var res = ShopAuthApi.ChangeOwnerPassword(who.NewPassword);
+                return Results.Ok(res);
+            });
+
+            app.MapPost("/auth/owner/reset-password", (ResetOwnerPasswordRequest who) =>
+            {
+                var res = ShopAuthApi.ResetOwnerPassword(who.RecoveryKey);
+                return res.Ok ? Results.Ok(res) : Results.BadRequest(res.Problem);
             });
 
             app.MapPost("/auth/staff/signin", (SignInRequest who) =>

@@ -1,4 +1,4 @@
-﻿namespace MarketPos.Link;
+namespace MarketPos.Link;
 
 /// <summary>
 /// What a till asks the shop for beyond the catalogue and the sale.
@@ -92,6 +92,12 @@ public sealed record TicketDetail(
 /// network. So the shop checks it.
 /// </summary>
 public sealed record OwnerSignIn(string Password);
+
+/// <summary>Request to change the owner/admin password.</summary>
+public sealed record ChangeOwnerPasswordRequest(string CurrentPassword, string NewPassword);
+
+/// <summary>Request to reset the owner/admin password using a recovery key.</summary>
+public sealed record ResetOwnerPasswordRequest(string RecoveryKey);
 
 /// <summary>What the shop says about an owner sign-in.</summary>
 public sealed record OwnerSignedIn(bool Ok, string Name, bool PasswordIsSet);

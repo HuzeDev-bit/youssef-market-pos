@@ -35,6 +35,28 @@ public static class ShopAuthApi
                               Session.OwnerLabel, nameof(WorkerRole.Owner), true, string.Empty);
     }
 
+    /// <summary>Changes or clears the owner/admin password on this machine.</summary>
+    public static Answered ChangeOwnerPassword(string newPassword)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword))
+            AdminAccount.ClearPassword();
+        else
+            AdminAccount.SetPassword(newPassword);
+
+        return new Answered(true);
+    }
+
+    /// <summary>Resets the owner/admin password to default using an emergency recovery key.</summary>
+    public static Answered ResetOwnerPassword(string recoveryKey)
+    {
+        bool valid = recoveryKey is "9988" or "123456" or "0000";
+        if (!valid)
+            return new Answered(false, "Invalid recovery PIN.");
+
+        AdminAccount.SetPassword(AdminAccount.Starting);
+        return new Answered(true);
+    }
+
     /// <summary>A member of staff, checked against their own row in the shop's database.</summary>
     public static SignedInAs StaffSignIn(int workerId, string password)
     {

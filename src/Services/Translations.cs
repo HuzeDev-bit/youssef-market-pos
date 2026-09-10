@@ -1,4 +1,4 @@
-﻿namespace MarketPos.Services;
+namespace MarketPos.Services;
 
 /// <summary>
 /// Every word the app says, in French and in Arabic.
@@ -580,6 +580,63 @@ public static class Translations
             ["Found {0} at {1}. Press Connect."] =
                 ("{0} trouvé à {1}. Appuyez sur Connecter.",
                  "تم العثور على {0} في {1}. اضغط اتصال."),
+            ["Forgot password?"] =
+                ("Mot de passe oublié ?",
+                 "نسيت كلمة المرور؟"),
+            ["Reset admin password?"] =
+                ("Réinitialiser le mot de passe ?",
+                 "إعادة تعيين كلمة مرور المسؤول؟"),
+            ["This will reset the admin password back to the default {0}. You can then unlock and set a new one."] =
+                ("Cela réinitialisera le mot de passe admin à {0}. Vous pourrez ensuite déverrouiller et en définir un nouveau.",
+                 "سيؤدي هذا إلى إعادة تعيين كلمة مرور المسؤول إلى القيمة الافتراضية {0}. يمكنك بعد ذلك إلغاء القفل وتعيين كلمة مرور جديدة."),
+            ["Password reset to {0}. Press Unlock to continue."] =
+                ("Mot de passe réinitialisé à {0}. Appuyez sur Déverrouiller pour continuer.",
+                 "تمت إعادة تعيين كلمة المرور إلى {0}. اضغط على فتح للمتابعة."),
+            ["Maintenance"] =
+                ("Maintenance",
+                 "صيانة"),
+            ["Cleaning"] =
+                ("Nettoyage",
+                 "تنظيف"),
+            ["Rent"] =
+                ("Loyer",
+                 "إيجار / كراء"),
+            ["Electricity"] =
+                ("Électricité",
+                 "كهرباء"),
+            ["Water"] =
+                ("Eau",
+                 "ماء"),
+            ["Internet"] =
+                ("Internet",
+                 "إنترنت"),
+            ["Worker Salaries"] =
+                ("Salaires des employés",
+                 "رواتب العمال"),
+            ["Transportation"] =
+                ("Transport",
+                 "نقل / مواصلات"),
+            ["Equipment"] =
+                ("Équipement",
+                 "معدات"),
+            ["Repairs"] =
+                ("Réparations",
+                 "إصلاحات"),
+            ["Taxes"] =
+                ("Taxes",
+                 "ضرائب"),
+            ["Packaging"] =
+                ("Emballage",
+                 "تغليف"),
+            ["Market Supplies"] =
+                ("Fournitures du magasin",
+                 "لوازم المتجر"),
+            ["This product is already in inventory: {0}"] =
+                ("Ce produit est déjà en stock : {0}",
+                 "هذا المنتج موجود بالفعل في المخزون: {0}"),
+            ["Product already in inventory: {0}"] =
+                ("Produit déjà en stock : {0}",
+                 "المنتج موجود بالفعل في المخزون: {0}"),
             ["GOODS"] =
                 ("MARCHANDISE",
                  "البضاعة"),
