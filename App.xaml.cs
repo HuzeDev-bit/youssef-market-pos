@@ -104,7 +104,15 @@ public partial class App : Application
         // build hands them over now that the database is open.
         AppSettings.MoveShopSettingsIntoTheDatabase();
 
-        if (e.Args.Contains("--selftest")) SelfTest.Run(this);
+        // Ends here, like every other diagnostic mode. It used to ask the application to
+        // shut down and then fall through to opening the till, which left the run alive with
+        // whatever it had on screen — and a shutdown that is requested and then ignored is not
+        // a shutdown.
+        if (e.Args.Contains("--selftest"))
+        {
+            Headless(SelfTest.Run(this) == 0 ? 0 : 1);
+            return;
+        }
 
         // A new install opens with a password on the back office rather than without one.
         // Once, and only on an install that has never had one — see AdminAccount.

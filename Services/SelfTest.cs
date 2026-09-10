@@ -19,7 +19,8 @@ namespace MarketPos.Services;
 /// </summary>
 public static class SelfTest
 {
-    public static void Run(Application app)
+    /// <summary>Runs every check and answers how many failed.</summary>
+    public static int Run(Application app)
     {
         var report = new StringBuilder();
         var failures = 0;
@@ -103,8 +104,32 @@ public static class SelfTest
             "MarketPos", "selftest.log");
         File.WriteAllText(path, report.ToString());
 
+        // Nothing this run built is left on the desktop, whatever happened during it. A
+        // check that throws between showing a window and closing it would otherwise leave that
+        // window behind — no title bar, nothing in the taskbar, and outliving the run.
+        CloseEverythingLeftOpen();
+
         Console.WriteLine(report.ToString());
-        app.Shutdown(failures == 0 ? 0 : 1);
+        return failures;
+    }
+
+    /// <summary>
+    /// Shuts every window this run opened.
+    ///
+    /// The diagnostics build and show real windows on purpose — measuring a layout means
+    /// laying it out — and each one is closed where it was opened. This is the backstop for
+    /// when that does not happen, because the thing it prevents is a fragment of the back
+    /// office sitting on the shop's desktop with no way to close it.
+    /// </summary>
+    private static void CloseEverythingLeftOpen()
+    {
+        if (Application.Current is not { } app) return;
+
+        foreach (var window in app.Windows.OfType<Window>().ToList())
+        {
+            try { window.Close(); }
+            catch { /* already going, or gone */ }
+        }
     }
 
     /// <summary>
@@ -1117,12 +1142,18 @@ public static class SelfTest
                 Width = width,
                 Height = height,
 
-                // Shown, because WPF refuses to make a window an Owner until it has been —
-                // and shown far off the side of every monitor, because a diagnostic run has
-                // no business flashing windows at whoever started it.
-                WindowStartupLocation = WindowStartupLocation.Manual,
-                Left = -30000,
-                Top = -30000,
+                // Shown, because WPF refuses to make a window an Owner until it has been, and
+                // because a window that has never been shown has no layout to measure.
+                //
+                // Invisible rather than off-screen. It used to be put at -30000,-30000 on the
+                // assumption that was past every monitor — but Windows will not leave a window
+                // entirely outside the desktop and clamps it back to the top-left corner, so a
+                // diagnostic run left a fragment of the back office sitting at 0,0 over
+                // whatever the shop was doing, with no title bar and nothing in the taskbar to
+                // close it by. Zero opacity is honest about the intent: it lays out and
+                // measures exactly as it would on screen, and nobody sees it.
+                Opacity = 0,
+                ShowActivated = false,
                 ShowInTaskbar = false,
             };
             shell.ShowWhatThisPersonMaySee();
@@ -1165,6 +1196,7 @@ public static class SelfTest
         catch (Exception error)
         {
             failures++;
+            CloseEverythingLeftOpen();
             report.AppendLine($"FAIL  dialog fits its window: {error.GetType().Name}: {error.Message}");
         }
     }
@@ -1195,9 +1227,11 @@ public static class SelfTest
             // checked on a window that was only ever measured.
             var shell = new AdminWindow
             {
-                WindowStartupLocation = WindowStartupLocation.Manual,
-                Left = -30000,
-                Top = -30000,
+                // Invisible, not off-screen: Windows clamps a window that is entirely outside
+                // the desktop back to the corner, which is how a diagnostic run came to leave
+                // a piece of the back office on the shop's desktop. See the note above.
+                Opacity = 0,
+                ShowActivated = false,
                 ShowInTaskbar = false,
             };
             shell.ShowWhatThisPersonMaySee();
@@ -1212,6 +1246,10 @@ public static class SelfTest
             {
                 Verdict(report, ref failures, "the activity filter stays where it is put",
                     false, "no filter found on the page");
+
+                // Closed on the way out. Returning past this left a back office open for the
+                // life of the run, which is how a piece of it ended up on the shop's desktop.
+                shell.Close();
                 return;
             }
 
@@ -1266,6 +1304,7 @@ public static class SelfTest
         catch (Exception error)
         {
             failures++;
+            CloseEverythingLeftOpen();
             report.AppendLine($"FAIL  activity filter: {error.GetType().Name}: {error.Message}");
         }
     }
