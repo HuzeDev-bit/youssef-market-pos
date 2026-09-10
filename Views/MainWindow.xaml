@@ -1,4 +1,4 @@
-﻿<!-- Text is laid out in Ideal mode, not Display. Display uses GDI-compatible metrics
+<!-- Text is laid out in Ideal mode, not Display. Display uses GDI-compatible metrics
      tuned for the fonts Windows ships with; it snaps an embedded face to whole pixels
      and crops the result, which is why descenders looked cut off. -->
 
@@ -200,7 +200,8 @@
                         <StackPanel Orientation="Horizontal">
                             <Ellipse x:Name="LinkDot" Width="8" Height="8" VerticalAlignment="Center"
                                      Fill="{StaticResource Brush.Muted}"/>
-                            <TextBlock x:Name="LinkStatus" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="LinkStatus" Margin="8,0,8,0" VerticalAlignment="Center"
+                                       FontFamily="Segoe UI, Tahoma"/>
                         </StackPanel>
                     </Button>
 

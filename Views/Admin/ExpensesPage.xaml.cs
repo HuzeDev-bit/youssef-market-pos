@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.Services;
@@ -174,7 +174,7 @@ public partial class ExpensesPage : AdminPageBase
 
         // What comes back every month whether the shop sells anything or not. This is the
         // number that says how much has to be taken before the doors have paid for themselves.
-        var fixedBills = ExpenseRepository
+        var fixedBills = Link.Shop.Expenses
             .List(range: Dates.Range)
             .Where(e => !e.IsVoid && e.Recurring == Recurrence.Monthly)
             .ToList();

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using System.Windows;
 using MarketPos.Data;
@@ -523,14 +523,14 @@ public static class SelfTest
             BarcodeScanner.Classify("7", human) == BarcodeScanner.Keystroke.PossibleStart,
             "120ms between digits passes straight through");
 
-        Verdict(report, ref failures, "letters are never treated as a barcode",
-            BarcodeScanner.Classify("a", machine) == BarcodeScanner.Keystroke.NotAScan
-            && BarcodeScanner.Classify(".", machine) == BarcodeScanner.Keystroke.NotAScan,
-            "a product name typed quickly stays in its field");
+        Verdict(report, ref failures, "alphanumeric characters are supported as barcode scans",
+            BarcodeScanner.Classify("A", machine) == BarcodeScanner.Keystroke.Burst
+            && BarcodeScanner.Classify("-", machine) == BarcodeScanner.Keystroke.Burst,
+            "barcodes with letters and hyphens are recognized");
 
         // char.IsDigit is true for Arabic-Indic ٠١٢ as well, and no barcode is
         // written in those. Same trap the money boxes fell into.
-        Verdict(report, ref failures, "only 0-9 counts as a scanned digit",
+        Verdict(report, ref failures, "only standard ASCII barcode chars count",
             BarcodeScanner.Classify("٨", machine) == BarcodeScanner.Keystroke.NotAScan,
             "Arabic-Indic digits are not a barcode");
 

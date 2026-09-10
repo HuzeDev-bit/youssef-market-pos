@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -342,26 +342,10 @@ public partial class MainWindow : Window
     /// </summary>
     private void Vm_ScannedSomethingUnknown(object? sender, string barcode)
     {
-        // Whoever is at the till has to be allowed to put something in the books. A cashier
-        // without that right gets the red line and nothing else, which is the state the till
-        // was in before this existed.
-        if (!Session.Can(Permission.ManageProducts)) return;
-
-        // And there has to be a till on screen to ask. The diagnostics build this window
-        // without ever showing it and then scan things through it, which is exactly what they
-        // are for; a modal question raised there is asked of nobody and answered by nobody,
-        // and it would hold the run open for ever waiting.
+        // There has to be a window on screen to own the dialog.
         if (!Owned.CanOwn(this)) return;
 
-        if (!ConfirmWindow.Ask(this,
-                Loc.T("{0} is not in the shop yet. Add it?", Loc.Ltr(barcode)),
-                Loc.T("You will be asked for its name and price. It goes on the till as soon "
-                    + "as you save, and this sale can carry on.")))
-        {
-            FocusBarcode();
-            return;
-        }
-
+        // Open the Add Product popup directly so the cashier can add the product immediately.
         if (Views.Admin.ProductWindow.AddScanned(this, barcode))
         {
             // Straight onto the sale it interrupted. The cashier scanned it because a customer

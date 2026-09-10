@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Data;
 using MarketPos.Data;
@@ -773,11 +773,15 @@ public sealed class SaleViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Long enough to be a scan rather than a search. Six digits is comfortably past any
-    /// quantity or price a cashier would type into the box by hand.
+    /// A barcode or SKU code rather than a text search with spaces.
+    /// Can be digits (EAN, UPC) or alphanumeric (Code 128, Code 39, QR, SKU).
     /// </summary>
     private static bool LooksLikeABarcode(string query) =>
-        query.Length >= 6 && query.All(char.IsDigit);
+        query.Length >= 2 && !query.Contains(' ') && query.All(c =>
+            (c >= '0' && c <= '9') ||
+            (c >= 'a' && c <= 'z') ||
+            (c >= 'A' && c <= 'Z') ||
+            c is '-' or '_' or '.' or '/' or '+' or '*' or '#' or '@' or '$' or '%' or ':');
 
     /// <summary>
     /// Puts a product the cashier has just created onto the sale, at the quantity or weight

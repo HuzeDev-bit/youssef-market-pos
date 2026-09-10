@@ -1,4 +1,4 @@
-﻿<Window x:Class="MarketPos.Views.Admin.ProductWindow"
+<Window x:Class="MarketPos.Views.Admin.ProductWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Product" Width="720" SizeToContent="Height"
@@ -219,9 +219,9 @@
             </ScrollViewer>
 
             <Grid Margin="0,22,0,0">
-                <Button Style="{StaticResource Button.PillMuted}" Content="Cancel"
+                <Button Style="{StaticResource Button.PillMuted}" Content="Cancel" IsCancel="True"
                         HorizontalAlignment="Left" Width="120" Click="Cancel_Click"/>
-                <Button x:Name="SaveButton" Style="{StaticResource Button.Pill}" Content="Save product"
+                <Button x:Name="SaveButton" Style="{StaticResource Button.Pill}" Content="Save product" IsDefault="True"
                         HorizontalAlignment="Right" Width="170" Click="Save_Click"/>
             </Grid>
         </StackPanel>
