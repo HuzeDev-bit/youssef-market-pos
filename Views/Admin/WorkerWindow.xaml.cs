@@ -147,8 +147,8 @@ public partial class WorkerWindow : Window
 
         try
         {
-            if (_existing is null) WorkerRepository.Create(worker);
-            else WorkerRepository.Update(worker);
+            if (_existing is null) Link.Shop.Workers.Create(worker);
+            else Link.Shop.Workers.Update(worker);
 
             DialogResult = true;
             Close();
@@ -169,7 +169,7 @@ public partial class WorkerWindow : Window
                 + "payments all stay on record."))
             return;
 
-        WorkerRepository.SetActive(_existing.Id, _existing.Name, activate);
+        Link.Shop.Workers.SetActive(_existing.Id, _existing.Name, activate);
         DialogResult = true;
         Close();
     }

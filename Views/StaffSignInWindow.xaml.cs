@@ -83,7 +83,7 @@ public partial class StaffSignInWindow : Window
     {
         if (!Catalog.BelongsToAServer)
         {
-            return WorkerRepository.List()
+            return Link.Shop.Workers.List()
                 .Where(w => w.HasPin)
                 .Select(w => new Choice(w.Name, w))
                 .ToList();

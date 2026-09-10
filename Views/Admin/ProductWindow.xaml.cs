@@ -53,7 +53,7 @@ public partial class ProductWindow : Window
         _suppliers.AddRange(Catalog.BelongsToAServer
             ? (ShopLink.Now(() => ShopLink.Suppliers()) ?? new List<Link.SupplierName>())
                 .Select(s => new Supplier { Id = s.Id, Name = s.Name })
-            : SupplierRepository.List());
+            : Link.Shop.Suppliers.List());
         SupplierBox.ItemsSource = _suppliers;
 
         if (existing is null) FillForNew(); else FillFrom(existing);
@@ -175,7 +175,7 @@ public partial class ProductWindow : Window
         // On a till the shop settles this, not the machine: the barcode is sent with the
         // product and the server answers whether it already has one, which is the only answer
         // that can be right when two counters are adding stock at once.
-        if (!Catalog.BelongsToAServer && StockRepository.BarcodeTaken(barcode, _existing?.Id ?? 0))
+        if (!Catalog.BelongsToAServer && Link.Shop.Stock.BarcodeTaken(barcode, _existing?.Id ?? 0))
         {
             Fail("Another product already uses that barcode.", BarcodeBox);
             return;
@@ -245,11 +245,11 @@ public partial class ProductWindow : Window
             }
             else if (_existing is null)
             {
-                StockRepository.Create(item, openingStock: stock);
+                Link.Shop.Stock.Create(item, openingStock: stock);
             }
             else
             {
-                StockRepository.Update(item);
+                Link.Shop.Stock.Update(item);
             }
 
             FilePicture(barcode, _existing?.Barcode);

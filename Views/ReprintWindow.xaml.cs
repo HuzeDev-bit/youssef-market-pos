@@ -11,8 +11,8 @@ namespace MarketPos.Views;
 /// <summary>
 /// Find a past sale by ticket number and print another copy of it.
 ///
-/// Strictly read-only: it calls SaleRepository.FindByInvoiceNumber and nothing else, so a
-/// reprint cannot create a sale, charge again, move stock or change revenue. The copy is
+/// Strictly read-only: it asks <see cref="Receipts"/> for the ticket and does nothing else, so
+/// a reprint cannot create a sale, charge again, move stock or change revenue. The copy is
 /// stamped DUPLICATA so it cannot be mistaken for a new transaction at cash-up.
 /// </summary>
 public partial class ReprintWindow : Window

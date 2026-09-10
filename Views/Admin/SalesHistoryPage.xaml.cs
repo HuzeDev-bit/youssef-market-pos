@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using MarketPos.Data;
 using MarketPos.Models;
@@ -34,7 +34,7 @@ public partial class SalesHistoryPage : AdminPageBase
         var seesMoney = Session.Can(Permission.SeeFinancials);
         ProfitHead.Visibility = seesMoney ? Visibility.Visible : Visibility.Hidden;
 
-        _rows = SalesHistoryRepository.List(
+        _rows = Link.Shop.Sales.List(
             range: Dates.Range,
             search: SearchBox.Text,
             workerId: SelectedCashierId);
@@ -58,10 +58,10 @@ public partial class SalesHistoryPage : AdminPageBase
 
         var selected = (CashierFilter.SelectedItem as Worker)?.Id ?? 0;
 
-        var sold = SalesHistoryRepository.WhoSoldIn(Dates.Range);
+        var sold = Link.Shop.Sales.WhoSoldIn(Dates.Range);
 
         var cashiers = new List<Worker> { new() { Id = 0, Name = Loc.T("Any cashier") } };
-        cashiers.AddRange(WorkerRepository.List(includeInactive: true)
+        cashiers.AddRange(Link.Shop.Workers.List(includeInactive: true)
             .Where(w => w.IsActive || sold.Contains(w.Id)));
 
         CashierFilter.ItemsSource = cashiers;

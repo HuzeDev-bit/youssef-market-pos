@@ -27,7 +27,7 @@ public partial class ExpenseWindow : Window
         Services.Responsive.Fit(this);
         _existing = existing;
 
-        CategoryBox.ItemsSource = ExpenseRepository.Categories().Select(c => c.Name).ToList();
+        CategoryBox.ItemsSource = Link.Shop.Expenses.Categories().Select(c => c.Name).ToList();
         MethodBox.ItemsSource = new[]
         {
             Loc.T("Cash"), Loc.T("Bank transfer"), Loc.T("Cheque"),
@@ -147,7 +147,7 @@ public partial class ExpenseWindow : Window
             {
                 Id = _existing?.Id ?? 0,
                 Name = name,
-                CategoryId = ExpenseRepository.AddCategory(category),
+                CategoryId = Link.Shop.Expenses.AddCategory(category),
                 Category = category,
                 Amount = amount,
                 SpentOn = DateBox.SelectedDate ?? DateTime.Today,
@@ -163,8 +163,8 @@ public partial class ExpenseWindow : Window
                 },
             };
 
-            if (_existing is null) ExpenseRepository.Create(expense);
-            else ExpenseRepository.Update(expense);
+            if (_existing is null) Link.Shop.Expenses.Create(expense);
+            else Link.Shop.Expenses.Update(expense);
 
             DialogResult = true;
             Close();

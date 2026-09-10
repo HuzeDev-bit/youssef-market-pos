@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using MarketPos.Models;
 using MarketPos.Services;
 
@@ -60,7 +60,7 @@ public partial class ReportsPage : AdminPageBase
 
     private void FillStatement()
     {
-        var f = Finance.For(Dates.Range);
+        var f = Link.Shop.Reports.Money(Dates.Range);
 
         RevenueValue.Text = Money(f.Revenue);
         RevenueNote.Text = f.Refunds > 0m
@@ -181,7 +181,7 @@ public partial class ReportsPage : AdminPageBase
 
     private void FillAlerts()
     {
-        _alerts = Notifications.Build();
+        _alerts = Link.Shop.Reports.Alerts();
 
         Alerts.ItemsSource = _alerts.Select((a, i) => new AlertRow
         {

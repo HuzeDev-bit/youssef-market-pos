@@ -165,6 +165,36 @@ public static class InventoryRepository
             detail: ActivityRepository.Say("changed {0} stock", productName), connection: connection);
     }
 
+    /// <summary>
+    /// A shelf corrected by hand: breakage, a miscount found later, goods taken for the shop.
+    ///
+    /// The movement and the entry in the day's activity are written together, because they are
+    /// one thing that happened and a movement nobody can account for is worse than none at all.
+    /// <see cref="SetCount"/> has always done it this way; a plain adjustment used to leave the
+    /// audit entry to whichever screen made the call, which meant a screen could forget.
+    /// </summary>
+    public static void Adjust(int productId, string productName, decimal delta, StockReason reason,
+                              string reference = "Manual", string note = "", decimal? unitCost = null)
+    {
+        Session.Require(Permission.ManageInventory);
+
+        using var connection = Database.Open();
+        decimal before;
+        using (var read = connection.CreateCommand())
+        {
+            read.CommandText = "SELECT stock FROM products WHERE id = $id;";
+            read.With("$id", productId);
+            before = Db.ParseMoney(read.ExecuteScalar() as string);
+        }
+
+        var after = Move(productId, delta, reason, reference: reference, note: note,
+                         unitCost: unitCost, connection: connection);
+
+        ActivityRepository.Record("changed stock", "Product", productId,
+            oldValue: before.ToString("0.###"), newValue: after.ToString("0.###"),
+            detail: ActivityRepository.Say("changed {0} stock", productName), connection: connection);
+    }
+
     public static List<StockMovement> ListMovements(DateRange? range = null, int? productId = null,
                                                     StockReason? reason = null, int limit = 400)
     {

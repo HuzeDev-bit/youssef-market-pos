@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -89,7 +89,7 @@ public partial class DeliveryEditor : UserControl
     /// <summary>Re-reads the catalogue, so a product added elsewhere turns up without a restart.</summary>
     public void Reload()
     {
-        Known = StockRepository.List();
+        Known = Link.Shop.Stock.List();
         ProductBox.ItemsSource = Known;
     }
 

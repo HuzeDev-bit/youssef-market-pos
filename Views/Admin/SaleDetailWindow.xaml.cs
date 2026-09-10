@@ -70,7 +70,7 @@ public partial class SaleDetailWindow : Window
         Services.Localizer.Apply(this);
         Services.Responsive.Fit(this);
 
-        _sale = SalesHistoryRepository.Find(invoiceNumber)
+        _sale = Link.Shop.Sales.Find(invoiceNumber)
                 ?? throw new InvalidOperationException($"No sale with receipt number {invoiceNumber}.");
 
         ReasonBox.ItemsSource = new[]
@@ -239,14 +239,14 @@ public partial class SaleDetailWindow : Window
 
         try
         {
-            SalesHistoryRepository.Refund(
+            Link.Shop.Sales.Refund(
                 _sale.InvoiceNumber,
                 chosen.Select(l => (l.Source.Id, l.ReturnQuantity)).ToList(),
                 reason, restock);
 
             _changed = true;
             _refunding = false;
-            _sale = SalesHistoryRepository.Find(_sale.InvoiceNumber)!;
+            _sale = Link.Shop.Sales.Find(_sale.InvoiceNumber)!;
             ErrorText.Text = string.Empty;
             Bind();
         }
@@ -265,9 +265,9 @@ public partial class SaleDetailWindow : Window
 
         try
         {
-            SalesHistoryRepository.Cancel(_sale.InvoiceNumber, "Cancelled by " + Session.CurrentName);
+            Link.Shop.Sales.Cancel(_sale.InvoiceNumber, "Cancelled by " + Session.CurrentName);
             _changed = true;
-            _sale = SalesHistoryRepository.Find(_sale.InvoiceNumber)!;
+            _sale = Link.Shop.Sales.Find(_sale.InvoiceNumber)!;
             Bind();
         }
         catch (Exception error)
@@ -282,7 +282,7 @@ public partial class SaleDetailWindow : Window
     /// </summary>
     private void Reprint_Click(object sender, RoutedEventArgs e)
     {
-        var receipt = SaleRepository.FindByInvoiceNumber(_sale.InvoiceNumber);
+        var receipt = Receipts.Find(_sale.InvoiceNumber);
         if (receipt is null)
         {
             ErrorText.Text = Loc.T("That receipt could not be read back.");

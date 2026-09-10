@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.Services;
@@ -50,7 +50,7 @@ public partial class ExpensesPage : AdminPageBase
 
         FillKindFilter();
 
-        _rows = ExpenseRepository.List(range: Dates.Range, categoryId: SelectedKindId);
+        _rows = Link.Shop.Expenses.List(range: Dates.Range, categoryId: SelectedKindId);
 
         var search = SearchBox.Text.Trim();
         if (search.Length > 0)
@@ -79,7 +79,7 @@ public partial class ExpensesPage : AdminPageBase
         _building = true;
 
         var kinds = new List<string> { Loc.T("Every kind") };
-        kinds.AddRange(ExpenseRepository.Categories().Select(c => c.Name));
+        kinds.AddRange(Link.Shop.Expenses.Categories().Select(c => c.Name));
 
         KindFilter.ItemsSource = kinds;
         KindFilter.SelectedIndex = 0;
@@ -94,7 +94,7 @@ public partial class ExpensesPage : AdminPageBase
             if (KindFilter.SelectedIndex <= 0) return null;
 
             var name = KindFilter.SelectedItem as string;
-            return ExpenseRepository.Categories()
+            return Link.Shop.Expenses.Categories()
                 .FirstOrDefault(c => c.Name == name) is { Id: > 0 } found ? found.Id : null;
         }
     }
@@ -108,7 +108,7 @@ public partial class ExpensesPage : AdminPageBase
 
     private void FillByKind()
     {
-        var kinds = ExpenseRepository.ByCategory(Dates.Range)
+        var kinds = Link.Shop.Expenses.ByCategory(Dates.Range)
             .Where(k => k.Amount > 0m)
             .ToList();
 
@@ -145,7 +145,7 @@ public partial class ExpensesPage : AdminPageBase
     private void FillSummary()
     {
         var live = _rows.Where(e => !e.IsVoid).ToList();
-        var total = ExpenseRepository.Total(Dates.Range);
+        var total = Link.Shop.Expenses.Total(Dates.Range);
 
         TotalValue.Text = Money(total);
         TotalNote.Text = live.Count == 0
@@ -153,7 +153,7 @@ public partial class ExpensesPage : AdminPageBase
             : Loc.T(live.Count == 1 ? "across {0} bill · {1}" : "across {0} bills · {1}",
                     live.Count, Loc.T(Dates.RangeLabel).ToLowerInvariant());
 
-        var kinds = ExpenseRepository.ByCategory(Dates.Range)
+        var kinds = Link.Shop.Expenses.ByCategory(Dates.Range)
             .Where(k => k.Amount > 0m)
             .OrderByDescending(k => k.Amount)
             .ToList();
@@ -189,7 +189,7 @@ public partial class ExpensesPage : AdminPageBase
 
         // Against revenue, because that is what says whether it matters. Two thousand dirhams
         // of bills is nothing in a busy month and frightening in a quiet one.
-        var revenue = Finance.For(Dates.Range).Revenue;
+        var revenue = Link.Shop.Reports.Money(Dates.Range).Revenue;
         if (revenue <= 0m)
         {
             ShareValue.Text = "—";

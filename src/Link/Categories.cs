@@ -12,7 +12,7 @@ namespace MarketPos.Link;
 /// </summary>
 public sealed class LocalCategories : ICategoryService
 {
-    public IReadOnlyList<CategoryRow> List(bool includeInactive = false) =>
+    public List<CategoryRow> List(bool includeInactive = false) =>
         CategoryRepository.List(includeInactive);
 
     public int Create(string name, string icon = "", string image = "") =>
@@ -46,7 +46,7 @@ public sealed class LocalCategories : ICategoryService
 /// </summary>
 public sealed class RemoteCategories : ICategoryService
 {
-    public IReadOnlyList<CategoryRow> List(bool includeInactive = false) =>
+    public List<CategoryRow> List(bool includeInactive = false) =>
         Api.Get<List<CategoryRow>>($"categories/all?includeInactive={includeInactive}")
         ?? new List<CategoryRow>();
 

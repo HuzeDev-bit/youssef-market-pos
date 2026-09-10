@@ -168,11 +168,11 @@ public static class ShopData
     // ---------------------------------------------------------------- how the shop is filed
 
     /// <summary>The shop's categories, for a till filling in a product it has just scanned.</summary>
-    public static IReadOnlyList<CategoryName> Categories() =>
+    public static List<CategoryName> Categories() =>
         CategoryRepository.List().Select(c => new CategoryName(c.Id, c.Name)).ToList();
 
     /// <summary>The shop's suppliers, for the same form.</summary>
-    public static IReadOnlyList<SupplierName> Suppliers() =>
+    public static List<SupplierName> Suppliers() =>
         SupplierRepository.List().Select(s => new SupplierName(s.Id, s.Name)).ToList();
 
     // ---------------------------------------------------------------- what the shop is

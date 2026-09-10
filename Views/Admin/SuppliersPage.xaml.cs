@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.Services;
@@ -48,7 +48,7 @@ public partial class SuppliersPage : AdminPageBase
     {
         Session.Require(Permission.ManageSuppliers);
 
-        _rows = SupplierRepository.List(includeInactive: true, search: SearchBox.Text);
+        _rows = Link.Shop.Suppliers.List(includeInactive: true, search: SearchBox.Text);
 
         if (OwedOnly.IsChecked == true)
             _rows = _rows.Where(s => s.Owed > 0m).ToList();
@@ -78,7 +78,7 @@ public partial class SuppliersPage : AdminPageBase
     /// </summary>
     private void FillSummary()
     {
-        var all = SupplierRepository.List(includeInactive: true);
+        var all = Link.Shop.Suppliers.List(includeInactive: true);
 
         var owed = all.Sum(s => s.Owed);
         var bought = all.Sum(s => s.TotalPurchased);
@@ -145,11 +145,11 @@ public partial class SuppliersPage : AdminPageBase
                 ? Loc.T("Paid up. {0} bought all told.", Money(supplier.TotalPurchased))
                 : Loc.T("Nothing bought from them yet.");
 
-        var goods = SupplierRepository.WhatWeBuy(supplier.Id);
+        var goods = Link.Shop.Suppliers.WhatWeBuy(supplier.Id);
         Goods.ItemsSource = goods;
         NoGoods.Visibility = goods.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        var purchases = SupplierRepository.ListPurchases(supplierId: supplier.Id);
+        var purchases = Link.Shop.Suppliers.Purchases(supplierId: supplier.Id);
 
         Deliveries.ItemsSource = purchases.Select(p => new Delivery
         {
@@ -167,7 +167,7 @@ public partial class SuppliersPage : AdminPageBase
 
         NoDeliveries.Visibility = purchases.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        var payments = SupplierRepository.ListPayments(supplierId: supplier.Id);
+        var payments = Link.Shop.Suppliers.Payments(supplierId: supplier.Id);
         Payments.ItemsSource = payments;
         NoPayments.Visibility = payments.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -179,7 +179,7 @@ public partial class SuppliersPage : AdminPageBase
     /// </summary>
     private static List<DeliveryLine> Contents(Purchase purchase)
     {
-        var lines = SupplierRepository.ListPurchaseLines(purchase.Id);
+        var lines = Link.Shop.Suppliers.PurchaseLines(purchase.Id);
 
         if (lines.Count == 0)
         {
@@ -267,8 +267,8 @@ public partial class SuppliersPage : AdminPageBase
 
         if (result is null) return;
 
-        SupplierRepository.Pay(supplier.Id, supplier.Name, result.Amount, result.Date,
-                               result.Method, result.Note);
+        Link.Shop.Suppliers.Pay(supplier.Id, supplier.Name, result.Amount, result.Date,
+                                result.Method, result.Note);
         ReloadAll();
     }
 }

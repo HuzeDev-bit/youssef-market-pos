@@ -133,15 +133,15 @@ public partial class SupplierWindow : Window
 
         try
         {
-            if (_existing is null) _created = SupplierRepository.Create(supplier);
-            else SupplierRepository.Update(supplier);
+            if (_existing is null) _created = Link.Shop.Suppliers.Create(supplier);
+            else Link.Shop.Suppliers.Update(supplier);
 
             // The delivery is recorded second and separately: the supplier row has to exist
             // for it to point at. If it throws, the supplier is still saved and the goods can
             // be entered again from the page rather than the whole thing being lost.
             if (lines.Count > 0)
             {
-                SupplierRepository.RecordPurchase(new Purchase
+                Link.Shop.Suppliers.RecordPurchase(new Purchase
                 {
                     SupplierId = _created,
                     SupplierName = supplier.Name,
@@ -202,7 +202,7 @@ public partial class SupplierWindow : Window
 
         if (!ConfirmWindow.Ask(this, $"Deactivate {_existing.Name}?", body)) return;
 
-        SupplierRepository.SetActive(_existing.Id, _existing.Name, active: false);
+        Link.Shop.Suppliers.SetActive(_existing.Id, _existing.Name, active: false);
         DialogResult = true;
         Close();
     }

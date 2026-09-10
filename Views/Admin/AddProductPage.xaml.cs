@@ -88,7 +88,7 @@ public partial class AddProductPage : AdminPageBase
         AddListPanel.Visibility = Visibility.Visible;
         AddScroll.Visibility = Visibility.Collapsed;
 
-        var products = StockRepository.RecentlyAdded();
+        var products = Link.Shop.Stock.RecentlyAdded();
 
         AddedList.ItemsSource = products.Select(p => new AddedRow
         {
@@ -167,7 +167,7 @@ public partial class AddProductPage : AdminPageBase
     private void AddedRow_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: int id }) return;
-        var product = StockRepository.Find(id);
+        var product = Link.Shop.Stock.Find(id);
         if (product is null) return;
 
         ShowAddForm();
@@ -194,10 +194,10 @@ public partial class AddProductPage : AdminPageBase
 
         if (sender is not FrameworkElement { Tag: int id }) return;
 
-        var product = StockRepository.Find(id);
+        var product = Link.Shop.Stock.Find(id);
         if (product is null) return;
 
-        StockRepository.SetActive(product.Id, product.Name, active: false);
+        Link.Shop.Stock.SetActive(product.Id, product.Name, active: false);
         Catalog.Reload();
         ShowAddList();
         AddListNote.Text = Loc.T("{0} removed from the shop", product.Name);
@@ -471,7 +471,7 @@ public partial class AddProductPage : AdminPageBase
         var barcode = AddBarcodeBox.Text.Trim();
         var found = barcode.Length == 0
             ? null
-            : StockRepository.List(includeInactive: true).FirstOrDefault(p => p.Barcode == barcode);
+            : Link.Shop.Stock.List(includeInactive: true).FirstOrDefault(p => p.Barcode == barcode);
 
         if (found is null)
         {
@@ -577,7 +577,7 @@ public partial class AddProductPage : AdminPageBase
         {
             if (_knownProduct is { } known)
             {
-                StockRepository.ReceiveAtTill(known.Id, quantity,
+                Link.Shop.Stock.ReceiveAtTill(known.Id, quantity,
                     cost: cost > 0m ? cost : null,
                     price: hasPrice && price > 0m ? price : null,
                     expiresOn: AddExpiryBox.SelectedDate);
@@ -600,13 +600,13 @@ public partial class AddProductPage : AdminPageBase
 
             // Empty stays empty: a product with nothing printed on it is saved with no
             // barcode at all, and that is what puts it on the till as something to press.
-            if (StockRepository.BarcodeTaken(barcode))
+            if (Link.Shop.Stock.BarcodeTaken(barcode))
             {
                 Fail("That barcode already belongs to another product.", AddBarcodeBox);
                 return;
             }
 
-            StockRepository.Create(new StockItem
+            Link.Shop.Stock.Create(new StockItem
             {
                 Barcode = barcode,
                 Name = name,

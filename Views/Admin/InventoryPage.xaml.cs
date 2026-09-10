@@ -44,7 +44,7 @@ public partial class InventoryPage : AdminPageBase
         // Everything, including what has been taken off the shelf, and the removed ones are
         // dropped afterwards. One query rather than two: the page has to know how many are
         // hidden even while it is not showing them, so that it can say so.
-        var all = InRange(StockRepository.List(search: SearchBox.Text, categoryId: SelectedCategoryId,
+        var all = InRange(Link.Shop.Stock.List(search: SearchBox.Text, categoryId: SelectedCategoryId,
                                                includeInactive: true));
         _removed = all.Count(i => !i.IsActive);
 
@@ -157,7 +157,7 @@ public partial class InventoryPage : AdminPageBase
     /// </summary>
     private void ShowSummary()
     {
-        if (StockRepository.List().Count == 0)
+        if (Link.Shop.Stock.List().Count == 0)
         {
             // Blank read as a page that had failed to load. A shop with nothing in it is a
             // real state — every shop starts there — and it should say which one it is in.
@@ -239,7 +239,7 @@ public partial class InventoryPage : AdminPageBase
     {
         if (Shell is null || sender is not FrameworkElement { Tag: int id }) return;
 
-        var item = StockRepository.Find(id);
+        var item = Link.Shop.Stock.Find(id);
         if (item is not null && ProductWindow.Edit(Shell, item)) ReloadAll();
     }
 
@@ -274,7 +274,7 @@ public partial class InventoryPage : AdminPageBase
         var item = _rows.FirstOrDefault(i => i.Id == id);
         if (item is null) return;
 
-        StockRepository.SetActive(item.Id, item.Name, active: !item.IsActive);
+        Link.Shop.Stock.SetActive(item.Id, item.Name, active: !item.IsActive);
         ReloadAll();
     }
 }

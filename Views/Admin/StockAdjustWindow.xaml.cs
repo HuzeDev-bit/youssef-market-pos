@@ -125,7 +125,7 @@ public partial class StockAdjustWindow : Window
             if (IsCount)
             {
                 if (typed < 0m) { ErrorText.Text = Loc.T("A counted total cannot be negative."); return; }
-                InventoryRepository.SetCount(_item.Id, _item.Name, typed, NoteBox.Text.Trim());
+                Link.Shop.Stock.SetCount(_item.Id, _item.Name, typed, NoteBox.Text.Trim());
             }
             else
             {
@@ -140,12 +140,8 @@ public partial class StockAdjustWindow : Window
                     return;
                 }
 
-                InventoryRepository.Move(_item.Id, delta, reason, reference: "Manual",
-                                         note: NoteBox.Text.Trim());
-                ActivityRepository.Record("changed stock", "Product", _item.Id,
-                    oldValue: _item.Stock.ToString("0.###"),
-                    newValue: (_item.Stock + delta).ToString("0.###"),
-                    detail: $"changed {_item.Name} stock");
+                Link.Shop.Stock.Move(_item.Id, _item.Name, delta, reason, reference: "Manual",
+                                     note: NoteBox.Text.Trim(), unitCost: null);
             }
 
             DialogResult = true;

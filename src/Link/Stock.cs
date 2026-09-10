@@ -1,4 +1,4 @@
-using MarketPos.Data;
+﻿using MarketPos.Data;
 using MarketPos.Models;
 
 namespace MarketPos.Link;
@@ -6,20 +6,20 @@ namespace MarketPos.Link;
 /// <summary>What the app needs to do with the shop's products and its shelves.</summary>
 public interface IStockService
 {
-    IReadOnlyList<StockItem> List(string? search = null, int? categoryId = null,
+    List<StockItem> List(string? search = null, int? categoryId = null,
                                   bool includeInactive = false);
 
     StockItem? Find(int id);
 
     StockItem? FindByBarcode(string barcode);
 
-    IReadOnlyList<StockItem> RecentlyAdded();
+    List<StockItem> RecentlyAdded();
 
-    IReadOnlyList<StockItem> LowStock();
+    List<StockItem> LowStock();
 
-    IReadOnlyList<StockItem> OutOfStock();
+    List<StockItem> OutOfStock();
 
-    IReadOnlyList<StockItem> Expiring(int withinDays);
+    List<StockItem> Expiring(int withinDays);
 
     bool BarcodeTaken(string barcode, int exceptId = 0);
 
@@ -33,21 +33,25 @@ public interface IStockService
 
     // ---- the shelves themselves ----
 
-    IReadOnlyList<StockMovement> Movements(DateRange? range = null, int? productId = null);
+    List<StockMovement> Movements(DateRange? range = null, int? productId = null);
 
-    IReadOnlyList<(StockReason Reason, decimal Quantity, decimal Value)> LossesByReason(DateRange range);
+    List<(StockReason Reason, decimal Quantity, decimal Value)> LossesByReason(DateRange range);
 
     /// <summary>Counts the shelf and writes the difference. The shop refuses an impossible one.</summary>
     void SetCount(int id, string name, decimal counted, string note);
 
-    /// <summary>Moves stock by a delta, with a reason. The shop refuses more than is there.</summary>
-    void Move(int id, decimal delta, StockReason reason, string reference, string note, decimal? unitCost);
+    /// <summary>
+    /// Corrects a shelf by a delta, with a reason, and records that somebody did. The shop
+    /// refuses to take a shelf below nothing.
+    /// </summary>
+    void Move(int id, string name, decimal delta, StockReason reason, string reference, string note,
+              decimal? unitCost);
 }
 
 /// <summary>The shop's stock, on the machine that owns it. The repositories, unchanged.</summary>
 public sealed class LocalStock : IStockService
 {
-    public IReadOnlyList<StockItem> List(string? search = null, int? categoryId = null,
+    public List<StockItem> List(string? search = null, int? categoryId = null,
                                          bool includeInactive = false) =>
         StockRepository.List(search: search, categoryId: categoryId, includeInactive: includeInactive);
 
@@ -55,13 +59,13 @@ public sealed class LocalStock : IStockService
 
     public StockItem? FindByBarcode(string barcode) => StockRepository.FindByBarcode(barcode);
 
-    public IReadOnlyList<StockItem> RecentlyAdded() => StockRepository.RecentlyAdded();
+    public List<StockItem> RecentlyAdded() => StockRepository.RecentlyAdded();
 
-    public IReadOnlyList<StockItem> LowStock() => StockRepository.LowStock();
+    public List<StockItem> LowStock() => StockRepository.LowStock();
 
-    public IReadOnlyList<StockItem> OutOfStock() => StockRepository.OutOfStock();
+    public List<StockItem> OutOfStock() => StockRepository.OutOfStock();
 
-    public IReadOnlyList<StockItem> Expiring(int withinDays) => StockRepository.Expiring(withinDays);
+    public List<StockItem> Expiring(int withinDays) => StockRepository.Expiring(withinDays);
 
     public bool BarcodeTaken(string barcode, int exceptId = 0) =>
         StockRepository.BarcodeTaken(barcode, exceptId);
@@ -77,17 +81,19 @@ public sealed class LocalStock : IStockService
     public void ReceiveAtTill(int id, decimal quantity, decimal? cost, decimal? price, DateTime? expiresOn) =>
         StockRepository.ReceiveAtTill(id, quantity, cost, price, expiresOn);
 
-    public IReadOnlyList<StockMovement> Movements(DateRange? range = null, int? productId = null) =>
+    public List<StockMovement> Movements(DateRange? range = null, int? productId = null) =>
         InventoryRepository.ListMovements(range, productId);
 
-    public IReadOnlyList<(StockReason Reason, decimal Quantity, decimal Value)> LossesByReason(DateRange range) =>
+    public List<(StockReason Reason, decimal Quantity, decimal Value)> LossesByReason(DateRange range) =>
         InventoryRepository.LossesByReason(range);
 
     public void SetCount(int id, string name, decimal counted, string note) =>
         InventoryRepository.SetCount(id, name, counted, note);
 
-    public void Move(int id, decimal delta, StockReason reason, string reference, string note, decimal? unitCost) =>
-        InventoryRepository.Move(id, delta, reason, reference: reference, note: note, unitCost: unitCost);
+    public void Move(int id, string name, decimal delta, StockReason reason, string reference,
+                     string note, decimal? unitCost) =>
+        InventoryRepository.Adjust(id, name, delta, reason, reference: reference, note: note,
+                                   unitCost: unitCost);
 }
 
 /// <summary>
@@ -100,7 +106,7 @@ public sealed class LocalStock : IStockService
 /// </summary>
 public sealed class RemoteStock : IStockService
 {
-    public IReadOnlyList<StockItem> List(string? search = null, int? categoryId = null,
+    public List<StockItem> List(string? search = null, int? categoryId = null,
                                          bool includeInactive = false)
     {
         var query = $"products?includeInactive={includeInactive}";
@@ -115,16 +121,16 @@ public sealed class RemoteStock : IStockService
     public StockItem? FindByBarcode(string barcode) =>
         Api.Get<StockItem>($"products/barcode/{Uri.EscapeDataString(barcode)}");
 
-    public IReadOnlyList<StockItem> RecentlyAdded() =>
+    public List<StockItem> RecentlyAdded() =>
         Api.Get<List<StockItem>>("products/recent") ?? new List<StockItem>();
 
-    public IReadOnlyList<StockItem> LowStock() =>
+    public List<StockItem> LowStock() =>
         Api.Get<List<StockItem>>("products/low") ?? new List<StockItem>();
 
-    public IReadOnlyList<StockItem> OutOfStock() =>
+    public List<StockItem> OutOfStock() =>
         Api.Get<List<StockItem>>("products/out") ?? new List<StockItem>();
 
-    public IReadOnlyList<StockItem> Expiring(int withinDays) =>
+    public List<StockItem> Expiring(int withinDays) =>
         Api.Get<List<StockItem>>($"products/expiring?withinDays={withinDays}") ?? new List<StockItem>();
 
     public bool BarcodeTaken(string barcode, int exceptId = 0) =>
@@ -144,7 +150,7 @@ public sealed class RemoteStock : IStockService
         Saved(Api.Post<StockSaved>($"products/{id}/deliveries",
                                    new ReceiveStock(quantity, cost, price, expiresOn)));
 
-    public IReadOnlyList<StockMovement> Movements(DateRange? range = null, int? productId = null)
+    public List<StockMovement> Movements(DateRange? range = null, int? productId = null)
     {
         var query = "inventory/movements?";
         if (range is { } r) query += $"from={r.From:O}&to={r.To:O}&";
@@ -153,7 +159,7 @@ public sealed class RemoteStock : IStockService
         return Api.Get<List<StockMovement>>(query) ?? new List<StockMovement>();
     }
 
-    public IReadOnlyList<(StockReason Reason, decimal Quantity, decimal Value)> LossesByReason(DateRange range) =>
+    public List<(StockReason Reason, decimal Quantity, decimal Value)> LossesByReason(DateRange range) =>
         (Api.Get<List<LossLine>>($"inventory/losses?from={range.From:O}&to={range.To:O}")
          ?? new List<LossLine>())
         .Select(l => (l.Reason, l.Quantity, l.Value))
@@ -162,7 +168,8 @@ public sealed class RemoteStock : IStockService
     public void SetCount(int id, string name, decimal counted, string note) =>
         Saved(Api.Post<StockSaved>($"inventory/{id}/count", new CountShelf(counted, note)));
 
-    public void Move(int id, decimal delta, StockReason reason, string reference, string note, decimal? unitCost) =>
+    public void Move(int id, string name, decimal delta, StockReason reason, string reference,
+                     string note, decimal? unitCost) =>
         Saved(Api.Post<StockSaved>($"inventory/{id}/adjustments",
                                    new AdjustStock(delta, reason.ToString(), reference, note, unitCost)));
 

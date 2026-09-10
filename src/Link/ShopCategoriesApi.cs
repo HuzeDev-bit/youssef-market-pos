@@ -1,4 +1,4 @@
-using MarketPos.Data;
+﻿using MarketPos.Data;
 
 namespace MarketPos.Link;
 
@@ -14,7 +14,7 @@ namespace MarketPos.Link;
 /// </summary>
 public static class ShopCategoriesApi
 {
-    public static IReadOnlyList<Models.CategoryRow> List(bool includeInactive) =>
+    public static List<Models.CategoryRow> List(bool includeInactive) =>
         CategoryRepository.List(includeInactive);
 
     public static CategorySaved Create(NewCategory asked)

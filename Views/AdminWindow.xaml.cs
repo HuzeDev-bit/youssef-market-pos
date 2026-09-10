@@ -411,5 +411,5 @@ public sealed class AdminShellViewModel : ViewModelBase
 
     public bool HasAlerts => AlertCount > 0;
 
-    public void RefreshAlerts() => AlertCount = Notifications.Build().Count;
+    public void RefreshAlerts() => AlertCount = Link.Shop.Reports.Alerts().Count;
 }

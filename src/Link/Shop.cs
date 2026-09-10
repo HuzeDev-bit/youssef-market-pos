@@ -1,4 +1,4 @@
-using MarketPos.Services;
+﻿using MarketPos.Services;
 
 namespace MarketPos.Link;
 
@@ -31,22 +31,67 @@ public static class Shop
     private static bool Remote => Services.Catalog.BelongsToAServer;
 
     private static ICategoryService? _categories;
+    private static IStockService? _stock;
+    private static ISupplierService? _suppliers;
+    private static IExpenseService? _expenses;
+    private static IWorkerService? _workers;
+    private static ISalesService? _sales;
+    private static IActivityService? _activity;
+    private static IReportService? _reports;
 
     /// <summary>How the shop files what it sells.</summary>
     public static ICategoryService Categories =>
         _categories ??= Remote ? new RemoteCategories() : new LocalCategories();
 
+    /// <summary>What the shop sells, and what is on its shelves.</summary>
+    public static IStockService Stock =>
+        _stock ??= Remote ? new RemoteStock() : new LocalStock();
+
+    /// <summary>Who the shop buys from, what arrived, and what has been paid.</summary>
+    public static ISupplierService Suppliers =>
+        _suppliers ??= Remote ? new RemoteSuppliers() : new LocalSuppliers();
+
+    /// <summary>What the shop spends on running itself.</summary>
+    public static IExpenseService Expenses =>
+        _expenses ??= Remote ? new RemoteExpenses() : new LocalExpenses();
+
+    /// <summary>Who works here, and what they are owed.</summary>
+    public static IWorkerService Workers =>
+        _workers ??= Remote ? new RemoteWorkers() : new LocalWorkers();
+
+    /// <summary>What has been sold, refunded and cancelled.</summary>
+    public static ISalesService Sales =>
+        _sales ??= Remote ? new RemoteSales() : new LocalSales();
+
+    /// <summary>What has been done, and by whom.</summary>
+    public static IActivityService Activity =>
+        _activity ??= Remote ? new RemoteActivity() : new LocalActivity();
+
+    /// <summary>The figures: takings, cost, profit, what needs attention.</summary>
+    public static IReportService Reports =>
+        _reports ??= Remote ? new RemoteReports() : new LocalReports();
+
     /// <summary>
     /// Forgets which implementations were chosen, for the diagnostics that switch a process
     /// between being a shop and being a till.
     /// </summary>
-    public static void Reconsider() => _categories = null;
+    public static void Reconsider()
+    {
+        _categories = null;
+        _stock = null;
+        _suppliers = null;
+        _expenses = null;
+        _workers = null;
+        _sales = null;
+        _activity = null;
+        _reports = null;
+    }
 }
 
 /// <summary>What the app needs to do with the shop's categories.</summary>
 public interface ICategoryService
 {
-    IReadOnlyList<Models.CategoryRow> List(bool includeInactive = false);
+    List<Models.CategoryRow> List(bool includeInactive = false);
 
     int Create(string name, string icon = "", string image = "");
 

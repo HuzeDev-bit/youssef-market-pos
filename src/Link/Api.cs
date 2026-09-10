@@ -119,6 +119,44 @@ public static class Api
         }
     }
 
+    /// <summary>
+    /// Turns a query into a query string: a date range when there is one, and whatever else the
+    /// caller wants asked. Written here so twenty call sites do not each get the ampersands
+    /// slightly wrong.
+    /// </summary>
+    public static string When(Models.DateRange? range, params string?[] also)
+    {
+        var parts = new List<string>();
+
+        if (range is { } r) parts.Add($"from={Uri.EscapeDataString(r.From.ToString("O"))}&to={Uri.EscapeDataString(r.To.ToString("O"))}");
+        parts.AddRange(also.Where(a => !string.IsNullOrWhiteSpace(a))!);
+
+        return parts.Count == 0 ? string.Empty : "?" + string.Join("&", parts);
+    }
+
+    /// <summary>
+    /// Insists on an answer, and turns the shop's refusal back into the exception the screens
+    /// were written to catch.
+    ///
+    /// The back office already handles a repository that throws — NotEnoughStockException when
+    /// a shelf cannot cover it, UnauthorizedAccessException when somebody may not. A refusal
+    /// that arrived as a polite object would slip past every one of those handlers and be shown
+    /// to an owner as success.
+    /// </summary>
+    public static Saved Must(Saved? said)
+    {
+        if (said is null) throw new ShopUnreachable("The shop did not answer.");
+        if (said.Ok) return said;
+
+        throw said.Refusal switch
+        {
+            nameof(Data.NotEnoughStockException) => new Data.NotEnoughStockException(said.Problem),
+            nameof(UnauthorizedAccessException) => new UnauthorizedAccessException(said.Problem),
+            nameof(ArgumentException) => new ArgumentException(said.Problem),
+            _ => new InvalidOperationException(said.Problem),
+        };
+    }
+
     private static async Task<T?> Read<T>(HttpResponseMessage response) where T : class
     {
         if (response.Content.Headers.ContentLength is 0) return null;

@@ -29,7 +29,7 @@ public partial class CategoriesPage : AdminPageBase
     {
         Session.Require(Permission.ManageCategories);
 
-        var products = StockRepository.List();
+        var products = Link.Shop.Stock.List();
         _rows = Link.Shop.Categories.List(includeInactive: ShowInactive.IsChecked == true).ToList();
 
         // Each card carries what is actually in it. Read from the products rather than kept

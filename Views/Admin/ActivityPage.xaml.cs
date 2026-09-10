@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.Services;
@@ -61,7 +61,7 @@ public partial class ActivityPage : AdminPageBase
 
         if (KindFilter.SelectedIndex != 2)
         {
-            rows.AddRange(ActivityRepository.List(Dates.Range, search).Select(a => new Entry
+            rows.AddRange(Link.Shop.Activity.List(Dates.Range, search).Select(a => new Entry
             {
                 At = a.HappenedAt,
                 Initial = a.Initial,
@@ -91,7 +91,7 @@ public partial class ActivityPage : AdminPageBase
     /// </summary>
     private IEnumerable<Entry> Movements(string search)
     {
-        var moves = InventoryRepository.ListMovements(Dates.Range);
+        var moves = Link.Shop.Stock.Movements(Dates.Range);
 
         if (search.Length > 0)
         {
