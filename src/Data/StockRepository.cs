@@ -1,4 +1,4 @@
-using MarketPos.Models;
+﻿using MarketPos.Models;
 using MarketPos.Services;
 
 namespace MarketPos.Data;
@@ -314,7 +314,10 @@ public static class StockRepository
 
     private static void Bind(Microsoft.Data.Sqlite.SqliteCommand command, StockItem item)
     {
-        command.With("$barcode", item.Barcode)
+        // NULL, not "". A product with nothing printed on it has no barcode, and the
+        // unique index only constrains the rows that have one — SQLite counts every NULL as
+        // distinct, so a shop can have as many unbarcoded products as it likes.
+        command.WithBarcode("$barcode", item.Barcode)
                .With("$name", item.Name)
                .With("$sku", item.Sku)
                .With("$category", Grouping(item))
@@ -348,31 +351,22 @@ public static class StockRepository
             "Product", id, newValue: name, detail: ActivityRepository.Say(active ? "reactivated {0}" : "deactivated {0}", name));
     }
 
-    /// <summary>Barcode uniqueness check for the product form, excluding the row being edited.</summary>
+    /// <summary>
+    /// Whether another product already carries this barcode, excluding the row being edited.
+    ///
+    /// An empty barcode is never taken: that is the answer for every product without one, and
+    /// there is no limit on how many of those a shop may have.
+    /// </summary>
     public static bool BarcodeTaken(string barcode, int exceptId = 0)
     {
+        barcode = barcode.Trim();
+        if (barcode.Length == 0) return false;
+
         using var connection = Database.Open();
         using var command = connection.CreateCommand();
         command.CommandText = "SELECT COUNT(*) FROM products WHERE barcode = $barcode AND id <> $id;";
-        command.With("$barcode", barcode.Trim()).With("$id", exceptId);
+        command.With("$barcode", barcode).With("$id", exceptId);
         return Convert.ToInt32(command.ExecuteScalar()) > 0;
-    }
-
-    /// <summary>
-    /// The next free internal barcode for a product that has none printed on it. Uses the
-    /// 2xxxxxxxxxxx range, which EAN-13 reserves for in-store use, so a shop-made code can
-    /// never collide with a manufacturer's.
-    /// </summary>
-    public static string NextInternalBarcode()
-    {
-        using var connection = Database.Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT COALESCE(MAX(CAST(barcode AS INTEGER)), 2000000000000)
-            FROM products WHERE barcode GLOB '2[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]';
-            """;
-        var next = Convert.ToInt64(command.ExecuteScalar()) + 1;
-        return next.ToString("D13");
     }
 
     // ------------------------------- Alerts -------------------------------

@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -85,7 +86,7 @@ public partial class SaleDetailWindow : Window
     {
         try
         {
-            var window = new SaleDetailWindow(invoiceNumber) { Owner = owner };
+            var window = new SaleDetailWindow(invoiceNumber).By(owner);
             window.ShowDialog();
             return window._changed;
         }

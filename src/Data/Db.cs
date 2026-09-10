@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Microsoft.Data.Sqlite;
 
 namespace MarketPos.Data;
@@ -72,4 +72,19 @@ internal static class Db
     public const string SumMoney = "COALESCE(SUM(CAST({0} AS REAL)), 0)";
 
     public static string Sum(string column) => string.Format(SumMoney, column);
+
+    /// <summary>
+    /// Binds a barcode, or NULL when the product has none.
+    /// </summary>
+    /// <remarks>
+    /// Its own method rather than a null check at each call site: an empty string written into
+    /// that column would be a barcode as far as the unique index is concerned, and the second
+    /// product without one would be refused.
+    /// </remarks>
+    public static SqliteCommand WithBarcode(this SqliteCommand command, string name, string? barcode)
+    {
+        var code = (barcode ?? string.Empty).Trim();
+        command.Parameters.AddWithValue(name, code.Length == 0 ? DBNull.Value : code);
+        return command;
+    }
 }

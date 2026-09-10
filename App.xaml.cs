@@ -100,6 +100,10 @@ public partial class App : Application
             return;
         }
 
+        // The shop's own settings belong with the shop, so a machine upgrading from an older
+        // build hands them over now that the database is open.
+        AppSettings.MoveShopSettingsIntoTheDatabase();
+
         if (e.Args.Contains("--selftest")) SelfTest.Run(this);
 
         // A new install opens with a password on the back office rather than without one.

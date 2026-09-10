@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -86,13 +87,13 @@ public partial class ExpenseWindow : Window
     }
 
     public static bool AddNew(Window owner) =>
-        new ExpenseWindow(null) { Owner = owner }.ShowDialog() == true;
+        new ExpenseWindow(null).By(owner).ShowDialog() == true;
 
     public static bool Edit(Window owner, Expense expense) =>
-        new ExpenseWindow(expense) { Owner = owner }.ShowDialog() == true;
+        new ExpenseWindow(expense).By(owner).ShowDialog() == true;
 
     public static bool Repeat(Window owner, Expense template) =>
-        new ExpenseWindow(null, template) { Owner = owner }.ShowDialog() == true;
+        new ExpenseWindow(null, template).By(owner).ShowDialog() == true;
 
     private void ShowReceipt() =>
         ReceiptText.Text = string.IsNullOrWhiteSpace(_receiptPath)

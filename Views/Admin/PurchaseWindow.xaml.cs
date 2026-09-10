@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -60,7 +61,7 @@ public partial class PurchaseWindow : Window
             return false;
         }
 
-        return new PurchaseWindow(supplierId) { Owner = owner }.ShowDialog() == true;
+        return new PurchaseWindow(supplierId).By(owner).ShowDialog() == true;
     }
 
     // ------------------------------- Lines -------------------------------

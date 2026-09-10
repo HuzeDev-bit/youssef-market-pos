@@ -299,7 +299,7 @@ public partial class AddProductPage : AdminPageBase
 
         // What the photo is for depends on whether this thing will ever be a tile.
         var code = AddBarcodeBox.Text.Trim();
-        var scanned = code.Length > 0 && !Product.IsShopsOwnCode(code);
+        var scanned = code.Length > 0;
 
         AddPictureNote.Text = Loc.T(scanned
             ? "The photo is optional here — this product is scanned, so it only shows on lists and receipts."
@@ -598,7 +598,8 @@ public partial class AddProductPage : AdminPageBase
             if (category.Length == 0) { Fail("Choose or type a category.", AddCategoryBox); return; }
             if (!hasPrice || price <= 0m) { Fail("Enter what it sells for.", AddPriceBox); return; }
 
-            if (barcode.Length == 0) barcode = StockRepository.NextInternalBarcode();
+            // Empty stays empty: a product with nothing printed on it is saved with no
+            // barcode at all, and that is what puts it on the till as something to press.
             if (StockRepository.BarcodeTaken(barcode))
             {
                 Fail("That barcode already belongs to another product.", AddBarcodeBox);

@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -72,7 +73,7 @@ public partial class AmountWindow : Window
     /// <summary>Shows the dialog; null when the owner backed out.</summary>
     public static AmountResult? Ask(Window owner, AmountRequest request)
     {
-        var window = new AmountWindow(request) { Owner = owner };
+        var window = new AmountWindow(request).By(owner);
         return window.ShowDialog() == true ? window.Result : null;
     }
 

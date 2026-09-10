@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 using MarketPos.Services;
 
@@ -35,7 +35,7 @@ public partial class ServerSetupWindow : Window
     /// </summary>
     public static bool Ask(Window owner, out bool workingAlone)
     {
-        var window = new ServerSetupWindow { Owner = owner };
+        var window = new ServerSetupWindow().By(owner);
         var connected = window.ShowDialog() == true;
         workingAlone = window._workingAlone;
         return connected;

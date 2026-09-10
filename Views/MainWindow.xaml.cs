@@ -297,6 +297,12 @@ public partial class MainWindow : Window
         // was in before this existed.
         if (!Session.Can(Permission.ManageProducts)) return;
 
+        // And there has to be a till on screen to ask. The diagnostics build this window
+        // without ever showing it and then scan things through it, which is exactly what they
+        // are for; a modal question raised there is asked of nobody and answered by nobody,
+        // and it would hold the run open for ever waiting.
+        if (!Owned.CanOwn(this)) return;
+
         if (!ConfirmWindow.Ask(this,
                 Loc.T("{0} is not in the shop yet. Add it?", Loc.Ltr(barcode)),
                 Loc.T("You will be asked for its name and price. It goes on the till as soon "
@@ -536,7 +542,7 @@ public partial class MainWindow : Window
             // The back office is its own window rather than a fourth page in the till. The
             // till stays a single-purpose screen that a cashier cannot get lost in, and the
             // office gets the width its tables need.
-            new AdminWindow { Owner = this }.ShowDialog();
+            new AdminWindow().By(this).ShowDialog();
 
             Catalog.Reload();
             Vm.ReloadProducts();
@@ -614,7 +620,7 @@ public partial class MainWindow : Window
         var receipt = SaleRepository.FindByInvoiceNumber(invoiceNumber);
         if (receipt is null) return;
 
-        new ReceiptWindow(receipt, allowReprint: true) { Owner = this }.ShowDialog();
+        new ReceiptWindow(receipt, allowReprint: true).By(this).ShowDialog();
         FocusBarcode();
     }
 
@@ -630,7 +636,7 @@ public partial class MainWindow : Window
 
     private void Reprint_Click(object sender, RoutedEventArgs e)
     {
-        new ReprintWindow { Owner = this }.ShowDialog();
+        new ReprintWindow().By(this).ShowDialog();
         FocusBarcode();
     }
 

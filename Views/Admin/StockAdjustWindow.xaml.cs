@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -51,7 +52,7 @@ public partial class StockAdjustWindow : Window
     }
 
     public static bool Show(Window owner, StockItem item) =>
-        new StockAdjustWindow(item) { Owner = owner }.ShowDialog() == true;
+        new StockAdjustWindow(item).By(owner).ShowDialog() == true;
 
     private bool IsCount => ModeCount.IsChecked == true;
 

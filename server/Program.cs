@@ -136,16 +136,23 @@ app.MapGet("/catalog", (string? since) =>
 // it and when is written in the one place that keeps such records.
 app.MapPost("/products", (NewProduct arriving) =>
 {
-    var barcode = arriving.Barcode.Trim();
-    if (barcode.Length == 0) return Results.BadRequest("A product needs a barcode.");
+    var barcode = (arriving.Barcode ?? string.Empty).Trim();
 
-    // Two tills can scan the same unknown thing within a minute of each other, and the second
-    // one is not an error: the shop already has it, which is the answer that till needs.
-    var already = StockRepository.FindByBarcode(barcode);
-    if (already is not null)
+    if (arriving.Name.Trim().Length == 0)
+        return Results.BadRequest("A product needs a name.");
+
+    // A barcode is optional — a product with nothing printed on it is saved without one, and
+    // is found at the till by its picture. Only a barcode that is actually there can clash.
+    if (barcode.Length > 0)
     {
-        Note($"product {barcode} was already here as {already.Name}");
-        return Results.Ok(new ProductAccepted(already.Id, already.Barcode, already.Name, true));
+        // Two tills can scan the same unknown thing within a minute of each other, and the
+        // second is not an error: the shop already has it, which is the answer that till needs.
+        var already = StockRepository.FindByBarcode(barcode);
+        if (already is not null)
+        {
+            Note($"product {barcode} was already here as {already.Name}");
+            return Results.Ok(new ProductAccepted(already.Id, already.Barcode, already.Name, true));
+        }
     }
 
     var id = StockRepository.Create(new StockItem
@@ -161,7 +168,8 @@ app.MapPost("/products", (NewProduct arriving) =>
         ShowInPos = true,
     }, openingStock: arriving.Stock);
 
-    Note($"{arriving.AddedBy} added {arriving.Name} ({barcode}) from a till");
+    Note($"{arriving.AddedBy} added {arriving.Name} "
+       + $"({(barcode.Length > 0 ? barcode : "no barcode")}) from a till");
     return Results.Ok(new ProductAccepted(id, barcode, arriving.Name.Trim(), false));
 });
 

@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.Windows;
 using System.Windows.Input;
 using MarketPos.Data;
@@ -71,7 +72,7 @@ public partial class SupplierWindow : Window
     /// </summary>
     public static bool AddNew(Window owner, out int createdId)
     {
-        var window = new SupplierWindow(null) { Owner = owner };
+        var window = new SupplierWindow(null).By(owner);
         var saved = window.ShowDialog() == true;
         createdId = saved ? window._created : 0;
         return saved;
@@ -80,7 +81,7 @@ public partial class SupplierWindow : Window
     public static bool AddNew(Window owner) => AddNew(owner, out _);
 
     public static bool Edit(Window owner, Supplier supplier) =>
-        new SupplierWindow(supplier) { Owner = owner }.ShowDialog() == true;
+        new SupplierWindow(supplier).By(owner).ShowDialog() == true;
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {

@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.Windows;
 using System.Windows.Input;
 using MarketPos.Services;
@@ -34,7 +35,7 @@ public partial class PinWindow : Window
     /// <summary>Returns the new PIN, or null if the owner backed out.</summary>
     public static string? Ask(Window owner, string workerName, bool hasPin)
     {
-        var window = new PinWindow(workerName, hasPin) { Owner = owner };
+        var window = new PinWindow(workerName, hasPin).By(owner);
         return window.ShowDialog() == true ? window._pin : null;
     }
 

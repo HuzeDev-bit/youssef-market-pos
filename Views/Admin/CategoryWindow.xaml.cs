@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using MarketPos.Views;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
@@ -57,10 +58,10 @@ public partial class CategoryWindow : Window
     }
 
     public static bool AddNew(Window owner) =>
-        new CategoryWindow(null) { Owner = owner }.ShowDialog() == true;
+        new CategoryWindow(null).By(owner).ShowDialog() == true;
 
     public static bool Edit(Window owner, CategoryRow row) =>
-        new CategoryWindow(row) { Owner = owner }.ShowDialog() == true;
+        new CategoryWindow(row).By(owner).ShowDialog() == true;
 
     private void Suggestion_Click(object sender, RoutedEventArgs e)
     {

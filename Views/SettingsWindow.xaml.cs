@@ -68,7 +68,7 @@ public partial class SettingsWindow : Window
 
     /// <summary>Opens settings. True when something was saved.</summary>
     public static bool Ask(Window owner) =>
-        new SettingsWindow { Owner = owner }.ShowDialog() == true;
+        new SettingsWindow().By(owner).ShowDialog() == true;
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {

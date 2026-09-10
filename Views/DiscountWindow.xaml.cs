@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -49,7 +49,7 @@ public partial class DiscountWindow : Window
     public static bool Ask(Window owner, decimal gross, DiscountKind kind, decimal value,
                            out DiscountKind newKind, out decimal newValue)
     {
-        var dialog = new DiscountWindow(gross, kind, value) { Owner = owner };
+        var dialog = new DiscountWindow(gross, kind, value).By(owner);
         var confirmed = dialog.ShowDialog() == true;
         newKind = dialog.Removed ? DiscountKind.None : dialog.Kind;
         newValue = dialog.Removed ? 0m : dialog.Value;

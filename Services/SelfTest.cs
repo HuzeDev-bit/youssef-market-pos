@@ -1865,7 +1865,6 @@ public static class SelfTest
                 ("read the catalogue", () => StockRepository.List()),
                 ("read categories", () => CategoryRepository.List()),
                 ("look up a barcode", () => StockRepository.BarcodeTaken("9990000000404")),
-                ("make an in-store code", () => StockRepository.NextInternalBarcode()),
                 ("ask for the scan prompt", () => { _ = new Views.ScanWindow(); }),
             ];
 

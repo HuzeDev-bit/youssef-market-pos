@@ -1,4 +1,4 @@
-namespace MarketPos.Models;
+﻿namespace MarketPos.Models;
 
 /// <summary>
 /// A sellable item. Price is the shelf price in MAD, tax-inclusive (as displayed
@@ -63,21 +63,18 @@ public sealed class Product
     /// True when this is something a scanner can read: a manufacturer's barcode, printed on
     /// the packet.
     ///
-    /// The shop's own codes are in the 2xxxxxxxxxxx range, which EAN-13 reserves for in-store
-    /// use. A product wearing one of those has no barcode of its own — it is bread, or loose
-    /// tomatoes, and the code exists only so the database has a key. That is exactly the split
-    /// the till needs: scannable things are scanned, and everything else needs a picture to
-    /// press.
+    /// A product without one has no barcode at all — the column is NULL in the database, and
+    /// empty here. It is bread, or loose tomatoes, and it is found by pressing its picture
+    /// rather than by scanning. That is exactly the split the till needs, and it is now the
+    /// plain reading of the data rather than a range of digits that had to be decoded.
+    ///
+    /// <para>
+    /// The shop used to mint a code in the 2xxxxxxxxxxx range for these, because the column
+    /// could not be empty. It can now, so nothing is invented: a product either carries a
+    /// barcode somebody printed on it or it carries none.
+    /// </para>
     /// </summary>
-    public bool IsScannable => Barcode.Length > 0 && !IsShopsOwnCode(Barcode);
-
-    /// <summary>
-    /// An in-store code minted by <c>StockRepository.NextInternalBarcode</c>: thirteen digits
-    /// beginning with 2. Kept here rather than in the repository because the till has to make
-    /// the same judgement about a product it is only holding in memory.
-    /// </summary>
-    public static bool IsShopsOwnCode(string barcode) =>
-        barcode.Length == 13 && barcode[0] == '2' && barcode.All(char.IsAsciiDigit);
+    public bool IsScannable => Barcode.Length > 0;
 
     /// <summary>Shelf-price label for the product tile, e.g. "6.90 DH/kg" or "8.50 DH".</summary>
     public string PriceLabel => Services.Loc.Ltr(Unit == Unit.Kg

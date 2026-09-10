@@ -89,13 +89,15 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
+            <!-- No Generate any more. It minted an in-store code for a product with nothing
+                 printed on it, which read like a barcode everywhere it was shown and could be
+                 scanned off a screen. Empty is the honest value, and it is what puts the
+                 product on the till as a tile. -->
                             <Grid Margin="0,0,0,6">
                                 <TextBlock Text="BARCODE" Style="{StaticResource Text.FieldLabel}" Margin="2,0,0,0"/>
-                                <TextBlock Text="Generate" Style="{StaticResource Text.Eyebrow}"
-                                           Foreground="{StaticResource Brush.Accent}"
-                                           HorizontalAlignment="Right" Cursor="Hand"
-                                           MouseLeftButtonDown="GenerateBarcode_Click"
-                                           ToolTip="Make an in-store code for a product with no printed barcode"/>
+                                <TextBlock Text="Leave empty if it has none" Style="{StaticResource Text.Eyebrow}"
+                                           Foreground="{StaticResource Brush.Muted}"
+                                           HorizontalAlignment="Right"/>
                             </Grid>
                             <TextBox x:Name="BarcodeBox" Style="{StaticResource TextBox.Field}"
                                      TextChanged="Barcode_Changed"/>

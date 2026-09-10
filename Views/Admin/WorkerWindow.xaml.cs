@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -88,10 +89,10 @@ public partial class WorkerWindow : Window
     }
 
     public static bool AddNew(Window owner) =>
-        new WorkerWindow(null) { Owner = owner }.ShowDialog() == true;
+        new WorkerWindow(null).By(owner).ShowDialog() == true;
 
     public static bool Edit(Window owner, Worker worker) =>
-        new WorkerWindow(worker) { Owner = owner }.ShowDialog() == true;
+        new WorkerWindow(worker).By(owner).ShowDialog() == true;
 
     private void Role_Changed(object sender, RoutedEventArgs e) => UpdateRoleNote();
 

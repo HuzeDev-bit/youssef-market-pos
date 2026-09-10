@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 
 namespace MarketPos.Views;
@@ -22,7 +22,7 @@ public partial class ConfirmWindow : Window
 
     /// <summary>Shows the prompt modally; true when the user confirms.</summary>
     public static bool Ask(Window owner, string heading, string? body = null) =>
-        new ConfirmWindow(heading, body) { Owner = owner }.ShowDialog() == true;
+        new ConfirmWindow(heading, body).By(owner).ShowDialog() == true;
 
     private void Yes_Click(object sender, RoutedEventArgs e)
     {

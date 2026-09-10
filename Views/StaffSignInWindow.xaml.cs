@@ -68,9 +68,8 @@ public partial class StaffSignInWindow : Window
         if (Session.Current is not null) return true;    // somebody signed in this run
         if (Session.IsOwnerUnlocked) return true;
 
-        var asking = new StaffSignInWindow();
-        if (owner is not null) asking.Owner = owner;
-        else asking.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        var asking = new StaffSignInWindow().By(owner);
+        if (asking.Owner is null) asking.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
         return asking.ShowDialog() == true;
     }

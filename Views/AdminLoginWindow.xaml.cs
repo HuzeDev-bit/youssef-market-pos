@@ -70,7 +70,7 @@ public partial class AdminLoginWindow : Window
 
     /// <summary>Shows the prompt; true when the owner is through the gate.</summary>
     public static bool Ask(Window owner, bool changePassword = false) =>
-        new AdminLoginWindow(changePassword) { Owner = owner }.ShowDialog() == true;
+        new AdminLoginWindow(changePassword).By(owner).ShowDialog() == true;
 
     private void Submit_Click(object sender, RoutedEventArgs e)
     {

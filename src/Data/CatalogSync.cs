@@ -45,7 +45,7 @@ public static class CatalogSync
                     UPDATE products SET barcode = 'replaced-' || id, is_active = 0, show_in_pos = 0
                     WHERE barcode = $barcode AND id <> $id;
                     """;
-                displace.With("$barcode", item.Barcode).With("$id", item.Id);
+                displace.WithBarcode("$barcode", item.Barcode).With("$id", item.Id);
                 displace.ExecuteNonQuery();
             }
 
@@ -67,7 +67,7 @@ public static class CatalogSync
                     updated_at  = excluded.updated_at;
                 """;
             upsert.With("$id", item.Id)
-                  .With("$barcode", item.Barcode)
+                  .WithBarcode("$barcode", item.Barcode)
                   .With("$name", item.Name)
                   .With("$category", categories[Grouping(item.Category)])
                   .WithMoney("$price", item.Price)

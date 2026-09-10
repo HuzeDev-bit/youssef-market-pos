@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using MarketPos.Views;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Input;
@@ -64,7 +65,7 @@ public partial class ProductWindow : Window
     }
 
     public static bool AddNew(Window owner) =>
-        new ProductWindow(null) { Owner = owner }.ShowDialog() == true;
+        new ProductWindow(null).By(owner).ShowDialog() == true;
 
     /// <summary>
     /// The same form, opened already knowing the barcode — the cashier has just scanned
@@ -73,7 +74,7 @@ public partial class ProductWindow : Window
     /// </summary>
     public static bool AddScanned(Window owner, string barcode)
     {
-        var form = new ProductWindow(null) { Owner = owner };
+        var form = new ProductWindow(null).By(owner);
         form.BarcodeBox.Text = barcode;
         form.Loaded += (_, _) => { form.NameBox.Focus(); form.NameBox.SelectAll(); };
 
@@ -81,7 +82,7 @@ public partial class ProductWindow : Window
     }
 
     public static bool Edit(Window owner, StockItem item) =>
-        new ProductWindow(item) { Owner = owner }.ShowDialog() == true;
+        new ProductWindow(item).By(owner).ShowDialog() == true;
 
     private void FillForNew()
     {
@@ -306,7 +307,7 @@ public partial class ProductWindow : Window
 
         // Says what the photo is actually for, which depends on whether this product will
         // ever appear as something to press.
-        var scanned = BarcodeBox.Text.Trim() is { Length: > 0 } code && !Product.IsShopsOwnCode(code);
+        var scanned = BarcodeBox.Text.Trim().Length > 0;
         PictureNote.Text = scanned
             ? "Optional. This product is scanned, so the photo only shows on receipts and lists."
             : "Shown on the till, where the cashier presses it. Worth adding for anything without a barcode.";
@@ -378,15 +379,6 @@ public partial class ProductWindow : Window
         MarginText.Foreground = (System.Windows.Media.Brush)FindResource(
             margin < 0m ? "Brush.Danger" : "Brush.Text");
         MarginWarning.Visibility = margin < 0m ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void GenerateBarcode_Click(object sender, MouseButtonEventArgs e)
-    {
-        BarcodeBox.Text = StockRepository.NextInternalBarcode();
-
-        // An in-store code means this product will be a tile at the till, so what the photo is
-        // for has just changed. Say so rather than leaving the old note under it.
-        ShowPicture();
     }
 
     private void Barcode_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e)

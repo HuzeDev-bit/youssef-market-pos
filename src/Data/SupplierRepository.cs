@@ -1,4 +1,4 @@
-using MarketPos.Models;
+﻿using MarketPos.Models;
 using MarketPos.Services;
 
 namespace MarketPos.Data;
@@ -269,10 +269,9 @@ public static class SupplierRepository
             var id = StockRepository.Create(new StockItem
             {
                 // The code on the box when one was scanned, so the till finds it by scan from
-                // the first sale. Only goods with no barcode of their own get an in-store one.
-                Barcode = string.IsNullOrWhiteSpace(line.Barcode)
-                    ? StockRepository.NextInternalBarcode()
-                    : line.Barcode,
+                // the first sale. Goods with nothing printed on them arrive with no barcode and
+                // keep none: they are found on the till by their picture.
+                Barcode = (line.Barcode ?? string.Empty).Trim(),
                 Name = line.Name,
                 Cost = line.UnitCost,
                 // No selling price given means the shop has not decided yet. Cost is the
