@@ -173,6 +173,11 @@ public partial class App : Application
     /// </summary>
     private static Job WhatThisOneIs(string[] args)
     {
+#if TILL_BUILD
+        // The cashier's download. Nothing can talk it out of this — not a flag, and above all
+        // not what the file happens to be called by the time it reaches the counter.
+        return Job.Till;
+#else
         if (args.Contains("--till")) return Job.Till;
         if (args.Contains("--server") || args.Contains("--headless")) return Job.Server;
 
@@ -184,6 +189,7 @@ public partial class App : Application
 
         // The one download that is both, which is what a shop with one computer wants.
         return Job.Shop;
+#endif
     }
 
     protected override void OnExit(ExitEventArgs e)

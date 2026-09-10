@@ -25,6 +25,12 @@
          because that one flows down into the Core project as well and both halves then try to
          publish a file of the same name. -->
     <AssemblyName Condition="'$(TillBuild)' == 'true'">MarketPosTill</AssemblyName>
+
+    <!-- And the role is compiled in, not read back off the file name at run time.
+         Windows renames a second download to "MarketPosTill (1).exe", which does not end in
+         Till — so the copy the shop actually double-clicks stopped being a till and became a
+         shop of its own, with its own database, silently. A build knows what it is. -->
+    <DefineConstants Condition="'$(TillBuild)' == 'true'">$(DefineConstants);TILL_BUILD</DefineConstants>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
