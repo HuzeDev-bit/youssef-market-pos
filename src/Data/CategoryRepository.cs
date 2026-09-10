@@ -138,8 +138,24 @@ public static class CategoryRepository
         using var work = connection.BeginTransaction();
         try
         {
-            // Products already off the shelves have nowhere to go: category_id cannot be
-            // empty, so they leave with the category they were filed under.
+            // A product that has ever been sold stays, and is filed under Other.
+            //
+            // This used to delete every off-the-shelf product in the category, which the
+            // database refused the moment a receipt pointed at one -- and refusing the delete
+            // took the whole category with it, so an owner who had once sold a thing could
+            // never tidy the category away again. The receipts are the part that must not
+            // move; the category is not. So the sold ones are re-filed and the rest go.
+            var elsewhere = Somewhere(connection, work, exceptId: id);
+
+            using var keep = connection.CreateCommand();
+            keep.Transaction = work;
+            keep.CommandText =
+                "UPDATE products SET category_id = $other WHERE category_id = $id"
+                + " AND id IN (SELECT product_id FROM sale_lines);";
+            keep.With("$id", id).With("$other", elsewhere).ExecuteNonQuery();
+
+            // The rest were never sold and are already off the shelves, so they leave with the
+            // category they were filed under.
             using var sweep = connection.CreateCommand();
             sweep.Transaction = work;
             sweep.CommandText = "DELETE FROM products WHERE category_id = $id AND is_active = 0;";
@@ -152,13 +168,13 @@ public static class CategoryRepository
 
             work.Commit();
         }
-        catch (SqliteException)
+        catch (SqliteException held)
         {
-            // Something outside this table is holding on — a sale line, a delivery. The
-            // database says so by refusing the delete, which is exactly the answer wanted.
+            // Something else is still holding on -- a delivery line, most likely. The database
+            // says so by refusing, and saying which is more use than saying "cannot".
             work.Rollback();
-            problem = Loc.T("{0} cannot be deleted: what is in it appears in the sales history. "
-                          + "Move the products to another category first.", name);
+            problem = Loc.T("{0} could not be deleted: something in the shop's records still "
+                          + "points at it. ({1})", name, held.Message);
             return false;
         }
 
@@ -167,6 +183,30 @@ public static class CategoryRepository
 
         CategoryImages.Forget(id);
         return true;
+    }
+
+    /// <summary>
+    /// Somewhere to file a product whose category is going away.
+    ///
+    /// Other, which every shop has; and if this one has had it deleted, it comes back. A
+    /// product's category cannot be empty, so there has to be an answer here.
+    /// </summary>
+    private static int Somewhere(SqliteConnection connection, SqliteTransaction work, int exceptId)
+    {
+        using var look = connection.CreateCommand();
+        look.Transaction = work;
+        look.CommandText = "SELECT id FROM categories WHERE name = 'Other' AND id <> $id LIMIT 1;";
+        look.With("$id", exceptId);
+
+        if (look.ExecuteScalar() is { } found and not DBNull) return Convert.ToInt32(found);
+
+        using var make = connection.CreateCommand();
+        make.Transaction = work;
+        make.CommandText =
+            "INSERT INTO categories (name, icon, is_active, image) VALUES ('Other', '', 1, '');"
+            + " SELECT last_insert_rowid();";
+
+        return Convert.ToInt32(make.ExecuteScalar());
     }
 
     public static bool SetActive(int id, string name, bool active, out string problem)

@@ -123,7 +123,8 @@ app.MapGet("/catalog", (string? since) =>
     var items = StockRepository.List()
         .Where(p => p.ShowInPos)
         .Select(p => new CatalogItem(
-            p.Id, p.Barcode, p.Name, p.Category, p.Price, p.TaxRate, p.Unit.ToString(), p.Stock))
+            p.Id, p.Barcode, p.Name, p.Category, p.Price, p.TaxRate, p.Unit.ToString(), p.Stock,
+            HasPhoto: !string.IsNullOrWhiteSpace(p.ImagePath)))
         .ToList();
 
     // A stamp rather than a row count: the till sends back what it last saw, and a shop that
@@ -415,6 +416,11 @@ app.MapDelete("/categories/{id:int}", (HttpRequest request, int id) =>
 // and the work belongs with the shop rather than on whichever counter took the picture.
 app.MapGet("/products/{id:int}/photo", (int id) =>
     ShopData.Photo(id) is { } picture
+        ? Results.File(picture.Bytes, picture.Type)
+        : Results.NotFound());
+
+app.MapGet("/categories/{id:int}/photo", (int id) =>
+    ShopData.CategoryPhoto(id) is { } picture
         ? Results.File(picture.Bytes, picture.Type)
         : Results.NotFound());
 

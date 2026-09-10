@@ -2395,6 +2395,9 @@ public static class Translations
             ["{0} sales, after {1} refunded"] =
                 ("{0} ventes, après {1} remboursés",
                  "{0} عمليات بيع، بعد استرجاع {1}"),
+            ["{0} could not be deleted: something in the shop's records still points at it. ({1})"] =
+                ("{0} n'a pas pu être supprimée : quelque chose dans les registres du magasin y renvoie encore. ({1})",
+                 "تعذر حذف {0}: لا يزال شيء في سجلات المتجر يشير إليها. ({1})"),
             ["{0} still has {1} product in it. Move it to another category first."] =
                 ("{0} contient encore {1} produit. Déplacez-le vers une autre catégorie d'abord.",
                  "{0} ما زالت تحتوي على {1} منتج. انقله إلى فئة أخرى أولاً."),

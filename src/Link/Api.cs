@@ -49,6 +49,30 @@ public static class Api
     public static T? Delete<T>(string what) where T : class =>
         Send<T>(HttpMethod.Delete, what, null);
 
+    /// <summary>
+    /// A file the shop holds, as bytes. Photographs, and nothing else so far.
+    ///
+    /// Separate from <see cref="Get{T}"/> because a picture is not JSON and must not be put
+    /// through a deserialiser. Null when the shop has none, so a tile draws without a photo
+    /// rather than an error appearing in front of a customer.
+    /// </summary>
+    public static byte[]? Bytes(string what)
+    {
+        if (Address.Length == 0)
+            throw new ShopUnreachable("This machine has not been told where the shop is.");
+
+        return Task.Run(async () =>
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{Address}/{what}");
+            if (ShopSession.SignedIn) request.Headers.Add(TokenHeader, ShopSession.Token);
+
+            using var response = await Http.SendAsync(request);
+            if (!response.IsSuccessStatusCode) return null;
+
+            return await response.Content.ReadAsByteArrayAsync();
+        }).GetAwaiter().GetResult();
+    }
+
     private static T? Send<T>(HttpMethod how, string what, object? body) where T : class
     {
         if (Address.Length == 0)

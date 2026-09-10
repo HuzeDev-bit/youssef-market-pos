@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:system="clr-namespace:System;assembly=System.Runtime">
 
@@ -71,8 +71,16 @@
          Both are compiled into the exe. A shop machine has whatever Windows shipped with, so
          a family named but not embedded falls back to Segoe UI and takes the identity with it. -->
 
-    <FontFamily x:Key="Font.Brand">pack://application:,,,/Assets/Fonts/#Nunito</FontFamily>
-    <FontFamily x:Key="Font.Base">pack://application:,,,/Assets/Fonts/#Inter</FontFamily>
+    <!-- Segoe UI after each one, and it is not decoration.
+
+         Inter and Nunito are Latin fonts: neither carries a single Arabic letter. With the app
+         in Arabic every label was drawn through whatever WPF fell back to on its own, one glyph
+         at a time, so the letters never joined: "متصل" came out as "متص" with a stray mark where
+         the lam should have been. Naming the fallback here means Arabic is shaped by a font that
+         has the letters, and Latin still gets the identity the design was drawn with. -->
+
+    <FontFamily x:Key="Font.Brand">pack://application:,,,/Assets/Fonts/#Nunito, Segoe UI</FontFamily>
+    <FontFamily x:Key="Font.Base">pack://application:,,,/Assets/Fonts/#Inter, Segoe UI</FontFamily>
 
     <!-- One step per purpose, not per size. Anything that needs a size not on this list is
          usually a sign the thing itself is in the wrong place. -->

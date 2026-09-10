@@ -178,6 +178,10 @@ public static class ShopLink
                     TaxRate = item.TaxRate,
                     Unit = item.Unit == nameof(Models.Unit.Kg) ? Models.Unit.Kg : Models.Unit.Each,
                     Stock = item.Stock,
+
+                    // Not a path -- this machine has no picture files. A token the tile's
+                    // converter knows how to turn back into a photo by asking the shop.
+                    ImagePath = item.HasPhoto ? ShopImages.ProductToken(item.Id) : null,
                 }));
 
                 CatalogSync.Stamp = page.Stamp;

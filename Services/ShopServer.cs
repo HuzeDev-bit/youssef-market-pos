@@ -304,6 +304,11 @@ public static class ShopServer
 
             // A product's photo. Business data: a shop that has photographed its shelves has done work,
             // and the work belongs with the shop rather than on whichever counter took the picture.
+            app.MapGet("/categories/{id:int}/photo", (int id) =>
+                ShopData.CategoryPhoto(id) is { } picture
+                    ? Results.File(picture.Bytes, picture.Type)
+                    : Results.NotFound());
+
             app.MapGet("/products/{id:int}/photo", (int id) =>
                 ShopData.Photo(id) is { } picture
                     ? Results.File(picture.Bytes, picture.Type)
@@ -314,7 +319,8 @@ public static class ShopServer
                 var items = StockRepository.List()
                     .Where(p => p.ShowInPos)
                     .Select(p => new CatalogItem(
-                        p.Id, p.Barcode, p.Name, p.Category, p.Price, p.TaxRate, p.Unit.ToString(), p.Stock))
+                        p.Id, p.Barcode, p.Name, p.Category, p.Price, p.TaxRate, p.Unit.ToString(), p.Stock,
+                                 HasPhoto: !string.IsNullOrWhiteSpace(p.ImagePath)))
                     .ToList();
 
                 var stamp = Stamp(items);

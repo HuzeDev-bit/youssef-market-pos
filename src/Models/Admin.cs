@@ -591,7 +591,7 @@ public sealed class CategoryRow
     public string Image { get; init; } = string.Empty;
 
     /// <summary>Full path to the picture, or null — what the card binds to.</summary>
-    public string? ImagePath => Services.CategoryImages.Find(Image);
+    public string? ImagePath => Services.ShopImages.ForCategory(Id, Image);
 
     /// <summary>How much stock sits in this category, filled in by the page that needs it.</summary>
     public decimal StockValue { get; set; }

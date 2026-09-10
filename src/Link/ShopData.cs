@@ -148,6 +148,23 @@ public static class ShopData
     }
 
     /// <summary>
+    /// The picture on a category card, as bytes.
+    ///
+    /// The same reasoning as a product photo: the owner chose that picture and it belongs with
+    /// the shop, not on the one machine that happened to have the file when they picked it.
+    /// </summary>
+    public static (byte[] Bytes, string Type)? CategoryPhoto(int categoryId)
+    {
+        var name = CategoryRepository.List(includeInactive: true)
+                                     .FirstOrDefault(c => c.Id == categoryId)?.Image;
+
+        var path = CategoryImages.Find(name);
+        if (path is null) return null;
+
+        return (System.IO.File.ReadAllBytes(path), "image/png");
+    }
+
+    /// <summary>
     /// Files a photo a cashier took at the counter, on the shop's own machine.
     ///
     /// Named by barcode, in the shop's own pictures folder, which is where every other part of
