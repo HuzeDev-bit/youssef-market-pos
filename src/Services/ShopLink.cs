@@ -73,10 +73,17 @@ public static class ShopLink
         }
     }
 
-    /// <summary>Sales taken here that the server has not confirmed.</summary>
+    /// <summary>
+    /// Sales taken here that the server has not confirmed. Never any, on a till: a till makes
+    /// no sale of its own to hold on to, and has no database to hold one in.
+    /// </summary>
     public static int Waiting
     {
-        get { try { return OutboxRepository.PendingCount(); } catch { return 0; } }
+        get
+        {
+            if (Catalog.BelongsToAServer) return 0;
+            try { return OutboxRepository.PendingCount(); } catch { return 0; }
+        }
     }
 
     // ---------------------------------------------------------------- queueing
@@ -301,7 +308,7 @@ public static class ShopLink
 
         try
         {
-            var response = await Http.PostAsJsonAsync($"{Address}/products", product, Json);
+            var response = await Http.PostAsJsonAsync($"{Address}/products/scanned", product, Json);
             response.EnsureSuccessStatusCode();
 
             var made = await response.Content.ReadFromJsonAsync<ProductAccepted>(Json);
@@ -504,7 +511,7 @@ public static class ShopLink
     public static async Task<List<CategoryName>?> Categories() => await Ask<List<CategoryName>>("categories");
 
     /// <summary>The shop's suppliers.</summary>
-    public static async Task<List<SupplierName>?> Suppliers() => await Ask<List<SupplierName>>("suppliers");
+    public static async Task<List<SupplierName>?> Suppliers() => await Ask<List<SupplierName>>("suppliers/names");
 
     /// <summary>One plain GET, for the answers that are just a list.</summary>
     private static async Task<T?> Ask<T>(string what) where T : class

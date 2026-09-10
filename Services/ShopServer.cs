@@ -75,7 +75,182 @@ public static class ShopServer
 
             // The shop's own filing, for a till filling in a product it has just scanned.
             app.MapGet("/categories", () => Results.Ok(ShopData.Categories()));
-            app.MapGet("/suppliers", () => Results.Ok(ShopData.Suppliers()));
+            app.MapGet("/suppliers/names", () => Results.Ok(ShopData.Suppliers()));
+
+            // ================================================================ the back office
+            //
+            // Every one of these runs on this machine, under the identity the caller's token names, and
+            // calls the repository the shop's own back office calls. A remote screen can therefore do
+            // exactly what the person signed in at it is allowed to do, and nothing else.
+
+            // ---------------------------------------------------------------- products
+            app.MapGet("/products", (HttpRequest r, string? search, int? categoryId, bool? includeInactive) =>
+                Authorised.Do(r, () => ShopBusinessApi.Products(search, categoryId, includeInactive == true)));
+
+            app.MapGet("/products/recent", (HttpRequest r) => Authorised.Do(r, ShopBusinessApi.RecentProducts));
+            app.MapGet("/products/low", (HttpRequest r) => Authorised.Do(r, ShopBusinessApi.LowStock));
+            app.MapGet("/products/out", (HttpRequest r) => Authorised.Do(r, ShopBusinessApi.OutOfStock));
+
+            app.MapGet("/products/expiring", (HttpRequest r, int withinDays) =>
+                Authorised.Do(r, () => ShopBusinessApi.Expiring(withinDays)));
+
+            app.MapGet("/products/barcode-taken", (HttpRequest r, string barcode, int exceptId) =>
+                Authorised.Do(r, () => ShopBusinessApi.BarcodeTaken(barcode, exceptId)));
+
+            app.MapGet("/products/barcode/{barcode}", (HttpRequest r, string barcode) =>
+                Authorised.Do(r, () => ShopBusinessApi.ProductByBarcode(barcode)));
+
+            app.MapGet("/products/{id:int}", (HttpRequest r, int id) =>
+                Authorised.Do(r, () => ShopBusinessApi.Product(id)));
+
+            app.MapPost("/products", (HttpRequest r, SaveProduct asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.CreateProduct(asked), s => s.Ok));
+
+            app.MapPut("/products/{id:int}", (HttpRequest r, int id, SaveProduct asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.UpdateProduct(asked), s => s.Ok));
+
+            app.MapPut("/products/{id:int}/active", (HttpRequest r, int id, SetProductActive asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.SetProductActive(id, asked.Active), s => s.Ok));
+
+            app.MapPost("/products/{id:int}/deliveries", (HttpRequest r, int id, ReceiveStock asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.ReceiveStock(id, asked), s => s.Ok));
+
+            // ---------------------------------------------------------------- the shelves
+            app.MapGet("/inventory/movements", (HttpRequest r, DateTime? from, DateTime? to, int? productId) =>
+                Authorised.Do(r, () => ShopBusinessApi.Movements(ShopBusinessApi.Span(from, to), productId)));
+
+            app.MapGet("/inventory/losses", (HttpRequest r, DateTime from, DateTime to) =>
+                Authorised.Do(r, () => ShopBusinessApi.Losses(DateRange.Custom(from, to))));
+
+            app.MapPost("/inventory/{id:int}/count", (HttpRequest r, int id, CountShelf asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.CountShelf(id, asked), s => s.Ok));
+
+            app.MapPost("/inventory/{id:int}/adjustments", (HttpRequest r, int id, AdjustStock asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.AdjustStock(id, asked), s => s.Ok));
+
+            // ---------------------------------------------------------------- suppliers
+            app.MapGet("/suppliers", (HttpRequest r, bool? includeInactive, string? search) =>
+                Authorised.Do(r, () => ShopBusinessApi.Suppliers(includeInactive == true, search)));
+
+            app.MapPost("/suppliers", (HttpRequest r, Supplier asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.CreateSupplier(asked), s => s.Ok));
+
+            app.MapPut("/suppliers/{id:int}", (HttpRequest r, int id, Supplier asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.UpdateSupplier(asked), s => s.Ok));
+
+            app.MapPut("/suppliers/{id:int}/active", (HttpRequest r, int id, SetActive asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.SetSupplierActive(id, asked.Active), s => s.Ok));
+
+            app.MapGet("/suppliers/{id:int}/goods", (HttpRequest r, int id) =>
+                Authorised.Do(r, () => ShopBusinessApi.SupplierGoods(id)));
+
+            app.MapGet("/suppliers/deliveries", (HttpRequest r, DateTime? from, DateTime? to, int? supplierId) =>
+                Authorised.Do(r, () => ShopBusinessApi.Deliveries(ShopBusinessApi.Span(from, to), supplierId)));
+
+            app.MapGet("/suppliers/deliveries/{id:int}/lines", (HttpRequest r, int id) =>
+                Authorised.Do(r, () => ShopBusinessApi.DeliveryLines(id)));
+
+            app.MapPost("/suppliers/{id:int}/deliveries", (HttpRequest r, int id, RecordDelivery asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.RecordDelivery(asked), s => s.Ok));
+
+            app.MapPost("/suppliers/deliveries/{id:int}/cancel", (HttpRequest r, int id, Reason why) =>
+                Authorised.Answering(r, () => ShopBusinessApi.CancelDelivery(id, why.Text), s => s.Ok));
+
+            app.MapGet("/suppliers/payments", (HttpRequest r, DateTime? from, DateTime? to, int? supplierId) =>
+                Authorised.Do(r, () => ShopBusinessApi.SupplierPayments(ShopBusinessApi.Span(from, to), supplierId)));
+
+            app.MapPost("/suppliers/{id:int}/payments", (HttpRequest r, int id, PaySupplier asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.PaySupplier(id, asked), s => s.Ok));
+
+            // ---------------------------------------------------------------- expenses
+            app.MapGet("/expenses", (HttpRequest r, DateTime? from, DateTime? to, int? categoryId, string? search) =>
+                Authorised.Do(r, () => ShopBusinessApi.Expenses(ShopBusinessApi.Span(from, to), categoryId, search)));
+
+            app.MapPost("/expenses", (HttpRequest r, Expense asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.CreateExpense(asked), s => s.Ok));
+
+            app.MapPut("/expenses/{id:int}", (HttpRequest r, int id, Expense asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.UpdateExpense(asked), s => s.Ok));
+
+            app.MapPost("/expenses/{id:int}/void", (HttpRequest r, int id, Reason why) =>
+                Authorised.Answering(r, () => ShopBusinessApi.VoidExpense(id, why.Text), s => s.Ok));
+
+            app.MapGet("/expenses/by-category", (HttpRequest r, DateTime from, DateTime to) =>
+                Authorised.Do(r, () => ShopBusinessApi.ExpensesByCategory(DateRange.Custom(from, to))));
+
+            app.MapGet("/expenses/total", (HttpRequest r, DateTime from, DateTime to) =>
+                Authorised.Do(r, () => ShopBusinessApi.ExpenseTotal(DateRange.Custom(from, to))));
+
+            app.MapGet("/expenses/categories", (HttpRequest r) => Authorised.Do(r, ShopBusinessApi.ExpenseCategories));
+
+            app.MapPost("/expenses/categories", (HttpRequest r, Named asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.AddExpenseCategory(asked.Name), s => s.Ok));
+
+            // ---------------------------------------------------------------- employees
+            app.MapGet("/employees", (HttpRequest r, bool? includeInactive) =>
+                Authorised.Do(r, () => ShopBusinessApi.Employees(includeInactive == true)));
+
+            app.MapPost("/employees", (HttpRequest r, Worker asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.CreateEmployee(asked), s => s.Ok));
+
+            app.MapPut("/employees/{id:int}", (HttpRequest r, int id, Worker asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.UpdateEmployee(asked), s => s.Ok));
+
+            app.MapPut("/employees/{id:int}/active", (HttpRequest r, int id, SetActive asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.SetEmployeeActive(id, asked.Active), s => s.Ok));
+
+            app.MapPut("/employees/{id:int}/password", (HttpRequest r, int id, Secret asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.SetEmployeePassword(id, asked.Value), s => s.Ok));
+
+            app.MapGet("/employees/salaries", (HttpRequest r, DateTime from, DateTime to) =>
+                Authorised.Do(r, () => ShopBusinessApi.Salaries(DateRange.Custom(from, to))));
+
+            app.MapGet("/employees/paid", (HttpRequest r, DateTime from, DateTime to) =>
+                Authorised.Do(r, () => ShopBusinessApi.SalariesPaidIn(DateRange.Custom(from, to))));
+
+            app.MapPost("/employees/{id:int}/salary-payments", (HttpRequest r, int id, PaySalaryNow asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.PaySalary(id, asked), s => s.Ok));
+
+            // ---------------------------------------------------------------- sales history
+            app.MapGet("/sales", (HttpRequest r, DateTime? from, DateTime? to, string? search, int? workerId,
+                                  string? method, int? productId, int? categoryId) =>
+                Authorised.Do(r, () => ShopBusinessApi.Sales(
+                    ShopBusinessApi.Span(from, to), search, workerId,
+                    Enum.TryParse<PaymentMethod>(method, out var how) ? how : null,
+                    productId, categoryId)));
+
+            app.MapGet("/sales/products", (HttpRequest r, DateTime from, DateTime to) =>
+                Authorised.Do(r, () => ShopBusinessApi.ProductPerformance(DateRange.Custom(from, to))));
+
+            app.MapGet("/sales/cashiers", (HttpRequest r, DateTime from, DateTime to) =>
+                Authorised.Do(r, () => ShopBusinessApi.WhoSoldIn(DateRange.Custom(from, to))));
+
+            app.MapGet("/sales/{invoice:int}", (HttpRequest r, int invoice) =>
+                Authorised.Do(r, () => ShopBusinessApi.Sale(invoice)));
+
+            app.MapPost("/sales/{invoice:int}/refunds", (HttpRequest r, int invoice, RefundSale asked) =>
+                Authorised.Answering(r, () => ShopBusinessApi.RefundSale(invoice, asked), s => s.Ok));
+
+            app.MapPost("/sales/{invoice:int}/cancel", (HttpRequest r, int invoice, Reason why) =>
+                Authorised.Answering(r, () => ShopBusinessApi.CancelSale(invoice, why.Text), s => s.Ok));
+
+            // ---------------------------------------------------------------- activity
+            app.MapGet("/activity", (HttpRequest r, DateTime? from, DateTime? to, string? search, int? limit) =>
+                Authorised.Do(r, () => ShopBusinessApi.Activity(ShopBusinessApi.Span(from, to), search, limit ?? 300)));
+
+            // ---------------------------------------------------------------- the figures
+            app.MapGet("/reports/money", (HttpRequest r, DateTime from, DateTime to) =>
+                Authorised.Do(r, () => ShopBusinessApi.Money(DateRange.Custom(from, to))));
+
+            app.MapGet("/reports/series", (HttpRequest r, DateTime from, DateTime to, string kind) =>
+                Authorised.Do(r, () => ShopBusinessApi.Series(
+                    DateRange.Custom(from, to),
+                    Enum.TryParse<SeriesKind>(kind, out var which) ? which : SeriesKind.Revenue)));
+
+            app.MapGet("/reports/alerts", (HttpRequest r) => Authorised.Do(r, ShopBusinessApi.Alerts));
+
+            app.MapGet("/reports/losses", (HttpRequest r, DateTime from, DateTime to) =>
+                Authorised.Do(r, () => ShopBusinessApi.Losses(DateRange.Custom(from, to))));
 
             // ---------------------------------------------------------------- who is allowed in
             //
@@ -150,24 +325,37 @@ public static class ShopServer
                 return Results.Ok(new CatalogPage(stamp, items, Complete: true));
             });
 
-            app.MapPost("/sales", (SaleBatch batch) =>
+                        app.MapPost("/sales", (SaleBatch batch) => Results.Ok(ShopTill.Accept(batch)));
+
+            // ---------------------------------------------------------------- the till's own work
+            //
+            // A till pointed at this machine must be able to do everything it can do against the
+            // standalone server, because from the counter they are the same shop.
+
+            app.MapPost("/checkout", (SaleUpload sale) =>
             {
-                var accepted = new List<SaleAccepted>();
-                var rejected = new List<string>();
+                var done = ShopTill.Checkout(sale, out var status);
+                return status == 200 ? Results.Ok(done) : Results.Json(done, statusCode: status);
+            });
 
-                foreach (var sale in batch.Sales)
-                {
-                    try
-                    {
-                        accepted.Add(Record(sale));
-                    }
-                    catch
-                    {
-                        rejected.Add(sale.TillReference);
-                    }
-                }
+            app.MapPost("/products/scanned", (NewProduct arriving) =>
+            {
+                var made = ShopTill.AddScanned(arriving, out var problem);
+                return made is null ? Results.BadRequest(problem) : Results.Ok(made);
+            });
 
-                return Results.Ok(new SaleBatchResult(accepted, rejected));
+            app.MapGet("/health", () =>
+            {
+                var health = ShopTill.Health(serverId, out var well);
+                return well ? Results.Ok(health) : Results.Json(health, statusCode: 503);
+            });
+
+            app.MapPost("/backup", () =>
+            {
+                var (ok, file, bytes, problem) = ShopTill.Backup();
+                return ok
+                    ? Results.Ok(new { ok = true, file, bytes })
+                    : Results.Json(new { ok = false, problem }, statusCode: 500);
             });
 
             _app = app;
@@ -194,61 +382,8 @@ public static class ShopServer
         catch { }
     }
 
-    private static SaleAccepted Record(SaleUpload upload)
-    {
-        var catalogue = StockRepository.List(includeInactive: true);
-        var byBarcode = catalogue.Where(p => p.Barcode.Length > 0)
-                                 .ToDictionary(p => p.Barcode, StringComparer.Ordinal);
-        var byId = catalogue.ToDictionary(p => p.Id);
-
-        var lines = upload.Lines.Select(l =>
-        {
-            var known = (l.Barcode.Length > 0 ? byBarcode.GetValueOrDefault(l.Barcode) : null)
-                        ?? byId.GetValueOrDefault(l.ProductId);
-
-            return new SaleItem(
-                new Product
-                {
-                    Id = known?.Id ?? 0,
-                    Barcode = l.Barcode,
-                    Name = l.Name,
-                    Price = l.UnitPrice,
-                    TaxRate = l.TaxRate,
-                    Unit = Enum.TryParse<Unit>(l.Unit, out var unit) ? unit : Unit.Each,
-                    Category = known?.Category ?? string.Empty,
-                },
-                l.Quantity);
-        }).ToList();
-
-        var before = SeenBefore(upload.TillReference);
-
-        var invoice = SaleRepository.Save(
-            lines,
-            upload.GrossBeforeDiscount,
-            Enum.TryParse<DiscountKind>(upload.DiscountKind, out var kind) ? kind : DiscountKind.None,
-            upload.DiscountValue,
-            upload.DiscountAmount,
-            upload.Subtotal,
-            upload.Tax,
-            upload.Total,
-            Enum.TryParse<PaymentMethod>(upload.PaymentMethod, out var method) ? method : PaymentMethod.Cash,
-            upload.AmountTendered,
-            new SaleOrigin(upload.SoldAt, upload.WorkerId, upload.WorkerName, upload.TillReference));
-
-        return new SaleAccepted(upload.TillReference, invoice, before);
-    }
-
-    private static bool SeenBefore(string reference)
-    {
-        if (string.IsNullOrEmpty(reference)) return false;
-
-        using var connection = Database.Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT 1 FROM sales WHERE till_reference = $ref;";
-        command.Parameters.AddWithValue("$ref", reference);
-        return command.ExecuteScalar() is not null;
-    }
-
+    
+    
     private static string Stamp(IEnumerable<CatalogItem> items)
     {
         var hash = new System.Text.StringBuilder();
