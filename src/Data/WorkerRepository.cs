@@ -1,4 +1,4 @@
-﻿using MarketPos.Models;
+using MarketPos.Models;
 using MarketPos.Services;
 
 namespace MarketPos.Data;
@@ -47,6 +47,78 @@ public static class WorkerRepository
     }
 
     public static Worker? Find(int id) => List(includeInactive: true).FirstOrDefault(w => w.Id == id);
+
+    /// <summary>
+    /// Staff as a till needs to receive them, hashes included, so a cashier can sign in on a
+    /// counter with the back office switched off. Only people who have been given a password:
+    /// somebody with no way to sign in is nobody a till needs to know about.
+    ///
+    /// Deliberately its own method rather than a flag on <see cref="List"/>: a password hash
+    /// should have to be asked for by name.
+    /// </summary>
+    public static List<(int Id, string Name, string Role, string Hash, string Salt, bool IsActive)> ForSync()
+    {
+        using var connection = Database.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id, name, role, pin_hash, pin_salt, is_active
+            FROM workers WHERE pin_hash <> '' ORDER BY id;
+            """;
+
+        var rows = new List<(int, string, string, string, string, bool)>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+            rows.Add((reader.Int(0), reader.Str(1), reader.Str(2),
+                      reader.Str(3), reader.Str(4), reader.Bool(5)));
+        return rows;
+    }
+
+    /// <summary>
+    /// Writes the staff a server sent into this till's own database, so the sign-in list and
+    /// the password check both work with nothing plugged in. Ids are the server's, exactly as
+    /// with the catalogue — a sale names the person who rang it up.
+    /// </summary>
+    public static int ReplaceFromServer(IReadOnlyList<Link.StaffMember> staff)
+    {
+        using var connection = Database.Open();
+        using var transaction = connection.BeginTransaction();
+
+        foreach (var person in staff)
+        {
+            using var upsert = connection.CreateCommand();
+            upsert.CommandText = """
+                INSERT INTO workers(id, name, role, started_on, salary, salary_period,
+                                    is_active, pin_hash, pin_salt, created_at)
+                VALUES($id, $name, $role, $now, '0', 'Monthly', $active, $hash, $salt, $now)
+                ON CONFLICT(id) DO UPDATE SET
+                    name      = excluded.name,
+                    role      = excluded.role,
+                    is_active = excluded.is_active,
+                    pin_hash  = excluded.pin_hash,
+                    pin_salt  = excluded.pin_salt;
+                """;
+            upsert.With("$id", person.Id)
+                  .With("$name", person.Name)
+                  .With("$role", person.Role)
+                  .With("$active", person.IsActive ? 1 : 0)
+                  .With("$hash", person.PinHash)
+                  .With("$salt", person.PinSalt)
+                  .WithDate("$now", DateTime.Now);
+            upsert.ExecuteNonQuery();
+        }
+
+        // Somebody who has left, or had their password taken away, can no longer sign in here.
+        // Deactivated rather than deleted: their name is on sales this till has already taken.
+        using var retire = connection.CreateCommand();
+        var ids = staff.Select(p => p.Id.ToString()).ToList();
+        retire.CommandText = ids.Count == 0
+            ? "UPDATE workers SET pin_hash = '', pin_salt = '';"
+            : $"UPDATE workers SET pin_hash = '', pin_salt = '' WHERE id NOT IN ({string.Join(",", ids)});";
+        retire.ExecuteNonQuery();
+
+        transaction.Commit();
+        return staff.Count;
+    }
 
     public static int Create(Worker worker)
     {

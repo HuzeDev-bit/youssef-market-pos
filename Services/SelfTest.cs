@@ -78,6 +78,7 @@ public static class SelfTest
         CheckEveryDialogSpeaksTheShopsLanguage(report, ref failures);
         CheckTheNavigationSpeaksTheShopsLanguage(report, ref failures);
         CheckPriceCheck(report, ref failures);
+        CheckStandaloneShopIsLeftAlone(report, ref failures);
         CheckTillAsCashier(report, ref failures);
         CheckSidebarByRole(report, ref failures);
         CheckSignOut(report, ref failures);
@@ -1812,6 +1813,39 @@ public static class SelfTest
             product.Cost <= 0m
                 ? $"{product.Name} has no purchase price recorded, so nobody sees one"
                 : $"cashier: hidden · owner: {asOwner.CostText}");
+    }
+
+    /// <summary>
+    /// A shop with one computer must never notice the network exists.
+    ///
+    /// The failure this guards is silent and slow: a standalone till quietly filling an outbox
+    /// nobody empties, or stamping references onto sales that have nowhere to go. Both would
+    /// look fine for months.
+    /// </summary>
+    private static void CheckStandaloneShopIsLeftAlone(StringBuilder report, ref int failures)
+    {
+        var configured = AppSettings.Current.ServerAddress;
+        AppSettings.Current.ServerAddress = string.Empty;
+
+        try
+        {
+            Verdict(report, ref failures, "a shop with one computer has no server to talk to",
+                !ShopLink.IsConfigured && ShopLink.Status.Length == 0,
+                "no address set, so the till shows nothing about a network");
+
+            var before = OutboxRepository.PendingCount();
+            ShopLink.Queue(new Link.SaleUpload(
+                "should-never-be-stored", DateTime.Now, null, "test", "Cash", 0m,
+                0m, "None", 0m, 0m, 0m, 0m, 0m, Array.Empty<Link.SaleLineDto>()));
+
+            Verdict(report, ref failures, "and queues nothing for it",
+                OutboxRepository.PendingCount() == before,
+                $"{before} in the outbox before and after");
+        }
+        finally
+        {
+            AppSettings.Current.ServerAddress = configured;
+        }
     }
 
     private static void CheckTillAsCashier(StringBuilder report, ref int failures)

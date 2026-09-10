@@ -193,6 +193,17 @@
                          on a second till it is the one thing a cashier needs to be able to
                          glance at, because it is the difference between "the shop knows about
                          this sale" and "the shop will know when the other machine wakes up". -->
+                    <Button x:Name="LinkChip" Style="{StaticResource Button.PillMuted}"
+                            Height="34" Margin="0,0,10,0" Visibility="Collapsed"
+                            Click="LinkChip_Click"
+                            ToolTip="Press to send now">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="LinkDot" Width="8" Height="8" VerticalAlignment="Center"
+                                     Fill="{StaticResource Brush.Muted}"/>
+                            <TextBlock x:Name="LinkStatus" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
                     <!-- Price check. Green while it is on, because the one thing that must
                          never happen is a cashier believing they are selling while every scan
                          is only being looked up - or the reverse. -->

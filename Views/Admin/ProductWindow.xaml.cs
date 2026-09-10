@@ -133,7 +133,7 @@ public partial class ProductWindow : Window
 
     // ------------------------------- Validation -------------------------------
 
-    private void Save_Click(object sender, RoutedEventArgs e)
+    private async void Save_Click(object sender, RoutedEventArgs e)
     {
         ErrorText.Text = string.Empty;
 
@@ -200,10 +200,40 @@ public partial class ProductWindow : Window
 
         try
         {
-            if (_existing is null)
+            // A till holds a copy of the shop, not the shop. A new product written into that
+            // copy would be overwritten by the server on the next sync, so it goes to the
+            // server — which is also the only place the back office, the stock list and the
+            // other till will ever look for it.
+            if (_existing is null && ShopLink.IsConfigured)
+            {
+                var made = await ShopLink.AddProduct(new Link.NewProduct(
+                    barcode, name, category, price, cost, item.TaxRate,
+                    item.Unit.ToString(), stock,
+                    Session.Current?.Name ?? Session.OwnerLabel));
+
+                if (made is null)
+                {
+                    // Deliberately not saved here as a fallback. A product that exists on this
+                    // counter and nowhere else is worse than one that does not exist yet: it
+                    // sells, the stock never moves in the books, and nobody finds out until
+                    // the shelves are counted.
+                    ErrorText.Text = Loc.T("The shop's server did not take it: {0}",
+                                           ShopLink.LastProblem);
+                    return;
+                }
+
+                // Straight back down again, so the thing just added is on this till's own
+                // screen before the cashier looks up.
+                await ShopLink.PullCatalogue();
+            }
+            else if (_existing is null)
+            {
                 StockRepository.Create(item, openingStock: stock);
+            }
             else
+            {
                 StockRepository.Update(item);
+            }
 
             FilePicture(barcode, _existing?.Barcode);
             Catalog.Reload();
