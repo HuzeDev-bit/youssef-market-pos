@@ -50,6 +50,17 @@ public partial class App : Application
         // kept by whoever remembered to check.
         MarketPos.Data.Database.NotOnThisMachine = Catalog.BelongsToAServer;
 
+        // A till starts out pointed at the shop. The server machine is called pos-server and
+        // listens on 5000, so that is the address unless somebody has since typed another one:
+        // a cashier's computer that starts pointed at nothing has to be set up by hand before
+        // it can sell anything, and the person switching it on in the morning is not the person
+        // who knows what an address is.
+        if (Catalog.BelongsToAServer && AppSettings.Current.ServerAddress.Trim().Length == 0)
+        {
+            AppSettings.Current.ServerAddress = Services.ShopFinder.Expected;
+            AppSettings.Current.Save();
+        }
+
         if (e.Args.Contains("--flowtest"))
         {
             // Runs before Catalog.Load so the scratch database is not seeded with demo

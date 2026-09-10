@@ -246,24 +246,65 @@ public partial class MainWindow : Window
     /// </summary>
     private async void LinkChip_Click(object sender, RoutedEventArgs e)
     {
-        // The chip is also the way back to setup when a till was deliberately left alone.
-        if (!ShopLink.IsConfigured)
+        LinkChip.IsEnabled = false;
+
+        try
         {
+            // Already talking to the shop: this is the "send what is waiting" button, and
+            // saying so is the whole of its job.
+            if (ShopLink.IsConfigured && ShopLink.IsOnline)
+            {
+                LinkStatus.Text = Loc.T("Sending…");
+                await ShopLink.Sync();
+                return;
+            }
+
+            // Not talking to the shop. A till starts out pointed at pos-server, so being
+            // unconnected almost always means that machine is off, is called something else,
+            // or is on another network -- and the cashier pressing this needs it either fixed
+            // or explained, not a chip that flickers and says the same thing again.
+            LinkStatus.Text = Loc.T("Sending…");
+            await ShopLink.Sync();
+            if (ShopLink.IsOnline)
+            {
+                Vm.ReloadProducts();
+                SetupSyncing();
+                return;
+            }
+
+            ShowLooking();
+            var found = await ShopFinder.Look();
+            if (found is not null && ShopFinder.IsThisMachine(found.Address)) found = null;
+
+            if (found is not null)
+            {
+                AppSettings.Current.ServerAddress = found.Address;
+                AppSettings.Current.Save();
+
+                await ShopLink.Sync();
+                if (ShopLink.IsOnline)
+                {
+                    Vm.ReloadProducts();
+                    SetupSyncing();
+                    return;
+                }
+            }
+
+            // Nothing answered by name and nothing answered on this network. The address is
+            // the thing to correct, so the screen that corrects it is what opens.
             if (ServerSetupWindow.Ask(this, out _))
             {
                 await ShopLink.Sync();
                 Vm.ReloadProducts();
                 SetupSyncing();
             }
+        }
+        finally
+        {
+            LinkChip.IsEnabled = true;
             ShowLinkState();
             FocusBarcode();
-            return;
         }
-
-        LinkStatus.Text = Loc.T("Sending…");
-        await ShopLink.Sync();
-        ShowLinkState();
-        FocusBarcode();
     }
 
     /// <summary>

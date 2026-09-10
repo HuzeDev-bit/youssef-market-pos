@@ -1,7 +1,8 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using MarketPos.Link;
 
 namespace MarketPos.Services;
 
@@ -11,15 +12,21 @@ namespace MarketPos.Services;
 /// <para>
 /// Setting a second till up used to mean somebody reading a number off the server's screen and
 /// typing it into the till without a digit wrong. The shop owner does not have a screen on that
-/// machine, does not know what ipconfig is, and should not have to: the two machines are on the
-/// same little network with a handful of addresses on it, and the shop's server is the one that
-/// answers when asked who it is.
+/// machine, does not know what ipconfig is, and should not have to.
 /// </para>
 ///
 /// <para>
-/// So this knocks on every address on the shop's own network at once and keeps the one that
-/// answers as the shop. It asks nothing of the server that the tills do not already ask of it
-/// every minute, which means a shop running an older server is found just the same.
+/// So it asks for the shop by name first. The server machine is called <c>pos-server</c>, and a
+/// name is the one thing about it that does not change when the router hands out addresses
+/// again after a power cut — which is the failure that has every till in the shop pointing at
+/// nothing on a Monday morning. Only if nothing answers to the name does it fall back to
+/// knocking on every address on the shop's own network.
+/// </para>
+///
+/// <para>
+/// Everything here speaks HTTPS, because the shop's server does. It used to knock in plain HTTP
+/// while the server had already moved to TLS, so the search could never find anything and every
+/// till in the shop sat there saying it was working offline.
 /// </para>
 /// </summary>
 public static class ShopFinder
@@ -27,28 +34,43 @@ public static class ShopFinder
     /// <summary>The shop's server, and the name it gave. Null when nothing answered.</summary>
     public sealed record Found(string Address, string ShopName);
 
-    private const int Port = 5000;
+    /// <summary>The port the shop's server listens on. Nobody types it.</summary>
+    public const int Port = 5000;
 
     /// <summary>
-    /// Knocks on this machine's own network and answers with the first shop that replies.
+    /// What the server machine is called. The setup script names it this, and the shop's
+    /// certificate carries the name, so a till can ask for it without knowing any numbers.
+    /// </summary>
+    public const string Name = "pos-server";
+
+    /// <summary>The address a till tries before it tries anything else.</summary>
+    public static string Expected => $"https://{Name}:{Port}";
+
+    /// <summary>
+    /// Asks for the shop by name, and knocks on the neighbours only if the name goes unanswered.
     ///
     /// A quarter of a second to open a socket and a second to answer: a machine that is there
     /// answers immediately, and one that is not never will. Every address is tried at the same
-    /// time, so the whole thing takes about as long as the slowest single one.
+    /// time, so the whole sweep takes about as long as the slowest single one.
     /// </summary>
     public static async Task<Found?> Look(CancellationToken stop = default)
     {
-        // Never on the caller's thread. Two hundred and fifty sockets are opened here, and the
-        // one thread this must not sit on is the one drawing the window that asked.
+        // Never on the caller's thread. Two hundred and fifty sockets can be opened below, and
+        // the one thread this must not sit on is the one drawing the window that asked.
         await Task.Yield();
+
+        using var byName = CancellationTokenSource.CreateLinkedTokenSource(stop);
+        using var naming = Client();
+
+        if (await Knock(naming, Name, byName).ConfigureAwait(false) is { } known) return known;
 
         var candidates = Neighbours().ToList();
         if (candidates.Count == 0) return null;
 
-        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+        using var http = Client();
         using var firstAnswer = CancellationTokenSource.CreateLinkedTokenSource(stop);
 
-        var knocks = candidates.Select(address => Knock(http, address, firstAnswer)).ToList();
+        var knocks = candidates.Select(a => Knock(http, a.ToString(), firstAnswer)).ToList();
 
         while (knocks.Count > 0)
         {
@@ -65,24 +87,33 @@ public static class ShopFinder
         return null;
     }
 
-    private static async Task<Found?> Knock(HttpClient http, IPAddress address, CancellationTokenSource stop)
+    /// <summary>
+    /// The same pinned client every other call to the shop uses.
+    ///
+    /// Not one that accepts any certificate. The first shop a till meets is the one it pairs
+    /// with, here as anywhere else, and every connection after that is checked against the key
+    /// it wrote down — so a search cannot be the thing that quietly lowers the bar.
+    /// </summary>
+    private static HttpClient Client() => PinnedShop.Client(TimeSpan.FromSeconds(2));
+
+    private static async Task<Found?> Knock(HttpClient http, string host, CancellationTokenSource stop)
     {
         try
         {
             // The port first, on its own. Opening a socket to a machine that is not there fails
-            // in milliseconds, where an HTTP call to the same address waits out its whole
+            // in milliseconds, where an HTTPS call to the same address waits out its whole
             // timeout — the difference between a search that takes a second and one that takes
-            // four minutes.
+            // four minutes. A name that resolves to nothing fails here too, and just as fast.
             using (var knock = new TcpClient())
             {
-                var open = knock.ConnectAsync(address, Port, stop.Token).AsTask();
+                var open = knock.ConnectAsync(host, Port, stop.Token).AsTask();
                 if (await Task.WhenAny(open, Task.Delay(400, stop.Token)).ConfigureAwait(false) != open)
                     return null;
 
-                await open.ConfigureAwait(false);   // rethrows a refusal: a machine that is there and is not the shop
+                await open.ConfigureAwait(false);   // rethrows a refusal: there, and not the shop
             }
 
-            var said = await http.GetStringAsync($"http://{address}:{Port}/hello", stop.Token)
+            var said = await http.GetStringAsync($"https://{host}:{Port}/hello", stop.Token)
                                  .ConfigureAwait(false);
 
             // Something is listening on 5000; whether it is the shop is another question. The
@@ -90,7 +121,7 @@ public static class ShopFinder
             var shop = System.Text.Json.JsonDocument.Parse(said).RootElement;
             if (!shop.TryGetProperty("shop", out var name)) return null;
 
-            return new Found($"http://{address}:{Port}", name.GetString() ?? string.Empty);
+            return new Found($"https://{host}:{Port}", name.GetString() ?? string.Empty);
         }
         catch
         {
@@ -100,11 +131,21 @@ public static class ShopFinder
     }
 
     /// <summary>Whether an address found is this very machine.</summary>
-    public static bool IsThisMachine(string address) =>
-        Uri.TryCreate(address, UriKind.Absolute, out var found)
-        && NetworkInterface.GetAllNetworkInterfaces()
+    public static bool IsThisMachine(string address)
+    {
+        if (!Uri.TryCreate(address, UriKind.Absolute, out var found)) return false;
+
+        // By name as well as by number. A server reached as "pos-server" from the machine that
+        // is itself pos-server has no IP address in the URL to compare, and answering "not me"
+        // would let a till mirror its own database while the chip says, truthfully and
+        // uselessly, that it is connected.
+        if (string.Equals(found.Host, Dns.GetHostName(), StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return NetworkInterface.GetAllNetworkInterfaces()
             .SelectMany(card => card.GetIPProperties().UnicastAddresses)
             .Any(here => here.Address.ToString() == found.Host);
+    }
 
     /// <summary>
     /// Every address on the same little network as this machine.

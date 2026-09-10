@@ -29,6 +29,13 @@ public static class TillTest
     private static int _failures;
 
     /// <summary>
+    /// Set only once every check has run. A run that stopped early -- the shop never answered,
+    /// or it refused to trade against a real one -- has no failures to report and has proved
+    /// nothing, and must not sign off as though it had.
+    /// </summary>
+    private static bool _finished;
+
+    /// <summary>
     /// The password this exercise signs in with. A new install starts with it and this run is
     /// against a scratch shop, so it is the one the server will have.
     /// </summary>
@@ -37,6 +44,28 @@ public static class TillTest
     public static int Run(string address, string? ownerPassword = null)
     {
         if (!string.IsNullOrEmpty(ownerPassword)) OwnerPassword = ownerPassword;
+
+        // Whose books are these?
+        //
+        // This test does not read a shop; it trades against one. It puts a product on the
+        // shelf, takes a delivery, pays a supplier, pays a salary, and rings up a real sale
+        // -- and every one of those is a row in whatever database the server it is pointed at
+        // happens to own. Pointed at a shop that is actually trading, it fills the owner's
+        // books with products called "Remote product 150015" and leaves sales in the day's
+        // takings that nobody made.
+        //
+        // So it refuses unless somebody has said, in words, that the shop on the other end is
+        // a throwaway one. --flowtest has asked the same question of the local database since
+        // the day it was written; this is the same question asked of a server.
+        if (Environment.GetEnvironmentVariable("MARKETPOS_TESTSHOP") != "1")
+        {
+            Say("REFUSED: --tilltest trades against the shop it is pointed at. It adds products,");
+            Say("suppliers, staff and salaries, and rings up a real sale.");
+            Say(string.Empty);
+            Say("Point it at a throwaway server -- one started with MARKETPOS_DB set to a");
+            Say("scratch path -- and set MARKETPOS_TESTSHOP=1 to say so.");
+            return 1;
+        }
 
         // A till, and nothing behind it.
         Catalog.BelongsToAServer = true;
@@ -491,6 +520,7 @@ public static class TillTest
         Ask("the shop's own name reaches the receipt", () => name.Length > 0);
         Say($"      \"{name}\", currency {AppSettings.Current.Currency}");
 
+        _finished = true;
         return Finish();
     }
 
@@ -530,9 +560,11 @@ public static class TillTest
     private static int Finish()
     {
         Say(string.Empty);
-        Say(_failures == 0
+        Say(_failures == 0 && _finished
             ? "THE TILL DID A DAY'S WORK WITHOUT A DATABASE"
-            : $"{_failures} CHECK(S) FAILED");
+            : _failures == 0
+                ? "THE RUN STOPPED EARLY -- IT DID NOT DO A DAY'S WORK"
+                : $"{_failures} CHECK(S) FAILED");
 
         try
         {

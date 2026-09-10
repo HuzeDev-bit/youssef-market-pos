@@ -51,8 +51,10 @@ public static class ShopCertificate
         {
             var kept = new X509Certificate2(Pfx, (string?)null, X509KeyStorageFlags.Exportable);
 
-            // A certificate that has run out is no better than none; make another.
-            if (kept.NotAfter > DateTime.Now.AddDays(7)) return kept;
+            // A certificate that has run out is no better than none, and one that does not
+            // carry the name the tills ask for is worse: it makes every till refuse the shop
+            // for a reason nobody can see. Either way, make another.
+            if (kept.NotAfter > DateTime.Now.AddDays(7) && Answers(kept, ShopName)) return kept;
         }
 
         var made = Make();
@@ -60,9 +62,32 @@ public static class ShopCertificate
         return made;
     }
 
+    /// <summary>
+    /// Whether a certificate carries a given name, so an old one made before the shop had a
+    /// name can be spotted and replaced rather than served to tills that will refuse it.
+    /// </summary>
+    private static bool Answers(X509Certificate2 certificate, string name)
+    {
+        foreach (var extension in certificate.Extensions)
+        {
+            if (extension.Oid?.Value != "2.5.29.17") continue;   // subject alternative name
+
+            if (extension.Format(true).Contains(name, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
     /// <summary>The fingerprint a till pins. Printed by the server so it can be read out loud.</summary>
     public static string Fingerprint(X509Certificate2 certificate) =>
         Convert.ToHexString(SHA256.HashData(certificate.RawData));
+
+    /// <summary>
+    /// What the server machine is called on the shop's network. The same name the tills ask
+    /// for; kept here as a plain string because this file cannot see the till's own code.
+    /// </summary>
+    private const string ShopName = "pos-server";
 
     private static X509Certificate2 Make()
     {
@@ -85,6 +110,13 @@ public static class ShopCertificate
         names.AddDnsName(Dns.GetHostName());
         names.AddDnsName("localhost");
         names.AddIpAddress(IPAddress.Loopback);
+
+        // And the name the tills actually ask for. A certificate that does not carry the name
+        // in the address is refused by the till before a single byte of shop data crosses, so
+        // this has to be here whether or not the machine has been renamed yet -- otherwise a
+        // shop that renames its server afterwards has to re-pair every till to fix it.
+        if (!string.Equals(Dns.GetHostName(), ShopName, StringComparison.OrdinalIgnoreCase))
+            names.AddDnsName(ShopName);
 
         foreach (var address in LocalAddresses()) names.AddIpAddress(address);
 

@@ -23,8 +23,13 @@ public partial class ServerSetupWindow : Window
         Services.Localizer.Apply(this);
         Services.Responsive.Fit(this);
 
-        AddressBox.Text = AppSettings.Current.ServerAddress;
-        SetupHint.Text = Loc.T("An address looks like 192.168.1.20. The app fills in the rest.");
+        AddressBox.Text = AppSettings.Current.ServerAddress.Length > 0
+            ? AppSettings.Current.ServerAddress
+            : ShopFinder.Expected;
+
+        SetupHint.Text = Loc.T("The shop's server is called {0}. Press Connect, or type its "
+                              + "address if it has been given a different name.",
+                              Loc.Ltr(ShopFinder.Name));
 
         Loaded += (_, _) => AddressBox.Focus();
     }
@@ -82,8 +87,8 @@ public partial class ServerSetupWindow : Window
         if (!Uri.TryCreate(address, UriKind.Absolute, out var parsed)
             || string.IsNullOrEmpty(parsed.Host))
         {
-            SetupHint.Text = Loc.T("That does not look like an address. Try 192.168.1.20 "
-                                  + "— or press Find the shop.");
+            SetupHint.Text = Loc.T("That does not look like an address. Try {0} "
+                                  + "— or press Find the shop.", Loc.Ltr(ShopFinder.Name));
             return;
         }
 
@@ -123,10 +128,10 @@ public partial class ServerSetupWindow : Window
         var text = (typed ?? string.Empty).Trim().TrimEnd('/');
         if (text.Length == 0) return string.Empty;
 
-        if (!text.Contains("://", StringComparison.Ordinal)) text = "http://" + text;
+        if (!text.Contains("://", StringComparison.Ordinal)) text = "https://" + text;
 
         return Uri.TryCreate(text, UriKind.Absolute, out var address) && address.IsDefaultPort
-            ? $"{address.Scheme}://{address.Host}:5000"
+            ? $"{address.Scheme}://{address.Host}:{Services.ShopFinder.Port}"
             : text;
     }
 }

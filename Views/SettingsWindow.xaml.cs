@@ -150,12 +150,12 @@ public partial class SettingsWindow : Window
         var text = (typed ?? string.Empty).Trim().TrimEnd('/');
         if (text.Length == 0) return string.Empty;
 
-        if (!text.Contains("://", StringComparison.Ordinal)) text = "http://" + text;
+        if (!text.Contains("://", StringComparison.Ordinal)) text = "https://" + text;
 
         // A host with no port is the shop server's own, which is the only port this app
         // listens on and the one nobody types.
         return Uri.TryCreate(text, UriKind.Absolute, out var address) && address.IsDefaultPort
-            ? $"{address.Scheme}://{address.Host}:5000"
+            ? $"{address.Scheme}://{address.Host}:{Services.ShopFinder.Port}"
             : text;
     }
 
