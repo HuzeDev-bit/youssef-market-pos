@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using MarketPos.Models;
 using MarketPos.Services;
 
@@ -58,11 +58,9 @@ public static class SaleRepository
         // Shifts are a thing that happens at this machine, so a sale from elsewhere joins none.
         var shiftId = origin is null ? ShiftRepository.OpenShift(Session.CurrentId)?.Id : null;
 
-        // Every sale taken on a networked till carries a reference this machine minted, and
-        // that reference is what makes handing it over safe to retry. A shop with one computer
-        // mints none: the column stays empty, which is what the unique index expects.
-        var tillReference = origin?.TillReference
-                            ?? (ShopLink.IsConfigured ? ShopLink.NewReference() : string.Empty);
+        // A shop with one computer mints no reference: the column stays empty, which is what
+        // the unique index expects.
+        var tillReference = origin?.TillReference ?? string.Empty;
 
         using var sale = connection.CreateCommand();
         sale.CommandText = @"
@@ -132,39 +130,7 @@ public static class SaleRepository
 
         transaction.Commit();
 
-        // The sale is on this machine's books. If this machine is a till on a shop network,
-        // the books that matter are on the other one, so it goes into the queue in the same
-        // breath — queueing anywhere else would mean a path that takes money without
-        // recording that it owes the server a copy.
-        //
-        // Never for a sale that arrived from a till: that is the server writing what it was
-        // handed, and queueing it would send it straight back where it came from.
-        if (origin is null) Handover(lines, grossBeforeDiscount, discountKind, discountValue,
-                                     discountAmount, subtotal, tax, total, method, amountTendered,
-                                     soldAt, workerId, workerName, tillReference);
-
         return invoiceNumber;
-    }
-
-    /// <summary>
-    /// Copies a sale into the outbox for the server. Does nothing at all on a shop with one
-    /// computer, which is every shop until somebody puts a second till on the counter.
-    /// </summary>
-    private static void Handover(
-        IReadOnlyList<SaleItem> lines, decimal gross, DiscountKind discountKind,
-        decimal discountValue, decimal discountAmount, decimal subtotal, decimal tax,
-        decimal total, PaymentMethod method, decimal tendered, DateTime soldAt,
-        int? workerId, string workerName, string reference)
-    {
-        if (!ShopLink.IsConfigured) return;
-
-        ShopLink.Queue(new Link.SaleUpload(
-            reference, soldAt, workerId, workerName, method.ToString(), tendered,
-            gross, discountKind.ToString(), discountValue, discountAmount,
-            subtotal, tax, total,
-            lines.Select(l => new Link.SaleLineDto(
-                l.Product.Id, l.Product.Barcode, l.Product.Name, l.Quantity,
-                l.Product.Price, l.Product.TaxRate, l.Product.Unit.ToString())).ToList()));
     }
 
     /// <summary>Current cost price per product id, for the lines about to be written.</summary>

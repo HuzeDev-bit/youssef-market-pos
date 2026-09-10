@@ -60,9 +60,6 @@ public partial class SettingsWindow : Window
 
         PrinterHint.Text = Loc.T("Receipts will print automatically to this printer.");
 
-        ServerBox.Text = AppSettings.Current.ServerAddress;
-        TillBox.Text = AppSettings.Current.TillName;
-
         Loaded += (_, _) => LanguageBox.Focus();
     }
 
@@ -85,12 +82,6 @@ public partial class SettingsWindow : Window
             AppSettings.Current.ReceiptPrinterName = selectedPrinter;
         }
 
-        // Typed by hand off a scrap of paper, so the shapes that get typed instead of an
-        // address are put right rather than refused: a bare machine name or IP is http on
-        // port 5000, and a trailing slash is nothing.
-        AppSettings.Current.ServerAddress = Address(ServerBox.Text);
-        AppSettings.Current.TillName = TillBox.Text.Trim();
-
         AppSettings.Current.Save();
 
         // A language is applied when windows are built, so the ones already open would keep the
@@ -100,63 +91,6 @@ public partial class SettingsWindow : Window
 
         DialogResult = true;
         Close();
-    }
-
-    /// <summary>
-    /// Looks for the shop's server on this network and fills the box in with what it finds.
-    ///
-    /// The whole point of the button is that the person pressing it does not know the answer,
-    /// so it says what it is doing while it does it and what it found afterwards — a button
-    /// that goes quiet for three seconds and then quietly changes a box is a button nobody
-    /// trusts the second time.
-    /// </summary>
-    private async void Find_Click(object sender, RoutedEventArgs e)
-    {
-        FindButton.IsEnabled = false;
-        ServerHint.Text = Loc.T("Looking for the shop on this network…");
-
-        try
-        {
-            var shop = await ShopFinder.Look();
-
-            if (shop is null)
-            {
-                ServerHint.Text = Loc.T("No shop server answered. Check it is switched on and "
-                                      + "that both machines are on the same network.");
-                return;
-            }
-
-            // The shop answered from this very machine, which means this machine is the shop.
-            // Filling the box in would point it at itself.
-            if (ShopFinder.IsThisMachine(shop.Address))
-            {
-                ServerHint.Text = Loc.T("This machine is the shop's server. Leave this empty.");
-                return;
-            }
-
-            ServerBox.Text = shop.Address;
-            ServerHint.Text = Loc.T("Found {0} at {1}. Press Save.",
-                                    shop.ShopName, Loc.Ltr(shop.Address));
-        }
-        finally
-        {
-            FindButton.IsEnabled = true;
-        }
-    }
-
-    /// <summary>Turns what was typed into an address the till can actually call.</summary>
-    private static string Address(string? typed)
-    {
-        var text = (typed ?? string.Empty).Trim().TrimEnd('/');
-        if (text.Length == 0) return string.Empty;
-
-        if (!text.Contains("://", StringComparison.Ordinal)) text = "http://" + text;
-
-        // A host with no port is the shop server's own, which is the only port this app
-        // listens on and the one nobody types.
-        return Uri.TryCreate(text, UriKind.Absolute, out var address) && address.IsDefaultPort
-            ? $"{address.Scheme}://{address.Host}:5000"
-            : text;
     }
 
     private void TestPrint_Click(object sender, RoutedEventArgs e)
