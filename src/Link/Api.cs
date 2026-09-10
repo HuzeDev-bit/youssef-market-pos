@@ -1,4 +1,4 @@
-﻿using System.Net.Http;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using MarketPos.Services;
@@ -33,7 +33,16 @@ public static class Api
         PropertyNameCaseInsensitive = true,
     };
 
-    private static string Address => AppSettings.Current.ServerAddress.Trim().TrimEnd('/');
+    private static string Address
+    {
+        get
+        {
+            var text = AppSettings.Current.ServerAddress.Trim().TrimEnd('/');
+            if (text.Length == 0) return string.Empty;
+            if (!text.Contains("://", StringComparison.Ordinal)) text = "http://" + text;
+            return text;
+        }
+    }
 
     /// <summary>The header a request proves itself with. Named once so both ends agree.</summary>
     public const string TokenHeader = "X-Shop-Token";

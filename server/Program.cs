@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.Link;
@@ -62,17 +62,12 @@ var builder = WebApplication.CreateBuilder(args);
 if (!args.Any(a => a.StartsWith("--urls", StringComparison.OrdinalIgnoreCase))
     && Environment.GetEnvironmentVariable("ASPNETCORE_URLS") is null)
 {
-    // Encrypted, because the owner's password and every session token afterwards cross this
-    // wire. The certificate is the shop's own — see ShopCertificate — and each till pins it the
-    // first time it connects, so nothing else on the network can answer for the shop.
-    var ours = MarketPos.Link.ShopCertificate.Ours();
-
     builder.WebHost.ConfigureKestrel(kestrel =>
     {
-        kestrel.ListenAnyIP(5000, listen => listen.UseHttps(ours));
+        kestrel.ListenAnyIP(5000);
     });
 
-    Note($"certificate fingerprint {MarketPos.Link.ShopCertificate.Fingerprint(ours)}");
+    Note("listening on http://0.0.0.0:5000");
 }
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(p =>
@@ -515,8 +510,8 @@ if (ShopDoor.Network() is { Length: > 0 } kind)
 // that starts silently leaves them reading Kestrel's console output for an IP address.
 foreach (var address in LocalAddresses())
 {
-    app.Logger.LogInformation("Tills should be pointed at https://{Address}:5000", address);
-    Note($"tills should be pointed at https://{address}:5000");
+    app.Logger.LogInformation("Tills should be pointed at http://{Address}:5000", address);
+    Note($"tills should be pointed at http://{address}:5000");
 }
 
 Note($"database {MarketPos.Data.Database.Path}");

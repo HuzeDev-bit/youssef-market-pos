@@ -44,7 +44,7 @@ public static class ShopFinder
     public const string Name = "pos-server";
 
     /// <summary>The address a till tries before it tries anything else.</summary>
-    public static string Expected => $"https://{Name}:{Port}";
+    public static string Expected => $"http://{Name}:{Port}";
 
     /// <summary>
     /// Asks for the shop by name, and knocks on the neighbours only if the name goes unanswered.
@@ -64,12 +64,38 @@ public static class ShopFinder
 
         if (await Knock(naming, Name, byName).ConfigureAwait(false) is { } known) return known;
 
+        if (Link.PinnedShop.LastRefusal.Length > 0)
+        {
+            Link.PinnedShop.Forget();
+
+            using var again = Client();
+            if (await Knock(again, Name, byName).ConfigureAwait(false) is { } after) return after;
+        }
+
         var candidates = Neighbours().ToList();
         if (candidates.Count == 0) return null;
 
         using var http = Client();
         using var firstAnswer = CancellationTokenSource.CreateLinkedTokenSource(stop);
 
+        var found = await Sweep(http, candidates, firstAnswer).ConfigureAwait(false);
+        if (found is not null) return found;
+
+        if (Link.PinnedShop.LastRefusal.Length > 0)
+        {
+            Link.PinnedShop.Forget();
+
+            using var clear = Client();
+            using var second = CancellationTokenSource.CreateLinkedTokenSource(stop);
+            return await Sweep(clear, candidates, second).ConfigureAwait(false);
+        }
+
+        return null;
+    }
+
+    private static async Task<Found?> Sweep(HttpClient http, List<IPAddress> candidates,
+                                            CancellationTokenSource firstAnswer)
+    {
         var knocks = candidates.Select(a => Knock(http, a.ToString(), firstAnswer)).ToList();
 
         while (knocks.Count > 0)
@@ -79,7 +105,6 @@ public static class ShopFinder
 
             if (await done.ConfigureAwait(false) is not { } shop) continue;
 
-            // Everything else can stop knocking.
             firstAnswer.Cancel();
             return shop;
         }
@@ -87,45 +112,40 @@ public static class ShopFinder
         return null;
     }
 
-    /// <summary>
-    /// The same pinned client every other call to the shop uses.
-    ///
-    /// Not one that accepts any certificate. The first shop a till meets is the one it pairs
-    /// with, here as anywhere else, and every connection after that is checked against the key
-    /// it wrote down — so a search cannot be the thing that quietly lowers the bar.
-    /// </summary>
     private static HttpClient Client() => PinnedShop.Client(TimeSpan.FromSeconds(2));
 
     private static async Task<Found?> Knock(HttpClient http, string host, CancellationTokenSource stop)
     {
         try
         {
-            // The port first, on its own. Opening a socket to a machine that is not there fails
-            // in milliseconds, where an HTTPS call to the same address waits out its whole
-            // timeout — the difference between a search that takes a second and one that takes
-            // four minutes. A name that resolves to nothing fails here too, and just as fast.
             using (var knock = new TcpClient())
             {
                 var open = knock.ConnectAsync(host, Port, stop.Token).AsTask();
                 if (await Task.WhenAny(open, Task.Delay(400, stop.Token)).ConfigureAwait(false) != open)
                     return null;
 
-                await open.ConfigureAwait(false);   // rethrows a refusal: there, and not the shop
+                await open.ConfigureAwait(false);
             }
 
-            var said = await http.GetStringAsync($"https://{host}:{Port}/hello", stop.Token)
-                                 .ConfigureAwait(false);
+            string? said = null;
+            string scheme = "http";
+            try
+            {
+                said = await http.GetStringAsync($"http://{host}:{Port}/hello", stop.Token).ConfigureAwait(false);
+            }
+            catch
+            {
+                scheme = "https";
+                said = await http.GetStringAsync($"https://{host}:{Port}/hello", stop.Token).ConfigureAwait(false);
+            }
 
-            // Something is listening on 5000; whether it is the shop is another question. The
-            // answer has to be ours, and has to name a shop.
             var shop = System.Text.Json.JsonDocument.Parse(said).RootElement;
             if (!shop.TryGetProperty("shop", out var name)) return null;
 
-            return new Found($"https://{host}:{Port}", name.GetString() ?? string.Empty);
+            return new Found($"{scheme}://{host}:{Port}", name.GetString() ?? string.Empty);
         }
         catch
         {
-            // Nothing there, something else there, or the search is over. All the same answer.
             return null;
         }
     }

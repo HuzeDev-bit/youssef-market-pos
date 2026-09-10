@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -8,8 +8,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketPos.Server", "server\MarketPos.Server.csproj", "{BE4E0DD9-58FD-4761-B5EA-8A0415E27EB9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketPos", "MarketPos.csproj", "{430B59FC-AE60-4004-ACA4-26366F88BD62}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketPos.Launcher", "launcher\MarketPos.Launcher.csproj", "{9221194E-441D-4229-98DA-D8D1ECD0C401}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,9 +30,5 @@ Global
 		{430B59FC-AE60-4004-ACA4-26366F88BD62}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{430B59FC-AE60-4004-ACA4-26366F88BD62}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{430B59FC-AE60-4004-ACA4-26366F88BD62}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9221194E-441D-4229-98DA-D8D1ECD0C401}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9221194E-441D-4229-98DA-D8D1ECD0C401}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9221194E-441D-4229-98DA-D8D1ECD0C401}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9221194E-441D-4229-98DA-D8D1ECD0C401}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

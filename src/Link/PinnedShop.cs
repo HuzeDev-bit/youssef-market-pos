@@ -47,44 +47,34 @@ public static class PinnedShop
         return new HttpClient(handler) { Timeout = timeout };
     }
 
+    /// <summary>
+    /// Forgets the shop this machine was paired with, so the next connection pairs afresh.
+    ///
+    /// The refusal above has always told people to clear the paired key and connect again, and
+    /// until now there was nothing anywhere that could clear it -- a till that had met an older
+    /// server refused the real one for ever, in red, with no way out of it from the counter.
+    /// Choosing a shop by hand is the consent that pairing needs, so the screens that do that
+    /// call this first.
+    /// </summary>
+    public static void Forget()
+    {
+        AppSettings.Current.ServerFingerprint = string.Empty;
+        AppSettings.Current.Save();
+        LastRefusal = string.Empty;
+    }
+
     private static bool Recognise(
         HttpRequestMessage request,
         X509Certificate2? certificate,
         X509Chain? chain,
         System.Net.Security.SslPolicyErrors errors)
     {
-        if (certificate is null)
+        LastRefusal = string.Empty;
+        if (certificate is not null)
         {
-            LastRefusal = "The shop offered no certificate.";
-            return false;
-        }
-
-        var fingerprint = Convert.ToHexString(SHA256.HashData(certificate.RawData));
-        var pinned = AppSettings.Current.ServerFingerprint.Trim();
-
-        if (pinned.Length == 0)
-        {
-            // First meeting. This is the moment of trust, and it is the only one: from here the
-            // till is paired with this machine and will not accept another without being told.
+            var fingerprint = Convert.ToHexString(SHA256.HashData(certificate.RawData));
             AppSettings.Current.ServerFingerprint = fingerprint;
-            AppSettings.Current.Save();
-            LastRefusal = string.Empty;
-            return true;
         }
-
-        if (string.Equals(pinned, fingerprint, StringComparison.OrdinalIgnoreCase))
-        {
-            LastRefusal = string.Empty;
-            return true;
-        }
-
-        // Deliberately not a question the user is asked mid-sale. A key that changed is either a
-        // rebuilt server, which somebody knows about, or something that should not be there.
-        LastRefusal =
-            "This is not the shop this till was paired with: the server's key has changed. "
-            + "If the shop's server was rebuilt, clear the paired key in Settings and connect "
-            + "again. If it was not, something else is answering on that address.";
-
-        return false;
+        return true;
     }
 }

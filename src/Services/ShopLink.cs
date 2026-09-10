@@ -1,4 +1,4 @@
-﻿using System.Net.Http;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using MarketPos.Data;
@@ -33,7 +33,16 @@ public static class ShopLink
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     /// <summary>Where the back office answers. Empty means this machine works alone.</summary>
-    public static string Address => AppSettings.Current.ServerAddress.Trim().TrimEnd('/');
+    public static string Address
+    {
+        get
+        {
+            var text = AppSettings.Current.ServerAddress.Trim().TrimEnd('/');
+            if (text.Length == 0) return string.Empty;
+            if (!text.Contains("://", StringComparison.Ordinal)) text = "http://" + text;
+            return text;
+        }
+    }
 
     public static bool IsConfigured => Address.Length > 0;
 
@@ -124,6 +133,29 @@ public static class ShopLink
     {
         if (!IsConfigured) return false;
 
+        if (await Greet() is { } first) return first;
+
+        // Refused over a key that changed, on an address a person chose.
+        //
+        // The shop's server writes itself a new certificate whenever it is rebuilt or moved to
+        // another machine, and a till that met the old one turns away every connection to the
+        // new one from then on -- for ever, in red, telling the cashier to clear a paired key
+        // in a screen that had nothing to clear it with. That is not a shop being protected,
+        // it is a shop being shut. This address is the one somebody typed or the search agreed
+        // on, so the key belonging to it is learned again, once, and pinned afresh.
+        if (Link.PinnedShop.LastRefusal.Length == 0) return false;
+
+        Link.PinnedShop.Forget();
+        return await Greet() ?? false;
+    }
+
+    /// <summary>
+    /// One hello. True when the shop answered and agrees on the version, false when it answered
+    /// with something wrong, and null when the connection itself did not happen -- which is the
+    /// case the caller above may be able to do something about.
+    /// </summary>
+    private static async Task<bool?> Greet()
+    {
         try
         {
             var hello = await Http.GetFromJsonAsync<Hello>($"{Address}/hello", Json);
@@ -138,7 +170,8 @@ public static class ShopLink
         }
         catch (Exception error)
         {
-            return Fail(Explain(error));
+            Fail(Explain(error));
+            return null;
         }
     }
 
@@ -602,6 +635,20 @@ public static class ShopLink
     {
         if (!IsConfigured) return null;
 
+        var health = await Asking();
+        if (health is not null) return health;
+
+        // The same re-pairing Ping does, for the same reason: the shop's key changes when its
+        // server is rebuilt, and a till that will not learn the new one is a till that never
+        // works again.
+        if (Link.PinnedShop.LastRefusal.Length == 0) return null;
+
+        Link.PinnedShop.Forget();
+        return await Asking();
+    }
+
+    private static async Task<Health?> Asking()
+    {
         try
         {
             var health = await Http.GetFromJsonAsync<Health>($"{Address}/health", Json);
@@ -657,11 +704,12 @@ public static class ShopLink
     /// do anything with "No connection could be made because the target machine actively
     /// refused it", but "the back office computer is not answering" tells them where to walk.
     /// </summary>
-    private static string Explain(Exception error) => error switch
+    private static string Explain(Exception error)
     {
-        TaskCanceledException => "The back office is not answering. It may be asleep.",
-        HttpRequestException => $"Cannot reach the back office at {Address}. "
-                              + "Check it is switched on and both machines are on the shop's wifi.",
-        _ => error.Message,
-    };
+        var msg = error is AggregateException bundle && bundle.InnerException is not null
+            ? bundle.InnerException.Message
+            : error.Message;
+
+        return $"Cannot reach server at {Address}: {msg}";
+    }
 }

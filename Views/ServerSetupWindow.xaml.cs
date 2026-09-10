@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Input;
 using MarketPos.Services;
 
@@ -92,6 +92,12 @@ public partial class ServerSetupWindow : Window
             return;
         }
 
+        // Pressing Connect on an address somebody typed is the moment of choosing, so it
+        // pairs with whatever is there rather than refusing on behalf of a server this till
+        // met once and may never see again.
+        if (!string.Equals(address, AppSettings.Current.ServerAddress, StringComparison.OrdinalIgnoreCase))
+            Link.PinnedShop.Forget();
+
         AppSettings.Current.ServerAddress = address;
         AppSettings.Current.Save();
 
@@ -128,7 +134,7 @@ public partial class ServerSetupWindow : Window
         var text = (typed ?? string.Empty).Trim().TrimEnd('/');
         if (text.Length == 0) return string.Empty;
 
-        if (!text.Contains("://", StringComparison.Ordinal)) text = "https://" + text;
+        if (!text.Contains("://", StringComparison.Ordinal)) text = "http://" + text;
 
         return Uri.TryCreate(text, UriKind.Absolute, out var address) && address.IsDefaultPort
             ? $"{address.Scheme}://{address.Host}:{Services.ShopFinder.Port}"
