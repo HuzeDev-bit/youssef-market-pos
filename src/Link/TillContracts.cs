@@ -82,6 +82,20 @@ public sealed record TicketDetail(
     decimal AmountTendered,
     decimal ChangeGiven);
 
+/// <summary>
+/// The owner proving who they are, to a machine that can actually check.
+///
+/// The owner's password is not a worker's: there is no staff row for it, and it is what opens
+/// the back office. On the shop's own machine it is checked against that machine's settings.
+/// On any other machine there is nothing to check it against, and a till that decided for
+/// itself who the owner was would be a back office anybody could open by unplugging the
+/// network. So the shop checks it.
+/// </summary>
+public sealed record OwnerSignIn(string Password);
+
+/// <summary>What the shop says about an owner sign-in.</summary>
+public sealed record OwnerSignedIn(bool Ok, string Name, bool PasswordIsSet);
+
 /// <summary>One category, as a till's dropdown needs it.</summary>
 public sealed record CategoryName(int Id, string Name);
 

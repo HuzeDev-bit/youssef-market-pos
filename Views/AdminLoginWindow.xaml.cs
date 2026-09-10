@@ -25,7 +25,7 @@ public partial class AdminLoginWindow : Window
         Services.Responsive.Fit(this);
 
         _isChangingPassword = changePassword;
-        _isOpen = !changePassword && !AdminAccount.IsConfigured;
+        _isOpen = !changePassword && !AdminAccount.WantsAPassword();
 
         if (_isChangingPassword)
         {
@@ -118,7 +118,15 @@ public partial class AdminLoginWindow : Window
             return;
         }
 
-        if (!AdminAccount.Verify(password))
+        var opens = AdminAccount.Opens(password);
+
+        if (opens is null)
+        {
+            Fail(Loc.T("Cannot reach the shop's server. {0}", ShopLink.LastProblem));
+            return;
+        }
+
+        if (opens is false)
         {
             Fail("Wrong password.");
             return;

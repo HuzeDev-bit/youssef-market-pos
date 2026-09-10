@@ -44,6 +44,12 @@ public partial class App : Application
         CurrentJob = WhatThisOneIs(e.Args);
         Catalog.BelongsToAServer = CurrentJob == Job.Till;
 
+        // And the door is locked behind it. A till has no shop database, so from here on any
+        // attempt to open one throws instead of quietly creating an empty file that something
+        // else then writes into. This is what makes the rule structural rather than a promise
+        // kept by whoever remembered to check.
+        MarketPos.Data.Database.NotOnThisMachine = Catalog.BelongsToAServer;
+
         if (e.Args.Contains("--flowtest"))
         {
             // Runs before Catalog.Load so the scratch database is not seeded with demo
@@ -87,6 +93,17 @@ public partial class App : Application
             return;
         }
 
+        // Proves a cashier's machine can work with no database of its own, by doing a day's
+        // work on one. Runs before anything opens anything, because the whole point is that
+        // nothing does.
+        if (e.Args.Contains("--tilltest"))
+        {
+            var at = Array.IndexOf(e.Args, "--tilltest") + 1;
+            Headless(Services.TillTest.Run(
+                at < e.Args.Length ? e.Args[at] : "http://localhost:5000"));
+            return;
+        }
+
         if (e.Args.Contains("--icons"))
         {
             var target = Array.IndexOf(e.Args, "--icons") + 1;
@@ -97,15 +114,19 @@ public partial class App : Application
 
         try
         {
-            // Must run before the main window builds its view model — the product grid
-            // binds straight to the catalogue.
-            Catalog.Load();
+            // A till loads nothing from here: there is no database on this machine to load it
+            // from. Its catalogue arrives over the wire once the window is up and the shop has
+            // been asked — see MainWindow. Until then it has no answer, which is a different
+            // thing from a shop with nothing in it, and the screen says which.
+            if (Catalog.BelongsToAServer) Catalog.NothingToSell();
+            else Catalog.Load();
         }
         catch (Exception ex)
         {
             MessageBox.Show(
                 $"The till could not open its database.\n\n{ex.Message}\n\n{MarketPos.Data.Database.Path}",
                 "Market POS", MessageBoxButton.OK, MessageBoxImage.Error);
+
             Shutdown(1);
             return;
         }

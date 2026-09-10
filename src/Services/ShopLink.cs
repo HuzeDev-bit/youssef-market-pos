@@ -231,6 +231,12 @@ public static class ShopLink
     {
         if (!IsConfigured) return 0;
 
+        // Never from a till. The outbox is the old arrangement: ring the sale up here, keep it
+        // in a local queue, hand it over later. A till makes no sale of its own now — it asks
+        // the shop to make one and waits — so there is nothing to queue, and the queue itself
+        // lives in a database this machine does not have.
+        if (Catalog.BelongsToAServer) return 0;
+
         var waiting = OutboxRepository.Pending();
         if (waiting.Count == 0) return 0;
 
@@ -446,6 +452,34 @@ public static class ShopLink
             var settings = await Http.GetFromJsonAsync<ShopWideSettings>($"{Address}/settings", Json);
             if (settings is not null) Succeed();
             return settings;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Asks the shop whether this is the owner's password.
+    ///
+    /// Null means the shop could not be asked, which is not the same as a wrong password and
+    /// must never be treated as one — nor as a right one.
+    /// </summary>
+    public static async Task<OwnerSignedIn?> SignInAsOwner(string password)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/auth/owner/signin",
+                new OwnerSignIn(password), Json);
+
+            response.EnsureSuccessStatusCode();
+
+            var said = await response.Content.ReadFromJsonAsync<OwnerSignedIn>(Json);
+            if (said is not null) Succeed();
+            return said;
         }
         catch (Exception error)
         {

@@ -101,6 +101,70 @@ public static class ShopData
             receipt.ChangeGiven);
     }
 
+    // ---------------------------------------------------------------- who the owner is
+
+    /// <summary>
+    /// Checks the owner's password, on the machine that holds it.
+    ///
+    /// A shop that has not set one is a shop where the back office opens on a press, and that
+    /// answer has to travel too — otherwise a till would demand a password the shop does not
+    /// have.
+    /// </summary>
+    public static OwnerSignedIn OwnerSignIn(string password)
+    {
+        if (!AdminAccount.IsConfigured)
+            return new OwnerSignedIn(true, Session.OwnerLabel, false);
+
+        return AdminAccount.Verify(password)
+            ? new OwnerSignedIn(true, Session.OwnerLabel, true)
+            : new OwnerSignedIn(false, string.Empty, true);
+    }
+
+    // ---------------------------------------------------------------- the pictures
+
+    /// <summary>
+    /// The photo the shop holds for a product, as bytes.
+    ///
+    /// Photos are business data: a shop that photographs its shelves has done work, and that
+    /// work belongs with the shop rather than on whichever counter happened to take the
+    /// picture. A till asks for them and holds what it gets in memory for as long as it is
+    /// open; nothing is written to the cashier's machine.
+    /// </summary>
+    public static (byte[] Bytes, string Type)? Photo(int productId)
+    {
+        var product = StockRepository.Find(productId);
+        var path = product?.ImagePath;
+
+        if (path is null || !System.IO.File.Exists(path)) return null;
+
+        var type = System.IO.Path.GetExtension(path).ToLowerInvariant() switch
+        {
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            _ => "image/jpeg",
+        };
+
+        return (System.IO.File.ReadAllBytes(path), type);
+    }
+
+    /// <summary>
+    /// Files a photo a cashier took at the counter, on the shop's own machine.
+    ///
+    /// Named by barcode, in the shop's own pictures folder, which is where every other part of
+    /// the app already looks for one. A product with no barcode is named by its id instead —
+    /// it has no other stable name.
+    /// </summary>
+    public static void SavePhoto(string nameOnDisk, byte[] bytes)
+    {
+        if (string.IsNullOrWhiteSpace(nameOnDisk) || bytes.Length == 0) return;
+
+        System.IO.Directory.CreateDirectory(ProductImages.Folder);
+        System.IO.File.WriteAllBytes(
+            System.IO.Path.Combine(ProductImages.Folder, nameOnDisk + ".png"), bytes);
+
+        ProductImages.Forget(nameOnDisk);
+    }
+
     // ---------------------------------------------------------------- how the shop is filed
 
     /// <summary>The shop's categories, for a till filling in a product it has just scanned.</summary>

@@ -30,7 +30,7 @@ public partial class CategoriesPage : AdminPageBase
         Session.Require(Permission.ManageCategories);
 
         var products = StockRepository.List();
-        _rows = CategoryRepository.List(includeInactive: ShowInactive.IsChecked == true);
+        _rows = Link.Shop.Categories.List(includeInactive: ShowInactive.IsChecked == true).ToList();
 
         // Each card carries what is actually in it. Read from the products rather than kept
         // on the category, so it cannot drift out of step with the shelves.
@@ -131,7 +131,7 @@ public partial class CategoriesPage : AdminPageBase
         var row = _rows.FirstOrDefault(c => c.Id == id);
         if (row is null) return;
 
-        if (CategoryRepository.Delete(row.Id, row.Name, out var problem))
+        if (Link.Shop.Categories.Delete(row.Id, row.Name, out var problem))
         {
             ReloadAll();
             return;

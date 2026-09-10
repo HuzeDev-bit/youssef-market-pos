@@ -77,6 +77,52 @@ public static class ShopServer
             app.MapGet("/categories", () => Results.Ok(ShopData.Categories()));
             app.MapGet("/suppliers", () => Results.Ok(ShopData.Suppliers()));
 
+            // ---------------------------------------------------------------- categories
+
+            // The back office's own view of them, hidden ones included, which is what its list needs.
+            app.MapGet("/categories/all", (bool? includeInactive) =>
+                Results.Ok(ShopCategoriesApi.List(includeInactive == true)));
+
+            app.MapPost("/categories", (NewCategory asked) =>
+            {
+                var said = ShopCategoriesApi.Create(asked);
+                return said.Ok ? Results.Ok(said) : Results.BadRequest(said);
+            });
+
+            app.MapPut("/categories/{id:int}", (int id, RenameCategory asked) =>
+            {
+                var said = ShopCategoriesApi.Rename(id, asked);
+                return said.Ok ? Results.Ok(said) : Results.BadRequest(said);
+            });
+
+            app.MapPut("/categories/{id:int}/active", (int id, SetCategoryActive asked) =>
+            {
+                var said = ShopCategoriesApi.SetActive(id, asked);
+                return said.Ok ? Results.Ok(said) : Results.Conflict(said);
+            });
+
+            app.MapDelete("/categories/{id:int}", (int id) =>
+            {
+                var said = ShopCategoriesApi.Delete(id);
+                return said.Ok ? Results.Ok(said) : Results.Conflict(said);
+            });
+
+            // ---------------------------------------------------------------- who is allowed in
+
+            // The owner proving who they are, on the machine that holds the password. A remote back office
+            // is opened on the strength of this answer, so the answer is not the client's to give.
+            app.MapPost("/auth/owner/signin", (OwnerSignIn who) =>
+                Results.Ok(ShopData.OwnerSignIn(who.Password)));
+
+            // ---------------------------------------------------------------- the pictures
+
+            // A product's photo. Business data: a shop that has photographed its shelves has done work,
+            // and the work belongs with the shop rather than on whichever counter took the picture.
+            app.MapGet("/products/{id:int}/photo", (int id) =>
+                ShopData.Photo(id) is { } picture
+                    ? Results.File(picture.Bytes, picture.Type)
+                    : Results.NotFound());
+
             app.MapGet("/catalog", (string? since) =>
             {
                 var items = StockRepository.List()

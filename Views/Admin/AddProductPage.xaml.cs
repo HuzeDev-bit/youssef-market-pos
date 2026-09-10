@@ -236,7 +236,7 @@ public partial class AddProductPage : AdminPageBase
         AddUnitBox.SelectedIndex = -1;
         FillAddUnits(null);
 
-        AddCategoryBox.ItemsSource = CategoryRepository.List().Select(c => c.Name).ToList();
+        AddCategoryBox.ItemsSource = Link.Shop.Categories.List().Select(c => c.Name).ToList();
         AddCategoryBox.Text = (AddCategoryBox.ItemsSource as List<string>)?.FirstOrDefault() ?? string.Empty;
 
         ShowBarcodeRow(true);

@@ -144,7 +144,7 @@ public partial class StaffSignInWindow : Window
     /// A password is asked for only when there is one to check. The owner of a shop that has
     /// set no admin password would otherwise be typing into a box that can never be right.
     /// </summary>
-    private bool NeedsPassword(Choice who) => who.Worker is not null || AdminAccount.IsConfigured;
+    private bool NeedsPassword(Choice who) => who.Worker is not null || AdminAccount.WantsAPassword();
 
     private void Retune(bool focus = false)
     {
@@ -189,10 +189,17 @@ public partial class StaffSignInWindow : Window
             return;
         }
 
-        if (AdminAccount.IsConfigured && !AdminAccount.Verify(PasswordBox.Password))
+        // Three answers. A shop that cannot be reached is not a wrong password and is not a
+        // right one: nobody is let in, and the reason says which it was.
+        switch (AdminAccount.Opens(PasswordBox.Password))
         {
-            Fail("Wrong password.");
-            return;
+            case null:
+                Fail(Loc.T("Cannot reach the shop's server. {0}", ShopLink.LastProblem));
+                return;
+
+            case false:
+                Fail("Wrong password.");
+                return;
         }
 
         // The typed name sticks, so it only has to be given once.

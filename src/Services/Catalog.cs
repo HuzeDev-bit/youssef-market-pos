@@ -35,6 +35,16 @@ public static class Catalog
     public static bool BelongsToAServer { get; set; }
 
     /// <summary>
+    /// Whether the shop has actually answered this till.
+    ///
+    /// The difference between "the shop sells nothing" and "the shop did not answer" is the
+    /// whole of what a cashier needs to know when the screen is empty, and the two look
+    /// identical on a till that keeps nothing. False until the server has been heard from, and
+    /// false again the moment a fetch fails.
+    /// </summary>
+    public static bool HasTheShopsAnswer { get; private set; }
+
+    /// <summary>
     /// The catalogue the server last sent, held in memory and written down nowhere.
     ///
     /// This is the whole of what a till knows about what the shop sells. It arrives over the
@@ -44,6 +54,7 @@ public static class Catalog
     /// </summary>
     public static void TakeFromTheServer(IEnumerable<Product> fromTheShop)
     {
+        HasTheShopsAnswer = true;
         _products = fromTheShop.ToList();
         _categories = new List<string> { "All" };
         _categories.AddRange(_products.Select(p => p.Category)
@@ -52,9 +63,15 @@ public static class Catalog
                                       .OrderBy(c => c, StringComparer.CurrentCultureIgnoreCase));
     }
 
-    /// <summary>Empty shelves: a till with no answer from its shop has nothing to sell.</summary>
+    /// <summary>
+    /// Empty shelves, and no answer to show for them.
+    ///
+    /// Not the same as a shop with no products: this is a till that has not been told. The
+    /// screen says so rather than drawing an empty grid that reads as a shop with bare shelves.
+    /// </summary>
     public static void NothingToSell()
     {
+        HasTheShopsAnswer = false;
         _products = new List<Product>();
         _categories = new List<string> { "All" };
     }

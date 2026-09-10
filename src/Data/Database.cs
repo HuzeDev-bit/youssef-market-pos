@@ -11,7 +11,35 @@ public static class Database
 {
     private static string? _path;
 
+    /// <summary>
+    /// True on a machine that has no shop database and must never make one.
+    ///
+    /// <para>
+    /// A cashier's till is that machine. Everything it shows comes over the wire from the shop,
+    /// so a database file here would be an empty one, created on the first careless call and
+    /// then quietly filled by whatever else forgot to ask the shop. Guards at each call site
+    /// catch the calls somebody remembered; this catches the ones nobody did.
+    /// </para>
+    ///
+    /// <para>
+    /// Set once at start-up, before anything opens anything. From then on every attempt to
+    /// reach a database on this machine throws with a message that says which machine the data
+    /// actually lives on, rather than silently creating a second shop.
+    /// </para>
+    /// </summary>
+    public static bool NotOnThisMachine { get; set; }
+
+    /// <summary>Where the database is, or would be. Reading this alone creates nothing.</summary>
     public static string Path => _path ??= BuildPath();
+
+    private static void RefuseIfTill()
+    {
+        if (!NotOnThisMachine) return;
+
+        throw new InvalidOperationException(
+            "This is a cashier's till: it has no shop database. Whatever asked for one should "
+            + "be asking the shop's server instead.");
+    }
 
     private static string BuildPath()
     {
@@ -33,6 +61,8 @@ public static class Database
 
     public static SqliteConnection Open()
     {
+        RefuseIfTill();
+
         var connection = new SqliteConnection($"Data Source={Path}");
         connection.Open();
 
@@ -65,6 +95,8 @@ public static class Database
     /// <summary>Creates the schema on first run. Safe to call on every startup.</summary>
     public static void Initialize()
     {
+        RefuseIfTill();
+
         using var connection = Open();
         using var command = connection.CreateCommand();
 

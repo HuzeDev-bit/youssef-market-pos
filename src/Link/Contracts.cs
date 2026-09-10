@@ -78,7 +78,12 @@ public sealed record CatalogItem(
     decimal Price,
     decimal TaxRate,
     string Unit,
-    decimal Stock);
+    decimal Stock,
+
+    // Whether the shop holds a photo for this. A till fetches the picture itself, and only
+    // for the products that have one — a request per empty tile would be a request per empty
+    // tile, on every till, every time the catalogue changed.
+    bool HasPhoto = false);
 
 /// <summary>
 /// The catalogue, with a stamp the till sends back next time.

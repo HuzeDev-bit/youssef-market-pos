@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using MarketPos.Data;
 using MarketPos.Models;
@@ -78,7 +78,7 @@ public partial class InventoryPage : AdminPageBase
         var chosen = (CategoryFilter.SelectedItem as CategoryRow)?.Id ?? 0;
 
         var categories = new List<CategoryRow> { new() { Id = 0, Name = Loc.T("All categories") } };
-        categories.AddRange(CategoryRepository.List());
+        categories.AddRange(Link.Shop.Categories.List());
 
         CategoryFilter.ItemsSource = categories;
         CategoryFilter.SelectedItem = categories.FirstOrDefault(c => c.Id == chosen) ?? categories[0];

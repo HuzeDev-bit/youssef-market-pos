@@ -144,9 +144,9 @@ public partial class CategoryWindow : Window
             if (_existing is null)
             {
                 // The picture is named after the category, so the row has to exist first.
-                var id = CategoryRepository.Create(name, icon);
+                var id = Link.Shop.Categories.Create(name, icon);
                 if (_pickedFrom is not null)
-                    CategoryRepository.Rename(id, name, name, icon, CategoryImageWriter.Save(id, _pickedFrom));
+                    Link.Shop.Categories.Rename(id, name, name, icon, CategoryImageWriter.Save(id, _pickedFrom));
             }
             else
             {
@@ -158,7 +158,7 @@ public partial class CategoryWindow : Window
                 // in the folder that nothing will ever point at again.
                 if (image.Length == 0) CategoryImages.Forget(_existing.Id);
 
-                CategoryRepository.Rename(_existing.Id, _existing.Name, name, icon, image);
+                Link.Shop.Categories.Rename(_existing.Id, _existing.Name, name, icon, image);
             }
 
             DialogResult = true;
@@ -210,7 +210,7 @@ public partial class CategoryWindow : Window
                 Loc.T("It goes for good. Products still on the shelves in it have to be moved first.")))
             return;
 
-        if (!CategoryRepository.Delete(_existing.Id, _existing.Name, out var problem))
+        if (!Link.Shop.Categories.Delete(_existing.Id, _existing.Name, out var problem))
         {
             ErrorText.Text = problem;
             return;

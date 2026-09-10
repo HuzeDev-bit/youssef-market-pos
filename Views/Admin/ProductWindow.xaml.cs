@@ -47,10 +47,7 @@ public partial class ProductWindow : Window
         TaxBox.ItemsSource = TaxRates.Select(t => t.Label).ToList();
         // Asked of the shop on a till. This machine has no categories of its own, and a
         // dropdown filled from an empty local table would file every product under nothing.
-        CategoryBox.ItemsSource = Catalog.BelongsToAServer
-            ? (ShopLink.Now(() => ShopLink.Categories()) ?? new List<Link.CategoryName>())
-                .Select(c => c.Name).ToList()
-            : CategoryRepository.List().Select(c => c.Name).ToList();
+        CategoryBox.ItemsSource = Link.Shop.Categories.List().Select(c => c.Name).ToList();
 
         _suppliers = new List<Supplier> { new() { Id = 0, Name = Loc.T("No supplier") } };
         _suppliers.AddRange(Catalog.BelongsToAServer
