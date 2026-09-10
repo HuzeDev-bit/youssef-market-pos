@@ -949,9 +949,14 @@ public sealed class SaleViewModel : ViewModelBase
 
         try
         {
-            var invoiceNumber = SaleRepository.Save(
-                Cart.Select(l => l.AsSaleItem).ToList(), GrossBeforeDiscount, DiscountKind, DiscountValue, DiscountAmount,
-                Subtotal, Tax, Total, method, amountTendered);
+            var invoiceNumber = Catalog.BelongsToAServer
+                ? SellThroughTheShop(method, amountTendered)
+                : SaleRepository.Save(
+                    Cart.Select(l => l.AsSaleItem).ToList(), GrossBeforeDiscount, DiscountKind,
+                    DiscountValue, DiscountAmount, Subtotal, Tax, Total, method, amountTendered);
+
+            // Nothing was sold, and the reason is already on screen.
+            if (invoiceNumber == 0) return;
 
             LastInvoiceNumber = invoiceNumber;
             ClearCart();
@@ -978,6 +983,54 @@ public sealed class SaleViewModel : ViewModelBase
         {
             SetStatus(Loc.T("Could not save the sale: {0}", ex.Message), isError: true);
         }
+    }
+
+    /// <summary>
+    /// Asks the shop's server to make this sale, and waits for its answer.
+    ///
+    /// <para>
+    /// A cashier's machine holds no books. It has a copy of the catalogue for as long as the
+    /// app is open and nothing else, so a sale written here would be written nowhere: not in
+    /// the shop's takings, not against the shop's stock, and not on the ticket the customer
+    /// might bring back next week. The sale is made on the machine that owns the database, in
+    /// one transaction, and this till waits to be told the invoice number.
+    /// </para>
+    ///
+    /// <para>
+    /// Returns zero when there is no sale, having already said why. The commonest reason is
+    /// the honest one that only a shop with two counters ever sees: the last one was sold on
+    /// the other till while this basket was being filled.
+    /// </para>
+    /// </summary>
+    private int SellThroughTheShop(PaymentMethod method, decimal amountTendered)
+    {
+        // Minted here and sent with the sale. If the answer is lost on the way back — the
+        // network blinks, the cashier's machine is unplugged mid-payment — asking again with
+        // the same reference returns the invoice number the shop already gave it, rather than
+        // banking the money twice.
+        var reference = ShopLink.NewReference();
+
+        var upload = new Link.SaleUpload(
+            reference, DateTime.Now, Session.CurrentId, Session.CurrentName,
+            method.ToString(), amountTendered,
+            GrossBeforeDiscount, DiscountKind.ToString(), DiscountValue, DiscountAmount,
+            Subtotal, Tax, Total,
+            Cart.Select(l => new Link.SaleLineDto(
+                l.Product.Id, l.Product.Barcode, l.Product.Name, l.Quantity,
+                l.Product.Price, l.Product.TaxRate, l.Product.Unit.ToString())).ToList());
+
+        // Waited for on this thread. A checkout is the one thing in the app that must not carry
+        // on without its answer: the drawer opens on the strength of it.
+        var done = System.Threading.Tasks.Task.Run(() => ShopLink.Checkout(upload))
+                                              .GetAwaiter().GetResult();
+
+        if (done.Ok) return done.InvoiceNumber;
+
+        ReloadCatalogue();
+        SetStatus(done.Problem.Length > 0
+                      ? done.Problem
+                      : Loc.T("The shop's server did not take the sale."), isError: true);
+        return 0;
     }
 
     /// <summary>

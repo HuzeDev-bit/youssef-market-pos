@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using Microsoft.Data.Sqlite;
 
 namespace MarketPos.Data;
@@ -37,7 +37,26 @@ public static class Database
         connection.Open();
 
         using var pragma = connection.CreateCommand();
-        pragma.CommandText = "PRAGMA foreign_keys = ON;";
+
+        // Three settings, and every one of them is about more than one thing touching this file
+        // at once — which is what a shop's server is, once two tills are ringing up sales.
+        //
+        //   foreign_keys  the relationships in the schema are enforced rather than decorative.
+        //
+        //   journal_mode  write-ahead logging. In the default rollback journal a single writer
+        //                 blocks every reader, so a till asking for the catalogue would be
+        //                 refused while another till was paying. Under WAL, readers carry on
+        //                 against the last committed state while a write is in flight. It is a
+        //                 property of the file, so setting it once would do — it is set on every
+        //                 connection because that costs nothing and cannot be forgotten.
+        //
+        //   busy_timeout  five seconds of waiting for a lock instead of failing instantly.
+        //                 Two tills paying in the same second is not an error; it is a Saturday.
+        pragma.CommandText = """
+            PRAGMA foreign_keys = ON;
+            PRAGMA journal_mode = WAL;
+            PRAGMA busy_timeout = 5000;
+            """;
         pragma.ExecuteNonQuery();
 
         return connection;

@@ -537,6 +537,24 @@ public partial class MainWindow : Window
     {
         if (!IsLoaded) return;
 
+        // Not on a cashier's machine. The back office is every screen that reads and writes
+        // the shop's books directly — stock, suppliers, expenses, staff, reports — and this
+        // machine has no books: it has a copy of the catalogue for as long as it is open. Half
+        // of those screens would show nothing and the other half would write into a database
+        // nobody will ever read again. The shop's own machine is where this belongs.
+        if (Catalog.BelongsToAServer)
+        {
+            ConfirmWindow.Ask(this,
+                Loc.T("The back office is on the shop's own computer."),
+                Loc.T("This is a cashier's till. Stock, suppliers, expenses, staff and reports "
+                    + "are kept on the machine that holds the shop's database — open Market POS "
+                    + "there."));
+
+            RestoreRailSelection();
+            FocusBarcode();
+            return;
+        }
+
         if (StaffSignInWindow.Ask(this))
         {
             // The back office is its own window rather than a fourth page in the till. The

@@ -133,3 +133,31 @@ public sealed record SaleAccepted(string TillReference, int InvoiceNumber, bool 
 public sealed record SaleBatch(IReadOnlyList<SaleUpload> Sales);
 
 public sealed record SaleBatchResult(IReadOnlyList<SaleAccepted> Accepted, IReadOnlyList<string> Rejected);
+
+/// <summary>
+/// What the server made of a checkout it was asked to perform.
+///
+/// <para>
+/// Not the same thing as a sale handed over afterwards. A till that owns its own books writes
+/// the sale and tells the server later; a till that owns nothing asks the server to make the
+/// sale and waits for the answer, because until the server says yes there is no sale — and the
+/// cashier is standing in front of the customer, which is exactly the moment to find out that
+/// the last tin was sold on the other counter a second ago.
+/// </para>
+/// </summary>
+public sealed record CheckoutDone(
+    bool Ok,
+    int InvoiceNumber,
+    bool AlreadyHad,
+    string Problem);
+
+/// <summary>Whether the shop's server is up, and what it is serving.</summary>
+public sealed record Health(
+    string Status,
+    string Shop,
+    int Version,
+    string ServerId,
+    string Database,
+    int Products,
+    int SalesToday,
+    DateTime Now);

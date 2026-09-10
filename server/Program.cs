@@ -173,6 +173,118 @@ app.MapPost("/products", (NewProduct arriving) =>
     return Results.Ok(new ProductAccepted(id, barcode, arriving.Name.Trim(), false));
 });
 
+// ---------------------------------------------------------------- is the shop up
+
+// Asked by anything that wants to know whether the shop is answering before it commits to
+// needing it: a till reconnecting, a person setting a machine up, a monitor on the shelf. It
+// touches the database rather than only the web server, because a server that is listening
+// over a database it cannot open is not healthy in any way that matters to a shop.
+app.MapGet("/health", () =>
+{
+    try
+    {
+        using var connection = Database.Open();
+
+        int Count(string sql)
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = sql;
+            return Convert.ToInt32(command.ExecuteScalar());
+        }
+
+        var today = DateTime.Today.ToString("O");
+        return Results.Ok(new Health(
+            "ok",
+            AppSettings.Current.BusinessName,
+            Contracts.Version,
+            serverId,
+            Database.Path,
+            Count("SELECT COUNT(*) FROM products WHERE is_active = 1"),
+            Count($"SELECT COUNT(*) FROM sales WHERE sold_at >= '{today}' AND is_voided = 0"),
+            DateTime.Now));
+    }
+    catch (Exception problem)
+    {
+        Note("HEALTH failed: " + problem.Message);
+        return Results.Json(new Health("failing", string.Empty, Contracts.Version, serverId,
+                                       Database.Path, 0, 0, DateTime.Now),
+                            statusCode: 503);
+    }
+});
+
+// ---------------------------------------------------------------- a copy of the books
+
+// A backup taken while the shop is trading.
+//
+// VACUUM INTO, not a file copy: under write-ahead logging the database is two files that only
+// agree at a checkpoint, so copying the .db alone can produce something that opens and is
+// missing the last hour of sales. SQLite writes a single consistent file here, from inside its
+// own locking, whatever the tills are doing at the time.
+//
+// Restoring is the plainest thing in the app: stop the server, put the file where
+// Database.Path says, start it again.
+app.MapPost("/backup", () =>
+{
+    try
+    {
+        var folder = System.IO.Path.Combine(
+            System.IO.Path.GetDirectoryName(Database.Path)!, "backups");
+        System.IO.Directory.CreateDirectory(folder);
+
+        var into = System.IO.Path.Combine(folder, $"marketpos-{DateTime.Now:yyyyMMdd-HHmmss}.db");
+
+        using var connection = Database.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "VACUUM INTO $into;";
+        command.Parameters.AddWithValue("$into", into);
+        command.ExecuteNonQuery();
+
+        var size = new System.IO.FileInfo(into).Length;
+        Note($"backup written to {into} ({size / 1024} KB)");
+        return Results.Ok(new { ok = true, file = into, bytes = size });
+    }
+    catch (Exception problem)
+    {
+        Note("backup failed: " + problem.Message);
+        return Results.Json(new { ok = false, problem = problem.Message }, statusCode: 500);
+    }
+});
+
+// ---------------------------------------------------------------- a sale, made here
+
+// The cashier's machine asks for this and waits. Everything that makes a sale a sale happens
+// inside one transaction on this machine — the ticket, its lines, the stock coming off the
+// shelf, the movements that record it — and the answer is the invoice number or the reason
+// there is not one. A till never writes any of it.
+app.MapPost("/checkout", (SaleUpload sale) =>
+{
+    if (sale.Lines.Count == 0)
+        return Results.BadRequest(new CheckoutDone(false, 0, false, "There is nothing in the basket."));
+
+    try
+    {
+        var done = Record(sale);
+
+        Note($"sale #{done.InvoiceNumber} for {sale.Total:0.00} from {sale.WorkerName}"
+           + (done.AlreadyHad ? " (a repeat, already on the books)" : string.Empty));
+
+        return Results.Ok(new CheckoutDone(true, done.InvoiceNumber, done.AlreadyHad, string.Empty));
+    }
+    catch (NotEnoughStockException shortfall)
+    {
+        // The commonest way a checkout fails on a shop with two counters, and the one the
+        // cashier can actually do something about.
+        Note("checkout refused: " + shortfall.Message);
+        return Results.Json(new CheckoutDone(false, 0, false, shortfall.Message), statusCode: 409);
+    }
+    catch (Exception problem)
+    {
+        app.Logger.LogError(problem, "Checkout failed for {Reference}", sale.TillReference);
+        Note("checkout failed: " + problem);
+        return Results.Json(new CheckoutDone(false, 0, false, problem.Message), statusCode: 500);
+    }
+});
+
 // ---------------------------------------------------------------- sales coming in
 
 app.MapPost("/sales", (SaleBatch batch) =>

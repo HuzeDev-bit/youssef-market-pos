@@ -308,6 +308,68 @@ public static class ShopLink
     }
 
     /// <summary>
+    /// Asks the shop's server to make a sale, and waits for it.
+    ///
+    /// <para>
+    /// This is the till's checkout. Not a copy of a sale already made here — the till makes no
+    /// sale. The server writes the ticket, its lines, the stock and the movements in one
+    /// transaction over the shop's own database, and answers with the invoice number or the
+    /// reason there is not one. Until that answer arrives nothing has been sold.
+    /// </para>
+    ///
+    /// <para>
+    /// The reference travels with it so a retry after a timeout cannot bank the same sale
+    /// twice: the server recognises it and hands back the invoice number it gave the first
+    /// time. That is why a lost answer is survivable and why the till may safely ask again.
+    /// </para>
+    /// </summary>
+    public static async Task<CheckoutDone> Checkout(SaleUpload sale)
+    {
+        if (!IsConfigured)
+            return new CheckoutDone(false, 0, false, "This till has no shop to sell for.");
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/checkout", sale, Json);
+
+            // A refusal is an answer, not a failure: the server says why, in words the cashier
+            // can act on — most often that the last one went on the other counter.
+            var said = await response.Content.ReadFromJsonAsync<CheckoutDone>(Json);
+            if (said is not null)
+            {
+                if (said.Ok) Succeed();
+                return said;
+            }
+
+            Fail("The server did not say what it did with the sale.");
+            return new CheckoutDone(false, 0, false, LastProblem);
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return new CheckoutDone(false, 0, false, LastProblem);
+        }
+    }
+
+    /// <summary>Whether the shop's server is answering, and what it says it is serving.</summary>
+    public static async Task<Health?> Ask()
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var health = await Http.GetFromJsonAsync<Health>($"{Address}/health", Json);
+            if (health is not null) Succeed();
+            return health;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>
     /// The whole exchange: is it there, what has changed, what do we owe it. Safe to call on
     /// a timer and safe to call while nothing is configured.
     /// </summary>
