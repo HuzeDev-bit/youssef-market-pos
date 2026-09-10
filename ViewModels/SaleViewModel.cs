@@ -699,6 +699,21 @@ public sealed class SaleViewModel : ViewModelBase
                 // one the cashier cannot fix from the till.
                 if (LooksLikeABarcode(query))
                 {
+                    // "The shop does not sell this" and "I cannot reach the shop" are different
+                    // answers, and only the first one is a reason to offer to add a product.
+                    //
+                    // A till reads its catalogue from the server. With the server down that
+                    // catalogue is whatever last arrived, so every scan of anything added since
+                    // would "not be found" — and the cashier would be invited to create a
+                    // product the shop already has, on a machine that cannot save it. Said
+                    // plainly instead: the shop cannot be reached.
+                    if (Catalog.BelongsToAServer && !ShopLink.IsOnline)
+                    {
+                        SetStatus(Loc.T("Cannot reach the shop's server, so this barcode cannot "
+                                      + "be looked up. {0}", ShopLink.LastProblem), isError: true);
+                        break;
+                    }
+
                     // Not a search that found nothing — a product the shop does not have yet.
                     // The till offers to add it; until somebody says yes, nothing has changed.
                     SetStatus(Loc.T("Error: {0} not found in stock.", query), isError: true);
@@ -770,11 +785,16 @@ public sealed class SaleViewModel : ViewModelBase
         var existing = Cart.FirstOrDefault(l => l.Product.Barcode == product.Barcode);
         var wanted = existing?.Step ?? (product.Unit == Unit.Kg ? 1.0m : 1m);
 
-        // The shelf has the last word only on the first one. A product already on the sale is
-        // a product the cashier is holding: scanning it again means "another of these", and
-        // the sale carries on. What the shelf says then is a matter for the stock count, not
-        // for a red banner in front of a waiting customer.
-        if (existing is null && RoomFor(product) < wanted)
+        // The shelf has the last word, on the first one and on every one after it.
+        //
+        // A product already on the sale used to be waved through: scanning it again meant
+        // "another of these", and the count was a matter for the stock report rather than a red
+        // banner in front of a waiting customer. That was right while the count could go
+        // negative. It cannot any more — the shop stops at nothing left, because with a second
+        // till the count being behind is usually the other cashier having just sold it — so a
+        // basket allowed past the shelf is a basket that would be refused at payment, with the
+        // customer's shopping already packed. Better to say it at the scan.
+        if (RoomFor(product) < wanted)
         {
             Refuse(Loc.T("Error: {0} is out of stock.", product.Name));
             return;

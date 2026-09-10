@@ -465,15 +465,51 @@ internal static class Schema
 
             Run($"CREATE TABLE products_rebuilt (\n                {shape}\n            );");
 
-            // The minted codes go out as they come across: thirteen digits starting with 2,
-            // which is the range the shop was using and no manufacturer ever prints.
-            var copied = names.Replace("barcode", """
-                CASE WHEN barcode GLOB '2[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
-                          OR TRIM(barcode) = ''
-                     THEN NULL ELSE barcode END
-                """);
+            // Only an empty barcode becomes NULL. Nothing else is touched.
+            //
+            // An earlier version of this also emptied anything in the 2xxxxxxxxxxx range, on
+            // the grounds that the shop's own minted codes lived there and no manufacturer
+            // prints one. The second half of that is not true: 20-29 is restricted-circulation,
+            // which is exactly what a supplier's own in-store code looks like, and a shop may
+            // well have scanned one off a box and saved it. There is no column recording which
+            // codes this app minted, so a code in that range is genuinely ambiguous — and a
+            // migration that guesses wrong destroys a barcode the shop scans every day and
+            // cannot get back.
+            //
+            // So ambiguity is resolved in favour of the data. A product still carrying a minted
+            // code keeps it and goes on being scannable; clearing the barcode field on its own
+            // form is one edit, and it is the shop's to make. Empty string is not ambiguous:
+            // it was never a barcode, and it would collide with itself under the unique index.
+            var copied = names.Replace(
+                "barcode",
+                "CASE WHEN TRIM(barcode) = '' THEN NULL ELSE barcode END");
 
             Run($"INSERT INTO products_rebuilt ({names}) SELECT {copied} FROM products;");
+
+            // Nothing may be lost in the copy. A rebuild that silently dropped rows would take
+            // the shop's catalogue with it, and every sale line pointing at those products.
+            using (var count = connection.CreateCommand())
+            {
+                count.Transaction = work;
+                count.CommandText = """
+                    SELECT (SELECT COUNT(*) FROM products),
+                           (SELECT COUNT(*) FROM products_rebuilt),
+                           (SELECT COUNT(*) FROM products p
+                            WHERE NOT EXISTS (SELECT 1 FROM products_rebuilt r WHERE r.id = p.id));
+                    """;
+                using var reader = count.ExecuteReader();
+                reader.Read();
+
+                var was = reader.GetInt32(0);
+                var now = reader.GetInt32(1);
+                var lost = reader.GetInt32(2);
+
+                if (was != now || lost != 0)
+                    throw new InvalidOperationException(
+                        $"The product table could not be rebuilt safely: {was} rows before, {now} after, "
+                        + $"{lost} ids missing. Nothing has been changed.");
+            }
+
             Run("DROP TABLE products;");
             Run("ALTER TABLE products_rebuilt RENAME TO products;");
 
@@ -495,6 +531,39 @@ internal static class Schema
             on.CommandText = "PRAGMA foreign_keys = ON;";
             on.ExecuteNonQuery();
         }
+
+        // Asked of the database itself, after the swap and outside the transaction: does every
+        // sale line, stock movement and purchase line still point at a product that is there,
+        // and is the file itself sound? A rebuild is the one operation in this schema that can
+        // quietly orphan a decade of history, so it is the one that says so out loud.
+        Complain(connection, "PRAGMA foreign_key_check;", "left rows pointing at products that are gone");
+        Complain(connection, "PRAGMA integrity_check;", "left the database itself damaged");
+    }
+
+    /// <summary>Runs a check pragma and throws with what it found, if it found anything.</summary>
+    private static void Complain(SqliteConnection connection, string pragma, string what)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = pragma;
+
+        var wrong = new List<string>();
+        using (var reader = command.ExecuteReader())
+        {
+            while (reader.Read() && wrong.Count < 10)
+            {
+                var row = string.Join(", ",
+                    Enumerable.Range(0, reader.FieldCount)
+                              .Select(i => reader.IsDBNull(i) ? "null" : reader.GetValue(i).ToString()));
+
+                // integrity_check answers with the single word "ok" when all is well.
+                if (row == "ok") return;
+                wrong.Add(row);
+            }
+        }
+
+        if (wrong.Count > 0)
+            throw new InvalidOperationException(
+                $"Rebuilding the product table {what}: {string.Join(" | ", wrong)}");
     }
 
     private static void AddColumns(SqliteConnection connection, string table,

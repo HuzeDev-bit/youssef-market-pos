@@ -238,6 +238,9 @@ public static class Translations
             ["Cancel sale"] =
                 ("Annuler la vente",
                  "إلغاء البيع"),
+            ["Cannot reach the shop's server, so this barcode cannot be looked up. {0}"] =
+                ("Impossible de joindre le serveur du magasin, ce code-barres ne peut pas être vérifié. {0}",
+                 "تعذر الوصول إلى خادم المتجر، لذا لا يمكن البحث عن هذا الباركود. {0}"),
             ["Cannot see profit, salaries, supplier debt or settings."] =
                 ("Ne voit ni le bénéfice, ni les salaires, ni la dette fournisseurs, ni les réglages.",
                  "لا يرى الأرباح ولا الرواتب ولا ديون الموردين ولا الإعدادات."),

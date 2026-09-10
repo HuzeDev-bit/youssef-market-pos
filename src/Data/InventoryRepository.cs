@@ -1,4 +1,4 @@
-using MarketPos.Models;
+﻿using MarketPos.Models;
 using MarketPos.Services;
 using Microsoft.Data.Sqlite;
 
@@ -51,21 +51,23 @@ public static class InventoryRepository
 
             var after = before + quantity;
 
-            // The shelf cannot hold less than nothing — except when something has already
-            // left it.
+            // The shelf cannot hold less than nothing.
             //
-            // A sale is a fact by the time it reaches here: the goods are in the customer's
-            // bag and the money is on the counter. Refusing it because the count disagrees
-            // does not put the goods back, it only loses the record of them going. And the
-            // count disagreeing is the ordinary case in a real shop — a delivery entered
-            // late, a breakage nobody wrote down. So a sale is allowed to take the count
-            // negative, and the negative is the shop telling its owner that the count is
-            // behind, which is exactly what it should say.
+            // This is checked here, inside the transaction that is about to write the new
+            // count, and that placement is the whole of the protection. Two tills can both be
+            // showing a stock of one — each read it a minute ago — and both press Pay in the
+            // same second. Whichever transaction takes the write lock first sees one and sells
+            // it; the second then reads the committed zero, not the one it was showing, and is
+            // refused. The shop ends at zero rather than at minus one, and one customer is
+            // told rather than both being served something that was not there.
             //
-            // Everything else still stops at zero. Writing off ten of something the shop has
-            // three of, or returning stock it never received, is not a fact that already
-            // happened — it is somebody typing the wrong number, and there is time to say so.
-            if (after < 0m && reason != StockReason.Sale)
+            // A sale used to be exempt, on the argument that the goods were already in the
+            // customer's bag and refusing only lost the record. That reasoning holds for a
+            // single till, where the count being behind is an ordinary fact of shop life. It
+            // does not hold across two, where the count being behind is another cashier
+            // selling the same tin a second ago — and where a silent minus one is two
+            // customers charged for one item.
+            if (after < 0m)
                 throw new NotEnoughStockException(NameOf(db, productId), before, -quantity);
 
             using (var write = db.CreateCommand())

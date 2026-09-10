@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.ViewModels;
@@ -482,8 +482,13 @@ public static class FlowTest
         Check("a scanned delivery keeps the code on the box",
               scanned?.Barcode == "6111999000123" ? 1 : 0, 1);
 
-        Check("the new product gets an in-store barcode",
-              (made?.Barcode.Length ?? 0) == 13 && made!.Barcode.StartsWith('2') ? 1 : 0, 1);
+        // A name typed on a delivery note is a product with nothing printed on it, and it is
+        // saved with no barcode at all. It used to be given a minted 2xxxxxxxxxxx code so the
+        // column could be filled; that code read like a barcode on every screen and could be
+        // scanned off one. Nothing is invented now — the product is found at the till by its
+        // picture, which is what it was always going to be found by.
+        Check("a product typed on a delivery gets no invented barcode",
+              (made?.Barcode.Length ?? 0) == 0 ? 1 : 0, 1);
 
         // A product with no category goes to Other, not to a category called "". The empty
         // name drew a nameless card in the back office and a blank shelf on the till, and
@@ -578,13 +583,27 @@ public static class FlowTest
         Check("and the shop calls it out of stock",
               StockRepository.Find(id)!.Status == StockStatus.OutOfStock ? 1 : 0, 1);
 
-        // The fourth. The goods left the shop whatever the count says, so the sale is banked
-        // and the count goes negative — which is the shop saying its count is behind, not the
-        // shop losing a sale.
-        SaleRepository.Save(new List<SaleItem> { new(product, 1m) }, 10m, DiscountKind.None,
-                            0m, 0m, 10m, 0m, 10m, PaymentMethod.Cash, 10m);
+        // The fourth, and there is no fourth.
+        //
+        // This used to be banked, taking the count to minus one, on the argument that the goods
+        // had already left the shop. That holds for one till. It does not hold for two: with a
+        // second counter the count being behind is usually the other cashier selling the same
+        // tin a second ago, and banking both means two customers charged for one item and a
+        // shelf that quietly reads minus one. The shop stops at nothing left.
+        var fourthRefused = false;
+        var refusal = string.Empty;
+        try
+        {
+            SaleRepository.Save(new List<SaleItem> { new(product, 1m) }, 10m, DiscountKind.None,
+                                0m, 0m, 10m, 0m, 10m, PaymentMethod.Cash, 10m);
+        }
+        catch (NotEnoughStockException error) { fourthRefused = true; refusal = error.Message; }
 
-        Check("selling one more is still banked", StockRepository.Find(id)!.Stock, -1m);
+        Check("selling one more than the shelf holds is refused", fourthRefused ? 1 : 0, 1);
+        Log.AppendLine($"      the shop would say: {refusal}");
+
+        // And the refusal rolled the whole sale back: no ticket, no line, no movement.
+        Check("a refused sale leaves the count at nothing", StockRepository.Find(id)!.Stock, 0m);
         Check("and it is still counted as out of stock",
               StockRepository.Find(id)!.Status == StockStatus.OutOfStock ? 1 : 0, 1);
 
@@ -599,7 +618,7 @@ public static class FlowTest
         Log.AppendLine($"      the shop would say: {message}");
 
         // And that refusal must not have half-written anything.
-        Check("a refused write-off leaves the count alone", StockRepository.Find(id)!.Stock, -1m);
+        Check("a refused write-off leaves the count alone", StockRepository.Find(id)!.Stock, 0m);
     }
 
     /// <summary>
@@ -635,19 +654,20 @@ public static class FlowTest
 
         Check("thirty scans put thirty on the sale", till.Cart.FirstOrDefault()?.Quantity ?? 0m, 30m);
 
-        // The thirty-first. The shelf says thirty, the cashier has thirty-one in their hands,
-        // and the customer is waiting: the sale wins. Stopping it would not put the goods
-        // back, it would only lose the record of them leaving.
+        // The thirty-first. The basket already holds everything the shelf has, so this one is
+        // not there to sell — and with a second till in the shop, "the count is behind" is
+        // usually the other cashier having just sold it.
         till.SearchText = "6119999900030";
         till.SubmitBarcodeCommand.Execute(null);
 
-        Check("the thirty-first goes on the sale too", till.Cart.FirstOrDefault()?.Quantity ?? 0m, 31m);
-        Check("and nothing red is said about it", till.StatusIsError ? 1 : 0, 0);
+        Check("the thirty-first is refused", till.Cart.FirstOrDefault()?.Quantity ?? 0m, 30m);
+        Check("and the refusal is said out loud", till.StatusIsError ? 1 : 0, 1);
+        Log.AppendLine($"      the till says: {till.StatusMessage}");
 
-        // Bank it.
-        till.CompleteSale(PaymentMethod.Cash, 279m);
+        // Bank the thirty that are really there.
+        till.CompleteSale(PaymentMethod.Cash, 270m);
 
-        Check("the count goes one below zero, and says so", StockRepository.Find(id)!.Stock, -1m);
+        Check("the shelf goes to nothing, not below it", StockRepository.Find(id)!.Stock, 0m);
         Check("the shop calls it out of stock",
               StockRepository.Find(id)!.Status == StockStatus.OutOfStock ? 1 : 0, 1);
 
@@ -657,7 +677,6 @@ public static class FlowTest
         after.SearchText = "6119999900030";
         after.SubmitBarcodeCommand.Execute(null);
 
-        // Now the basket is empty, so the shelf does have the last word again.
         Check("scanning it on a fresh sale is refused", after.Cart.Count, 0);
         Check("and that refusal is said out loud", after.StatusIsError ? 1 : 0, 1);
         Log.AppendLine($"      the till says: {after.StatusMessage}");
