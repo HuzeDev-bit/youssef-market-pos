@@ -98,17 +98,19 @@ public partial class MainWindow : Window
 
         LinkChip.Visibility = Visibility.Visible;
 
-        // Nothing on the shelves until the shop has put something there.
+        // Empty shelves, every single time it opens.
         //
-        // A till is a copy of a shop and holds nothing of its own. But the file it keeps that
-        // copy in is an ordinary database on an ordinary computer, and it may already have
-        // products in it — the app was run on that laptop as a shop of its own once, or a
-        // database was carried over. The till would put them on screen and sell them, and
-        // somebody opening the till on their own machine would see a shop: the wrong products,
-        // the wrong prices, and sales no book anywhere will record. So a till that has never
-        // been handed a catalogue starts with empty shelves, and the only thing that can fill
-        // them is the server.
-        if (!CatalogSync.HasEverSynced && CatalogSync.ForgetEverything() > 0)
+        // A till is a window onto the shop's database, not a shop. The file it keeps its copy
+        // in is an ordinary database on an ordinary laptop: the app may have been run there as
+        // a shop of its own, a database may have been carried over, or the copy may simply be
+        // out of date. Any of those and the till shows products — its own, in green, looking
+        // exactly like the shop's — and sells them into books that do not exist.
+        //
+        // So nothing carries over between openings. What is on this screen came from the
+        // server this time, or it is not on this screen. If the server cannot be reached the
+        // till says so in red and has nothing to sell, which is the truth: this machine does
+        // not have a shop on it.
+        if (CatalogSync.ForgetEverything() > 0)
         {
             Catalog.Reload();
             Vm.ReloadProducts();
@@ -149,8 +151,13 @@ public partial class MainWindow : Window
 
         var found = await ShopFinder.Look();
 
-        // A machine that answered is the shop — or at worst a shop on the same network, which
-        // is the closest thing this machine has to the one it is being set up for.
+        // Never itself. A machine that answers from this very computer is not the shop this
+        // till belongs to — it is something serving on this laptop, and connecting to it makes
+        // the till a mirror of its own database while the chip says, truthfully and uselessly,
+        // that it is connected. That is the exact shape of "he opened it and saw his own
+        // products": connected, in green, to himself.
+        if (found is not null && ShopFinder.IsThisMachine(found.Address)) found = null;
+
         if (found is not null)
         {
             AppSettings.Current.ServerAddress = found.Address;
@@ -218,8 +225,13 @@ public partial class MainWindow : Window
         LinkStatus.Text = ShopLink.Status;
         LinkDot.Fill = (System.Windows.Media.Brush)FindResource(
             ShopLink.IsOnline ? "Brush.Accent" : "Brush.Danger");
+
+        // The address, not just the word "connected". Which machine a till is talking to is
+        // the one thing that goes wrong when two computers are set up, and it was the one
+        // thing the chip would not say.
         LinkChip.ToolTip = ShopLink.IsOnline
-            ? $"Connected to {ShopLink.ShopName}. Press to send now."
+            ? Loc.T("Connected to {0} at {1}. Press to send now.",
+                    ShopLink.ShopName, Loc.Ltr(ShopLink.Address))
             : $"{ShopLink.LastProblem} Press to try again.";
     }
 

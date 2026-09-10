@@ -150,8 +150,18 @@ public static class CatalogSync
     public static int ForgetEverything()
     {
         using var connection = Database.Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE products SET show_in_pos = 0, is_active = 0 WHERE is_active = 1;";
-        return command.ExecuteNonQuery();
+
+        int cleared;
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "UPDATE products SET show_in_pos = 0, is_active = 0 WHERE is_active = 1;";
+            cleared = command.ExecuteNonQuery();
+        }
+
+        // And the note saying what this till last saw. Without this the server would compare
+        // the till's stamp to its own, decide nothing had changed, send nothing — and the
+        // shelves just emptied would stay empty while the chip said connected.
+        Stamp = string.Empty;
+        return cleared;
     }
 }
