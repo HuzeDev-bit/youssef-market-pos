@@ -1,4 +1,4 @@
-using MarketPos.Services;
+﻿using MarketPos.Services;
 
 namespace MarketPos.Data;
 
@@ -19,6 +19,17 @@ public sealed class NotEnoughStockException : InvalidOperationException
         ProductName = productName;
         Available = available;
         Wanted = wanted;
+    }
+
+    /// <summary>
+    /// The same refusal, in the shop's own words, when it arrives from the shop's own machine
+    /// rather than being worked out here. A till has no shelf to count; what it has is the
+    /// server's answer, and this keeps that answer the same type every screen already catches.
+    /// </summary>
+    public NotEnoughStockException(string message)
+        : base(message)
+    {
+        ProductName = string.Empty;
     }
 
     public string ProductName { get; }

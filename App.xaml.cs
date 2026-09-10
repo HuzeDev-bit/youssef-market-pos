@@ -100,7 +100,8 @@ public partial class App : Application
         {
             var at = Array.IndexOf(e.Args, "--tilltest") + 1;
             Headless(Services.TillTest.Run(
-                at < e.Args.Length ? e.Args[at] : "http://localhost:5000"));
+                at < e.Args.Length ? e.Args[at] : "https://localhost:5000",
+                at + 1 < e.Args.Length ? e.Args[at + 1] : null));
             return;
         }
 

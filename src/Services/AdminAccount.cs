@@ -95,7 +95,7 @@ public static class AdminAccount
             return !IsConfigured || Verify(password);
 
         var said = ShopLink.Now(() => ShopLink.SignInAsOwner(password));
-        return said is null ? null : said.Ok;
+        return said?.Ok;
     }
 
     /// <summary>

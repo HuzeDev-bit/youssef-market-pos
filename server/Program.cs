@@ -62,7 +62,17 @@ var builder = WebApplication.CreateBuilder(args);
 if (!args.Any(a => a.StartsWith("--urls", StringComparison.OrdinalIgnoreCase))
     && Environment.GetEnvironmentVariable("ASPNETCORE_URLS") is null)
 {
-    builder.WebHost.UseUrls("http://0.0.0.0:5000");
+    // Encrypted, because the owner's password and every session token afterwards cross this
+    // wire. The certificate is the shop's own — see ShopCertificate — and each till pins it the
+    // first time it connects, so nothing else on the network can answer for the shop.
+    var ours = MarketPos.Link.ShopCertificate.Ours();
+
+    builder.WebHost.ConfigureKestrel(kestrel =>
+    {
+        kestrel.ListenAnyIP(5000, listen => listen.UseHttps(ours));
+    });
+
+    Note($"certificate fingerprint {MarketPos.Link.ShopCertificate.Fingerprint(ours)}");
 }
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(p =>
@@ -200,42 +210,55 @@ app.MapGet("/settings", () => Results.Ok(ShopData.Settings()));
 app.MapGet("/categories", () => Results.Ok(ShopData.Categories()));
 app.MapGet("/suppliers", () => Results.Ok(ShopData.Suppliers()));
 
+// ---------------------------------------------------------------- who is allowed in
+//
+// Both checks run against this machine's own database, and what comes back is a token that
+// means nothing anywhere else. Nothing here is ever written to the log - not the token, and
+// certainly not the password that earned it.
+
+app.MapPost("/auth/owner/signin", (OwnerSignIn who) =>
+{
+    var said = ShopAuthApi.OwnerSignIn(who.Password);
+    Note(said.Ok ? "the owner signed in" : "an owner sign-in was refused");
+    return said.Ok ? Results.Ok(said) : Results.Json(said, statusCode: 401);
+});
+
+app.MapPost("/auth/staff/signin", (SignInRequest who) =>
+{
+    var said = ShopAuthApi.StaffSignIn(who.WorkerId, who.Password);
+    Note(said.Ok ? $"{said.Name} signed in" : "a staff sign-in was refused");
+    return said.Ok ? Results.Ok(said) : Results.Json(said, statusCode: 401);
+});
+
+app.MapPost("/auth/signout", (HttpRequest request) =>
+{
+    ShopTokens.Revoke(request.Headers[Api.TokenHeader].ToString());
+    return Results.Ok(new Answered(true));
+});
+
+app.MapGet("/auth/whoami", (HttpRequest request) =>
+    Results.Ok(ShopAuthApi.Whoami(request.Headers[Api.TokenHeader].ToString())));
+
 // ---------------------------------------------------------------- categories
 
 // The back office's own view of them, hidden ones included, which is what its list needs.
-app.MapGet("/categories/all", (bool? includeInactive) =>
-    Results.Ok(ShopCategoriesApi.List(includeInactive == true)));
+app.MapGet("/categories/all", (HttpRequest request, bool? includeInactive) =>
+    Authorised.Do(request, () => ShopCategoriesApi.List(includeInactive == true)));
 
-app.MapPost("/categories", (NewCategory asked) =>
-{
-    var said = ShopCategoriesApi.Create(asked);
-    return said.Ok ? Results.Ok(said) : Results.BadRequest(said);
-});
+app.MapPost("/categories", (HttpRequest request, NewCategory asked) =>
+    Authorised.Answering(request, () => ShopCategoriesApi.Create(asked), s => s.Ok, 400));
 
-app.MapPut("/categories/{id:int}", (int id, RenameCategory asked) =>
-{
-    var said = ShopCategoriesApi.Rename(id, asked);
-    return said.Ok ? Results.Ok(said) : Results.BadRequest(said);
-});
+app.MapPut("/categories/{id:int}", (HttpRequest request, int id, RenameCategory asked) =>
+    Authorised.Answering(request, () => ShopCategoriesApi.Rename(id, asked), s => s.Ok, 400));
 
-app.MapPut("/categories/{id:int}/active", (int id, SetCategoryActive asked) =>
-{
-    var said = ShopCategoriesApi.SetActive(id, asked);
-    return said.Ok ? Results.Ok(said) : Results.Conflict(said);
-});
+app.MapPut("/categories/{id:int}/active", (HttpRequest request, int id, SetCategoryActive asked) =>
+    Authorised.Answering(request, () => ShopCategoriesApi.SetActive(id, asked), s => s.Ok));
 
-app.MapDelete("/categories/{id:int}", (int id) =>
-{
-    var said = ShopCategoriesApi.Delete(id);
-    return said.Ok ? Results.Ok(said) : Results.Conflict(said);
-});
+app.MapDelete("/categories/{id:int}", (HttpRequest request, int id) =>
+    Authorised.Answering(request, () => ShopCategoriesApi.Delete(id), s => s.Ok));
 
 // ---------------------------------------------------------------- who is allowed in
 
-// The owner proving who they are, on the machine that holds the password. A remote back office
-// is opened on the strength of this answer, so the answer is not the client's to give.
-app.MapPost("/auth/owner/signin", (OwnerSignIn who) =>
-    Results.Ok(ShopData.OwnerSignIn(who.Password)));
 
 // ---------------------------------------------------------------- the pictures
 
@@ -388,8 +411,8 @@ app.MapPost("/sales", (SaleBatch batch) =>
 // that starts silently leaves them reading Kestrel's console output for an IP address.
 foreach (var address in LocalAddresses())
 {
-    app.Logger.LogInformation("Tills should be pointed at http://{Address}:5000", address);
-    Note($"tills should be pointed at http://{address}:5000");
+    app.Logger.LogInformation("Tills should be pointed at https://{Address}:5000", address);
+    Note($"tills should be pointed at https://{address}:5000");
 }
 
 Note($"database {MarketPos.Data.Database.Path}");

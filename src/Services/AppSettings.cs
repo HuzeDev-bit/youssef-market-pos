@@ -149,6 +149,17 @@ public sealed class AppSettings
     /// </summary>
     public string TillName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The fingerprint of the shop's server certificate, written down the first time this
+    /// machine reached it.
+    ///
+    /// Device configuration, not business data: it describes which machine this one is paired
+    /// with. Clearing it re-pairs the till, which is what a shop does after rebuilding its
+    /// server — and what nobody should be doing otherwise, because a key that changed on its
+    /// own is the one thing this is here to notice.
+    /// </summary>
+    public string ServerFingerprint { get; set; } = string.Empty;
+
     /// <summary>The till's name, falling back to the machine's — never empty in practice.</summary>
     [JsonIgnore]
     public string TillLabel =>

@@ -1,4 +1,4 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using MarketPos.Services;
@@ -24,7 +24,9 @@ namespace MarketPos.Link;
 /// </summary>
 public static class Api
 {
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(20) };
+    // Talks to the paired shop and refuses anything else. Not a client that accepts any
+    // certificate: that would encrypt the wire and then hand it to whoever asked.
+    private static readonly HttpClient Http = PinnedShop.Client(TimeSpan.FromSeconds(20));
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
@@ -32,6 +34,9 @@ public static class Api
     };
 
     private static string Address => AppSettings.Current.ServerAddress.Trim().TrimEnd('/');
+
+    /// <summary>The header a request proves itself with. Named once so both ends agree.</summary>
+    public const string TokenHeader = "X-Shop-Token";
 
     public static T? Get<T>(string what) where T : class => Send<T>(HttpMethod.Get, what, null);
 
@@ -58,14 +63,28 @@ public static class Api
                 using var request = new HttpRequestMessage(how, $"{Address}/{what}");
                 if (body is not null) request.Content = JsonContent.Create(body, options: Json);
 
+                // Who this is from. The only thing the client says about itself, and it says
+                // nothing about what it may do — the shop decides that from the token.
+                if (ShopSession.SignedIn)
+                    request.Headers.Add(TokenHeader, ShopSession.Token);
+
                 using var response = await Http.SendAsync(request);
 
                 // A refusal the shop meant — no such thing, not allowed — is an answer, and it
                 // is carried in the body for the caller to read.
+                // Not signed in, or signed in as somebody who may not do this. Neither is a
+                // network fault and neither may be shrugged off: they are thrown so a screen
+                // cannot mistake them for an empty result.
+                if (response.StatusCode is System.Net.HttpStatusCode.Unauthorized)
+                    throw new NotSignedInAtTheShop();
+
+                if (response.StatusCode is System.Net.HttpStatusCode.Forbidden)
+                    throw new UnauthorizedAccessException(
+                        "The shop did not allow that. Sign in as somebody who may do it.");
+
                 if (response.StatusCode is System.Net.HttpStatusCode.NotFound
                                         or System.Net.HttpStatusCode.Conflict
-                                        or System.Net.HttpStatusCode.BadRequest
-                                        or System.Net.HttpStatusCode.Forbidden)
+                                        or System.Net.HttpStatusCode.BadRequest)
                 {
                     return await Read<T>(response);
                 }
@@ -78,11 +97,23 @@ public static class Api
         {
             throw;
         }
+        catch (NotSignedInAtTheShop)
+        {
+            throw;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            throw;
+        }
         catch (Exception problem)
         {
             var reason = problem is AggregateException bundle && bundle.InnerException is not null
                 ? bundle.InnerException.Message
                 : problem.Message;
+
+            // A refused certificate is not a network fault and must not read like one: the
+            // shop is reachable, it is simply not the shop this till was paired with.
+            if (PinnedShop.LastRefusal.Length > 0) reason = PinnedShop.LastRefusal;
 
             throw new ShopUnreachable(reason);
         }
@@ -108,4 +139,16 @@ public sealed class ShopUnreachable : Exception
 {
     public ShopUnreachable(string reason)
         : base($"Cannot reach the shop's server. {reason}") { }
+}
+
+/// <summary>
+/// The shop does not know who this is: no token, or one that has expired or been signed out.
+///
+/// Its own type so a screen can send the person back to the sign-in box rather than showing
+/// them an empty list and letting them believe the shop is empty.
+/// </summary>
+public sealed class NotSignedInAtTheShop : Exception
+{
+    public NotSignedInAtTheShop()
+        : base("The shop does not know who this till is. Sign in again.") { }
 }

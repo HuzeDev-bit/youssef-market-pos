@@ -25,12 +25,10 @@ namespace MarketPos.Services;
 /// </summary>
 public static class ShopLink
 {
-    private static readonly HttpClient Http = new()
-    {
-        // Short on purpose. This runs while somebody is standing at a counter; a request that
-        // hangs for thirty seconds has already failed as far as the shop is concerned.
-        Timeout = TimeSpan.FromSeconds(6),
-    };
+    // Short on purpose. This runs while somebody is standing at a counter; a request that
+    // hangs for thirty seconds has already failed as far as the shop is concerned. Pinned to
+    // the paired shop, so the token it carries goes nowhere else.
+    private static readonly HttpClient Http = Link.PinnedShop.Client(TimeSpan.FromSeconds(6));
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -466,7 +464,7 @@ public static class ShopLink
     /// Null means the shop could not be asked, which is not the same as a wrong password and
     /// must never be treated as one — nor as a right one.
     /// </summary>
-    public static async Task<OwnerSignedIn?> SignInAsOwner(string password)
+    public static async Task<SignedInAs?> SignInAsOwner(string password)
     {
         if (!IsConfigured) return null;
 
@@ -475,10 +473,24 @@ public static class ShopLink
             var response = await Http.PostAsJsonAsync($"{Address}/auth/owner/signin",
                 new OwnerSignIn(password), Json);
 
+            // A wrong password is the shop answering, not the link failing.
+            if (response.StatusCode is System.Net.HttpStatusCode.Unauthorized)
+            {
+                Succeed();
+                return await response.Content.ReadFromJsonAsync<SignedInAs>(Json);
+            }
+
             response.EnsureSuccessStatusCode();
 
-            var said = await response.Content.ReadFromJsonAsync<OwnerSignedIn>(Json);
-            if (said is not null) Succeed();
+            var said = await response.Content.ReadFromJsonAsync<SignedInAs>(Json);
+            if (said is null) return null;
+
+            Succeed();
+
+            // Held for as long as the app is open, and sent with everything after this. It is
+            // what the shop checks; nothing this machine says about itself counts.
+            if (said.Ok) ShopSession.Keep(said.Token, said.Name);
+
             return said;
         }
         catch (Exception error)
@@ -543,7 +555,7 @@ public static class ShopLink
 
         try
         {
-            var response = await Http.PostAsJsonAsync($"{Address}/signin",
+            var response = await Http.PostAsJsonAsync($"{Address}/auth/staff/signin",
                 new SignInRequest(workerId, password), Json);
 
             // A wrong password is an answer, not a failure of the link.
@@ -555,9 +567,13 @@ public static class ShopLink
 
             response.EnsureSuccessStatusCode();
 
-            var who = await response.Content.ReadFromJsonAsync<SignedIn>(Json);
-            if (who is not null) Succeed();
-            return who;
+            var said = await response.Content.ReadFromJsonAsync<SignedInAs>(Json);
+            if (said is null || !said.Ok) return null;
+
+            Succeed();
+            ShopSession.Keep(said.Token, said.Name);
+
+            return new SignedIn(workerId, said.Name, said.Role);
         }
         catch (Exception error)
         {

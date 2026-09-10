@@ -27,8 +27,16 @@ public static class TillTest
     private static readonly StringBuilder Log = new();
     private static int _failures;
 
-    public static int Run(string address)
+    /// <summary>
+    /// The password this exercise signs in with. A new install starts with it and this run is
+    /// against a scratch shop, so it is the one the server will have.
+    /// </summary>
+    private static string OwnerPassword = AdminAccount.Starting;
+
+    public static int Run(string address, string? ownerPassword = null)
     {
+        if (!string.IsNullOrEmpty(ownerPassword)) OwnerPassword = ownerPassword;
+
         // A till, and nothing behind it.
         Catalog.BelongsToAServer = true;
         Data.Database.NotOnThisMachine = true;
@@ -119,13 +127,38 @@ public static class TillTest
             Say("      (nothing in stock at the shop, so the sale checks were skipped)");
         }
 
+        // ------------------------------------------------------------ nobody gets in for free
+        //
+        // The server unlocks itself as the owner so its own back office works. The whole point
+        // of the token is that this must not reach a request arriving over the network.
+
+        Link.ShopSession.SignOut();
+
+        var refused = false;
+        try
+        {
+            Link.Shop.Categories.List(includeInactive: true);
+        }
+        catch (Link.NotSignedInAtTheShop)
+        {
+            refused = true;
+        }
+
+        Ask("an unsigned request is refused, not served as the owner", () => refused);
+
+        var wrong = AdminAccount.Opens("not-the-password");
+        Ask("a wrong password is refused", () => wrong is false);
+        Ask("and refusing it signed nobody in", () => !Link.ShopSession.SignedIn);
+
         // ------------------------------------------------------------ the back office, remotely
         //
         // The same screens the shop's own machine runs, on a machine with no database. Every
         // one of these would throw if it reached for one.
 
         Ask("the owner is checked by the shop, not by this machine",
-            () => AdminAccount.Opens("definitely-not-the-password") is not null);
+            () => AdminAccount.Opens(OwnerPassword) is not null);
+
+        Ask("signing in gave this machine a token from the shop", () => Link.ShopSession.SignedIn);
 
         var before = 0;
         Ask("the back office can list the shop's categories", () =>
@@ -162,6 +195,22 @@ public static class TillTest
 
         Ask("leaving the shop as it was",
             () => Link.Shop.Categories.List(includeInactive: true).Count == before);
+
+        Link.ShopSession.SignOut();
+        var afterSignOut = false;
+        try
+        {
+            Link.Shop.Categories.List(includeInactive: true);
+        }
+        catch (Link.NotSignedInAtTheShop)
+        {
+            afterSignOut = true;
+        }
+
+        Ask("and signing out takes the back office away again", () => afterSignOut);
+
+        // Back in, for the settings check below.
+        AdminAccount.Opens(OwnerPassword);
 
         // ------------------------------------------------------------ what the shop is called
         ShopSettings.Reread();
