@@ -38,6 +38,21 @@ public sealed class RemoteSuppliers : ISupplierService
     public void SetActive(int id, string name, bool active) =>
         Api.Must(Api.Put<Saved>($"suppliers/{id}/active", new SetActive(active)));
 
+    public bool Delete(int id, string name, out bool removed, out string problem)
+    {
+        var said = Api.Delete<SupplierGone>($"suppliers/{id}")
+                   ?? throw new ShopUnreachable("The shop did not answer.");
+
+        // Not allowed is the shop's decision and is thrown, the way the repository throws it,
+        // so a page written against the repository behaves the same here.
+        if (said.Refusal == nameof(UnauthorizedAccessException))
+            throw new UnauthorizedAccessException(said.Problem);
+
+        removed = said.Removed;
+        problem = said.Problem;
+        return said.Ok;
+    }
+
     public List<SupplierGoods> WhatWeBuy(int supplierId) =>
         Api.Get<List<SupplierGoods>>($"suppliers/{supplierId}/goods") ?? new List<SupplierGoods>();
 
@@ -196,6 +211,9 @@ public sealed class RemoteReports : IReportService
 public sealed record Saved(bool Ok, int Id, string Problem, string Refusal);
 
 public sealed record SetActive(bool Active);
+
+/// <summary>What the shop made of a removal: whether the row went, or was only hidden.</summary>
+public sealed record SupplierGone(bool Ok, int Id, string Problem, string Refusal, bool Removed);
 
 public sealed record Reason(string Text);
 

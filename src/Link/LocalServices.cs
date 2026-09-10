@@ -24,6 +24,9 @@ public sealed class LocalSuppliers : ISupplierService
     public void SetActive(int id, string name, bool active) =>
         SupplierRepository.SetActive(id, name, active);
 
+    public bool Delete(int id, string name, out bool removed, out string problem) =>
+        SupplierRepository.Delete(id, name, out removed, out problem);
+
     public List<SupplierGoods> WhatWeBuy(int supplierId) =>
         SupplierRepository.WhatWeBuy(supplierId);
 

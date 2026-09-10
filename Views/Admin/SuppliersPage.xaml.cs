@@ -239,6 +239,49 @@ public partial class SuppliersPage : AdminPageBase
         if (SupplierWindow.Edit(Shell, supplier)) ReloadAll();
     }
 
+    /// <summary>
+    /// What just happened, in the line beside the filters. Cleared by the next reload, so it
+    /// never becomes an old message about a row that has since changed.
+    /// </summary>
+    private void Note(string what, bool gentle)
+    {
+        Hint.Text = what;
+        Hint.Foreground = (System.Windows.Media.Brush)FindResource(
+            gentle ? "Brush.Muted" : "Brush.Danger");
+    }
+
+    /// <summary>
+    /// Removing a supplier.
+    ///
+    /// One the shop has bought from is part of the books and is hidden rather than erased; one
+    /// entered by mistake and never used goes for good. The shop decides which, and says so,
+    /// because a row that is still on the list after pressing Remove needs explaining.
+    /// </summary>
+    private void Remove_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        if (sender is not FrameworkElement { Tag: int id }) return;
+
+        var supplier = _rows.FirstOrDefault(s => s.Id == id);
+        if (supplier is null) return;
+
+        try
+        {
+            Link.Shop.Suppliers.Delete(supplier.Id, supplier.Name, out var removed, out var why);
+            ReloadAll();
+
+            Note(removed
+                ? Loc.T("{0} was removed.", supplier.Name)
+                : why,
+                gentle: removed);
+        }
+        catch (Exception problem)
+        {
+            Note(problem.Message, gentle: false);
+        }
+    }
+
     /// <summary>A delivery: what arrived, what it cost, and how much was handed over there and then.</summary>
     private void Purchase_Click(object sender, RoutedEventArgs e)
     {

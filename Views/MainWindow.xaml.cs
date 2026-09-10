@@ -138,11 +138,22 @@ public partial class MainWindow : Window
     /// </summary>
     private async System.Threading.Tasks.Task FindTheShop()
     {
+        // An address that works is the end of it.
+        //
+        // A till now starts out pointed at pos-server, which is right when the shop's server
+        // machine carries that name and useless when it does not -- and "configured" used to be
+        // enough to stop the search below from ever running. So the address is tried, and only
+        // an address that actually answers counts as configured.
         if (ShopLink.IsConfigured)
         {
             SetupSyncing();
             await ShopLink.Sync();
-            return;
+
+            if (ShopLink.IsOnline)
+            {
+                Vm.ReloadProducts();
+                return;
+            }
         }
 
         ShowLooking();

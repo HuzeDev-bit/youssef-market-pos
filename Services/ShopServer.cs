@@ -141,6 +141,9 @@ public static class ShopServer
             app.MapPut("/suppliers/{id:int}/active", (HttpRequest r, int id, SetActive asked) =>
                 Authorised.Answering(r, () => ShopBusinessApi.SetSupplierActive(id, asked.Active), s => s.Ok));
 
+            app.MapDelete("/suppliers/{id:int}", (HttpRequest r, int id) =>
+                Authorised.Answering(r, () => ShopBusinessApi.DeleteSupplier(id), s => s.Ok));
+
             app.MapGet("/suppliers/{id:int}/goods", (HttpRequest r, int id) =>
                 Authorised.Do(r, () => ShopBusinessApi.SupplierGoods(id)));
 

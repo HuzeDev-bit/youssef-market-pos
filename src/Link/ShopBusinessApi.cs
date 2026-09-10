@@ -72,6 +72,31 @@ public static class ShopBusinessApi
     public static Saved SetSupplierActive(int id, bool active) => Try(() =>
         SupplierRepository.SetActive(id, NameOfSupplier(id), active));
 
+    /// <summary>
+    /// Removing a supplier. The shop decides whether the row can go or is only hidden, and
+    /// says which, because a client told "done" would have no way of knowing the row is still
+    /// on the list.
+    /// </summary>
+    public static SupplierGone DeleteSupplier(int id)
+    {
+        var name = NameOfSupplier(id);
+
+        try
+        {
+            var ok = SupplierRepository.Delete(id, name, out var removed, out var problem);
+            return new SupplierGone(ok, id, problem, string.Empty, removed);
+        }
+        catch (UnauthorizedAccessException refused)
+        {
+            return new SupplierGone(false, id, refused.Message,
+                                    nameof(UnauthorizedAccessException), false);
+        }
+        catch (Exception problem)
+        {
+            return new SupplierGone(false, id, problem.Message, string.Empty, false);
+        }
+    }
+
     public static List<SupplierGoods> SupplierGoods(int id) => SupplierRepository.WhatWeBuy(id);
 
     public static List<Purchase> Deliveries(DateRange? range, int? supplierId) =>

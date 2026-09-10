@@ -85,6 +85,14 @@ app.UseCors();
 // broken install finds out when it starts the server, not when a customer is waiting.
 Database.Initialize();
 
+// And the back office starts behind the password every install ships with.
+//
+// Only the all-in-one used to do this, so a shop running this server had no owner password set
+// at all -- and a password that is not set is not a password anyone can get wrong. Any till on
+// the network could sign in as the owner by typing anything. The owner is told to change it on
+// the sign-in screen, but "not set yet" must never be the same as "open to everybody".
+AdminAccount.StartWithTheDefault();
+
 // Every request runs as the shop itself. The till proves who its cashier is on sign-in, and
 // that name is carried on each sale it hands over — but the server's own authority to write
 // does not come from whoever is standing at a till.
@@ -248,6 +256,9 @@ app.MapPut("/suppliers/{id:int}", (HttpRequest r, int id, Supplier asked) =>
 
 app.MapPut("/suppliers/{id:int}/active", (HttpRequest r, int id, SetActive asked) =>
     Authorised.Answering(r, () => ShopBusinessApi.SetSupplierActive(id, asked.Active), s => s.Ok));
+
+app.MapDelete("/suppliers/{id:int}", (HttpRequest r, int id) =>
+    Authorised.Answering(r, () => ShopBusinessApi.DeleteSupplier(id), s => s.Ok));
 
 app.MapGet("/suppliers/{id:int}/goods", (HttpRequest r, int id) =>
     Authorised.Do(r, () => ShopBusinessApi.SupplierGoods(id)));

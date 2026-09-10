@@ -2398,6 +2398,12 @@ public static class Translations
             ["{0} could not be deleted: something in the shop's records still points at it. ({1})"] =
                 ("{0} n'a pas pu être supprimée : quelque chose dans les registres du magasin y renvoie encore. ({1})",
                  "تعذر حذف {0}: لا يزال شيء في سجلات المتجر يشير إليها. ({1})"),
+            ["{0} has deliveries or payments on record, so they are hidden rather than deleted. The history stays as it was."] =
+                ("{0} a des livraisons ou des paiements enregistrés : ce fournisseur est masqué plutôt que supprimé. L'historique reste intact.",
+                 "لدى {0} توصيلات أو دفعات مسجلة، لذلك تم إخفاؤه بدلاً من حذفه. يبقى السجل كما كان."),
+            ["{0} was removed."] =
+                ("{0} a été supprimé.",
+                 "تمت إزالة {0}."),
             ["{0} still has {1} product in it. Move it to another category first."] =
                 ("{0} contient encore {1} produit. Déplacez-le vers une autre catégorie d'abord.",
                  "{0} ما زالت تحتوي على {1} منتج. انقله إلى فئة أخرى أولاً."),

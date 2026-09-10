@@ -23,6 +23,12 @@ public interface ISupplierService
 
     void SetActive(int id, string name, bool active);
 
+    /// <summary>
+    /// Removes one. True when the shop did something; <paramref name="removed"/> says whether
+    /// the row went or was only hidden, and <paramref name="problem"/> says why when it was.
+    /// </summary>
+    bool Delete(int id, string name, out bool removed, out string problem);
+
     List<SupplierGoods> WhatWeBuy(int supplierId);
 
     // ---- deliveries ----

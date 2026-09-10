@@ -145,14 +145,27 @@ public static class CategoryRepository
             // took the whole category with it, so an owner who had once sold a thing could
             // never tidy the category away again. The receipts are the part that must not
             // move; the category is not. So the sold ones are re-filed and the rest go.
-            var elsewhere = Somewhere(connection, work, exceptId: id);
-
-            using var keep = connection.CreateCommand();
-            keep.Transaction = work;
-            keep.CommandText =
-                "UPDATE products SET category_id = $other WHERE category_id = $id"
+            using var counting = connection.CreateCommand();
+            counting.Transaction = work;
+            counting.CommandText =
+                "SELECT COUNT(*) FROM products WHERE category_id = $id"
                 + " AND id IN (SELECT product_id FROM sale_lines);";
-            keep.With("$id", id).With("$other", elsewhere).ExecuteNonQuery();
+            counting.With("$id", id);
+
+            // Only when there is something to re-file. Asking for somewhere to put nothing
+            // would create an Other category on a shop that had never needed one, so deleting
+            // an empty category would leave the shop with one more than it started with.
+            if (Convert.ToInt32(counting.ExecuteScalar()) > 0)
+            {
+                var elsewhere = Somewhere(connection, work, exceptId: id);
+
+                using var keep = connection.CreateCommand();
+                keep.Transaction = work;
+                keep.CommandText =
+                    "UPDATE products SET category_id = $other WHERE category_id = $id"
+                    + " AND id IN (SELECT product_id FROM sale_lines);";
+                keep.With("$id", id).With("$other", elsewhere).ExecuteNonQuery();
+            }
 
             // The rest were never sold and are already off the shelves, so they leave with the
             // category they were filed under.

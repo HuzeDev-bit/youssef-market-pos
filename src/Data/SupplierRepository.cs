@@ -115,6 +115,55 @@ public static class SupplierRepository
                                                 : "deactivated supplier {0}", name));
     }
 
+    /// <summary>
+    /// Removes a supplier, if removing one is honest.
+    ///
+    /// <para>
+    /// A supplier the shop has actually bought from is part of the books: deliveries point at
+    /// them, so do payments, and a shop that deleted the row would have last year's purchases
+    /// coming from nobody. Those are hidden instead, which is what the back office has always
+    /// done and what the list already understands.
+    /// </para>
+    ///
+    /// <para>
+    /// One entered by mistake and never used is a different thing entirely, and there is no
+    /// reason for it to sit in the list for ever. It goes. <paramref name="removed"/> says
+    /// which of the two happened, because "done" is not an answer when the row is still there.
+    /// </para>
+    /// </summary>
+    public static bool Delete(int id, string name, out bool removed, out string problem)
+    {
+        Session.Require(Permission.ManageSuppliers);
+        removed = false;
+        problem = string.Empty;
+
+        using var connection = Database.Open();
+
+        using var used = connection.CreateCommand();
+        used.CommandText =
+            "SELECT (SELECT COUNT(*) FROM purchases WHERE supplier_id = $id)"
+            + " + (SELECT COUNT(*) FROM supplier_payments WHERE supplier_id = $id);";
+        used.With("$id", id);
+
+        if (Convert.ToInt32(used.ExecuteScalar()) > 0)
+        {
+            SetActive(id, name, active: false);
+            problem = Loc.T("{0} has deliveries or payments on record, so they are hidden "
+                          + "rather than deleted. The history stays as it was.", name);
+            return true;
+        }
+
+        using var drop = connection.CreateCommand();
+        drop.CommandText = "DELETE FROM suppliers WHERE id = $id;";
+        drop.With("$id", id).ExecuteNonQuery();
+
+        ActivityRepository.Record("deleted supplier", "Supplier", id, oldValue: name,
+            detail: ActivityRepository.Say("deleted supplier {0}", name));
+
+        removed = true;
+        return true;
+    }
+
     private static void Bind(Microsoft.Data.Sqlite.SqliteCommand command, Supplier s) =>
         command.With("$name", s.Name).With("$contact", s.Contact).With("$phone", s.Phone)
                .With("$email", s.Email).With("$address", s.Address).With("$note", s.Note);
