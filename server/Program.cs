@@ -493,6 +493,24 @@ app.MapPost("/sales", (SaleBatch batch) =>
     Results.Ok(ShopTill.Accept(batch, (reference, error) =>
         app.Logger.LogError(error, "Rejected sale {Reference} from a till", reference))));
 
+// Let the tills in, before saying where to find us.
+//
+// Binding every address on this machine is not the same as being reachable from it. Windows
+// asks once, in a box that is easy to dismiss, and remembers the answer against the exact path
+// the exe was started from -- so the commonest failure in a two-computer shop is a server that
+// works perfectly on its own screen and cannot be reached by a single till, with nothing
+// anywhere saying why.
+var door = ShopDoor.Open(5000);
+Note(door.Open ? door.Said : "WARNING: " + door.Said);
+
+if (ShopDoor.Network() is { Length: > 0 } kind)
+{
+    Note($"this machine's network is marked {kind}.");
+    if (kind.Contains("Public", StringComparison.OrdinalIgnoreCase))
+        Note("On a Public network Windows treats the other computers as strangers. "
+           + "Settings > Network & Internet > your network > set it to Private.");
+}
+
 // Says where it is, in words the person who has to type it into a till can use. A server
 // that starts silently leaves them reading Kestrel's console output for an IP address.
 foreach (var address in LocalAddresses())

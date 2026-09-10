@@ -35,6 +35,11 @@ public static class ShopServer
 
             var serverId = Environment.MachineName;
 
+            // The same door the standalone server opens. A shop running the all-in-one as its
+            // server has exactly the same problem: bound to every address and reachable from
+            // none of them until Windows is told to let the tills in.
+            ShopDoor.Open(5000);
+
             app.MapGet("/hello", () => new Hello(
                 AppSettings.Current.BusinessName, Contracts.Version, serverId, DateTime.Now));
 
