@@ -154,8 +154,30 @@ public static class ShopLink
 
             Succeed();
 
-            // Not complete means nothing had changed, so the copy on this till still stands.
+            // Not complete means nothing had changed, so what is already in memory still stands.
             if (!page.Complete) return -1;
+
+            // A till puts the shop's answer straight into memory. It is not written to this
+            // computer at all: there is no products table to go stale, nothing for a second
+            // copy of the app to find, and nothing that can be shown when the shop is not
+            // answering. What is on screen came over the wire or it is not on screen.
+            if (Catalog.BelongsToAServer)
+            {
+                Catalog.TakeFromTheServer(page.Items.Select(item => new Models.Product
+                {
+                    Id = item.Id,
+                    Barcode = item.Barcode,
+                    Name = item.Name,
+                    Category = item.Category,
+                    Price = item.Price,
+                    TaxRate = item.TaxRate,
+                    Unit = item.Unit == nameof(Models.Unit.Kg) ? Models.Unit.Kg : Models.Unit.Each,
+                    Stock = item.Stock,
+                }));
+
+                CatalogSync.Stamp = page.Stamp;
+                return page.Items.Count;
+            }
 
             var written = CatalogSync.Apply(page.Items);
             CatalogSync.Stamp = page.Stamp;

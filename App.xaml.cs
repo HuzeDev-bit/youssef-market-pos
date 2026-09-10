@@ -114,6 +114,12 @@ public partial class App : Application
         // it believed.
         if (CurrentJob != Job.Till) ShopServer.Start();
 
+        // A till's products belong to the shop's server and are never read off this computer.
+        // Whatever the load above put in memory came from this machine's own database, so it
+        // is dropped here and the shelves stay empty until the server answers.
+        Catalog.BelongsToAServer = CurrentJob == Job.Till;
+        if (Catalog.BelongsToAServer) Catalog.NothingToSell();
+
         // ---------------------------------------------------------------- what to put on screen
         //
         // A server with a screen and a keyboard is the owner's machine: it holds the books, so
