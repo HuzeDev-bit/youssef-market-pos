@@ -1,68 +1,36 @@
-﻿using MarketPos.Views;
 using System.Windows;
-using System.Windows.Input;
-using MarketPos.Data;
 using MarketPos.Models;
-using MarketPos.Services;
 
 namespace MarketPos.Views.Admin;
 
-/// <summary>Add or edit a supplier. Deactivating never deletes — past invoices point here.</summary>
+/// <summary>
+/// A supplier's details in a window, for editing one. The form itself is
+/// <see cref="SupplierForm"/>; adding a supplier shows that same form on the Suppliers page,
+/// in place of the list, rather than in here.
+/// </summary>
 public partial class SupplierWindow : Window
 {
-    private readonly Supplier? _existing;
-
-    /// <summary>
-    /// The row that was just created, so the caller can go straight on to recording what they
-    /// brought. Zero when a supplier was edited rather than added.
-    /// </summary>
-    private int _created;
+    private readonly SupplierForm _form;
 
     public SupplierWindow(Supplier? existing)
     {
         InitializeComponent();
+
+        // Capped so a long delivery scrolls inside the form instead of pushing the buttons
+        // off the bottom of the screen.
+        _form = new SupplierForm(existing) { MaxHeight = 560 };
+        _form.Done += (_, saved) =>
+        {
+            DialogResult = saved;
+            Close();
+        };
+        Card.Child = _form;
+
         Services.Localizer.Apply(this);
         Services.Responsive.Fit(this);
-        _existing = existing;
 
-        if (existing is null)
-        {
-            HeadingText.Text = Loc.T("Add supplier");
-            SubText.Text = Loc.T("Only the name is required. Put in what they brought below "
-                               + "and it is recorded with them.");
-
-            // The goods editor needs the width; a contact form on its own does not.
-            Width = 940;
-            GoodsSection.Visibility = Visibility.Visible;
-            MethodBox.ItemsSource = new[]
-            {
-                Loc.T("Cash"), Loc.T("Bank transfer"), Loc.T("Cheque"),
-                Loc.T("Card"), Loc.T("Credit — pay later"),
-            };
-            MethodBox.SelectedIndex = 0;
-            PaidBox.Text = "0";
-            ShowTotal();
-        }
-        else
-        {
-            HeadingText.Text = existing.Name;
-            SubText.Text = Loc.T("Editing a supplier does not change any invoice already recorded.");
-            NameBox.Text = existing.Name;
-            ContactBox.Text = existing.Contact;
-            PhoneBox.Text = existing.Phone;
-            EmailBox.Text = existing.Email;
-            AddressBox.Text = existing.Address;
-            NoteBox.Text = existing.Note;
-            DeactivateButton.Visibility = Visibility.Visible;
-
-            BalanceCard.Visibility = Visibility.Visible;
-            BalanceText.Text = existing.Owed > 0m
-                ? $"{existing.Owed:N2} DH still owed"
-                : "Nothing outstanding";
-            BalanceNote.Text = $"{existing.TotalPurchased:N2} DH purchased, {existing.TotalPaid:N2} DH paid.";
-        }
-
-        Loaded += (_, _) => { NameBox.Focus(); NameBox.SelectAll(); };
+        // The goods editor needs the width; a contact form on its own does not.
+        if (existing is null) Width = 940;
     }
 
     /// <summary>
@@ -74,7 +42,7 @@ public partial class SupplierWindow : Window
     {
         var window = new SupplierWindow(null).By(owner);
         var saved = window.ShowDialog() == true;
-        createdId = saved ? window._created : 0;
+        createdId = saved ? window._form.Created : 0;
         return saved;
     }
 
@@ -82,154 +50,4 @@ public partial class SupplierWindow : Window
 
     public static bool Edit(Window owner, Supplier supplier) =>
         new SupplierWindow(supplier).By(owner).ShowDialog() == true;
-
-    private void Save_Click(object sender, RoutedEventArgs e)
-    {
-        var name = NameBox.Text.Trim();
-        if (name.Length == 0)
-        {
-            ErrorText.Text = Loc.T("Give the supplier a name.");
-            NameBox.Focus();
-            return;
-        }
-
-        var supplier = new Supplier
-        {
-            Id = _existing?.Id ?? 0,
-            Name = name,
-            Contact = ContactBox.Text.Trim(),
-            Phone = PhoneBox.Text.Trim(),
-            Email = EmailBox.Text.Trim(),
-            Address = AddressBox.Text.Trim(),
-            Note = NoteBox.Text.Trim(),
-        };
-
-        var lines = _existing is null ? Editor.Lines.ToList() : new List<PurchaseLine>();
-
-        DeliveryEditor.TryMoney(PaidBox?.Text, out var paid);
-        if (lines.Count > 0)
-        {
-            var total = lines.Sum(l => l.LineTotal);
-            if (paid < 0m)
-            {
-                ErrorText.Text = Loc.T("The amount paid cannot be negative.");
-                return;
-            }
-            if (paid > total)
-            {
-                ErrorText.Text = $"You cannot pay more than the {total:N2} DH delivery.";
-                return;
-            }
-
-            var atALoss = Editor.BelowCost;
-            if (atALoss.Count > 0 &&
-                !ConfirmWindow.Ask(this,
-                    atALoss.Count == 1
-                        ? $"Sell {atALoss[0].Name} below what it cost?"
-                        : $"Sell {atALoss.Count} of these below what they cost?",
-                    "Every one sold will lose money. Sometimes that is deliberate \u2014 confirm if it is."))
-                return;
-        }
-
-        try
-        {
-            if (_existing is null) _created = Link.Shop.Suppliers.Create(supplier);
-            else Link.Shop.Suppliers.Update(supplier);
-
-            // The delivery is recorded second and separately: the supplier row has to exist
-            // for it to point at. If it throws, the supplier is still saved and the goods can
-            // be entered again from the page rather than the whole thing being lost.
-            if (lines.Count > 0)
-            {
-                Link.Shop.Suppliers.RecordPurchase(new Purchase
-                {
-                    SupplierId = _created,
-                    SupplierName = supplier.Name,
-                    PurchasedOn = DateTime.Today,
-                    Method = MethodBox.SelectedItem as string ?? "Cash",
-                    Lines = lines,
-                }, paid);
-            }
-
-            DialogResult = true;
-            Close();
-        }
-        catch (Exception error)
-        {
-            ErrorText.Text = error.Message;
-        }
-    }
-
-    // ============================== What they brought ==============================
-
-    private void Editor_Problem(object? sender, string problem) => ErrorText.Text = problem;
-
-    private void Editor_Changed(object? sender, EventArgs e)
-    {
-        ErrorText.Text = string.Empty;
-        ShowTotal();
-    }
-
-    private void Paid_Changed(object sender, RoutedEventArgs e) => ShowTotal();
-
-    private void ShowTotal()
-    {
-        if (TotalText is null || Editor is null) return;
-
-        var total = Editor.Total;
-        TotalText.Text = Loc.Ltr($"{total:N2} DH");
-
-        DeliveryEditor.TryMoney(PaidBox.Text, out var paid);
-        var remaining = total - paid;
-
-        OwingText.Text = Editor.Lines.Count == 0
-            ? Loc.T("Add what arrived, or leave it empty.")
-            : remaining <= 0m
-                ? Loc.T("Paid in full \u2014 nothing will be owed.")
-                : Loc.T("{0} will be owed to them.", Loc.Ltr($"{remaining:N2} DH"));
-    }
-
-    private void Deactivate_Click(object sender, RoutedEventArgs e)
-    {
-        if (_existing is null) return;
-
-        // A supplier with an unpaid balance quietly disappearing from the list is how a debt
-        // gets forgotten, so the warning names the figure rather than being generic.
-        var body = _existing.Owed > 0m
-            ? $"{_existing.Owed:N2} DH is still owed to them. They stop appearing in lists, "
-              + "but the debt and every invoice stay on record."
-            : "They stop appearing in lists. Nothing is deleted.";
-
-        if (!ConfirmWindow.Ask(this, $"Deactivate {_existing.Name}?", body)) return;
-
-        Link.Shop.Suppliers.SetActive(_existing.Id, _existing.Name, active: false);
-        DialogResult = true;
-        Close();
-    }
-
-    private void Cancel_Click(object sender, RoutedEventArgs e)
-    {
-        // Backing out of a half-entered delivery loses real typing, so it asks first.
-        var count = _existing is null ? Editor.Lines.Count : 0;
-        if (count > 0 &&
-            !ConfirmWindow.Ask(this, "Discard this supplier?",
-                $"The name and {count} delivery line{(count == 1 ? string.Empty : "s")} will be lost."))
-            return;
-
-        DialogResult = false;
-        Close();
-    }
-
-    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Escape) { Cancel_Click(sender, e); return; }
-
-        // Enter with the cursor in a price box means "add this line", not "save the supplier
-        // and close" — which is what it would otherwise do, halfway through typing a delivery.
-        if (e.Key == Key.Enter && _existing is null && Editor.WantsEnter)
-        {
-            Editor_Problem(this, Editor.AddLine() ?? string.Empty);
-            e.Handled = true;
-        }
-    }
 }

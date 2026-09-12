@@ -116,9 +116,13 @@ public static class CatalogSync
         return ids;
     }
 
-    /// <summary>A product with no category still has to land somewhere.</summary>
+    /// <summary>
+    /// A product with no category still has to land somewhere: on the blank row, the same
+    /// place the shop's own database keeps it. Filing it under Other would bring back on the
+    /// till a category the shop deleted.
+    /// </summary>
     private static string Grouping(string category) =>
-        string.IsNullOrWhiteSpace(category) ? "Other" : category.Trim();
+        string.IsNullOrWhiteSpace(category) ? string.Empty : category.Trim();
 
     /// <summary>
     /// What the till last saw, so it can ask the server only for what has changed since.

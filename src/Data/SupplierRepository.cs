@@ -54,8 +54,11 @@ public static class SupplierRepository
                 Address = reader.Str(5),
                 Note = reader.Str(6),
                 IsActive = reader.Bool(7),
-                TotalPurchased = (decimal)reader.GetDouble(8),
-                TotalPaid = (decimal)reader.GetDouble(9),
+                // Summed by SQLite as doubles, so brought back to the centime here. Left raw,
+                // 0.1 + 0.2 of a delivery paid in full shows as a debt of 0.00000000001 DH:
+                // counted in "owed to N suppliers" and given a Pay button.
+                TotalPurchased = Math.Round((decimal)reader.GetDouble(8), 2),
+                TotalPaid = Math.Round((decimal)reader.GetDouble(9), 2),
             });
         }
         return suppliers;
@@ -116,19 +119,18 @@ public static class SupplierRepository
     }
 
     /// <summary>
-    /// Removes a supplier, if removing one is honest.
+    /// Deletes a supplier, and everything recorded against them.
     ///
     /// <para>
-    /// A supplier the shop has actually bought from is part of the books: deliveries point at
-    /// them, so do payments, and a shop that deleted the row would have last year's purchases
-    /// coming from nobody. Those are hidden instead, which is what the back office has always
-    /// done and what the list already understands.
+    /// Their deliveries and the payments made to them go too, in one transaction, so what the
+    /// shop owes and what it bought never counts a supplier who is no longer on the list. The
+    /// stock those deliveries brought stays where it is: the goods are on the shelves, and a
+    /// count that dropped because a name was deleted would be wrong about the shop.
     /// </para>
     ///
     /// <para>
-    /// One entered by mistake and never used is a different thing entirely, and there is no
-    /// reason for it to sit in the list for ever. It goes. <paramref name="removed"/> says
-    /// which of the two happened, because "done" is not an answer when the row is still there.
+    /// It used to hide a supplier with history instead — but the page lists hidden suppliers,
+    /// so the row stayed exactly where it was after Remove and could never be got rid of.
     /// </para>
     /// </summary>
     public static bool Delete(int id, string name, out bool removed, out string problem)
@@ -138,27 +140,51 @@ public static class SupplierRepository
         problem = string.Empty;
 
         using var connection = Database.Open();
-
-        using var used = connection.CreateCommand();
-        used.CommandText =
-            "SELECT (SELECT COUNT(*) FROM purchases WHERE supplier_id = $id)"
-            + " + (SELECT COUNT(*) FROM supplier_payments WHERE supplier_id = $id);";
-        used.With("$id", id);
-
-        if (Convert.ToInt32(used.ExecuteScalar()) > 0)
+        using var work = connection.BeginTransaction();
+        try
         {
-            SetActive(id, name, active: false);
-            problem = Loc.T("{0} has deliveries or payments on record, so they are hidden "
-                          + "rather than deleted. The history stays as it was.", name);
-            return true;
+            foreach (var sql in new[]
+            {
+                // The stock their deliveries brought stays, but its moves stop pointing at a
+                // delivery that no longer exists: they say whose it was instead.
+                """
+                UPDATE stock_movements SET reference = $gone
+                WHERE reference IN (SELECT 'Purchase #' || id FROM purchases WHERE supplier_id = $id)
+                   OR reference IN (SELECT 'Purchase #' || id || ' cancelled' FROM purchases
+                                    WHERE supplier_id = $id);
+                """,
+                // Products remember who they came from. That memory goes; the product stays.
+                "UPDATE products SET supplier_id = NULL WHERE supplier_id = $id;",
+                """
+                DELETE FROM supplier_payments
+                WHERE supplier_id = $id
+                   OR purchase_id IN (SELECT id FROM purchases WHERE supplier_id = $id);
+                """,
+                "DELETE FROM purchase_lines WHERE purchase_id IN (SELECT id FROM purchases WHERE supplier_id = $id);",
+                "DELETE FROM purchases WHERE supplier_id = $id;",
+                "DELETE FROM suppliers WHERE id = $id;",
+            })
+            {
+                using var command = connection.CreateCommand();
+                command.Transaction = work;
+                command.CommandText = sql;
+                command.With("$id", id);
+                if (sql.Contains("$gone"))
+                    command.With("$gone", Loc.T("Delivery from {0} (supplier deleted)", name));
+                command.ExecuteNonQuery();
+            }
+
+            ActivityRepository.Record("deleted supplier", "Supplier", id, oldValue: name,
+                detail: ActivityRepository.Say("deleted supplier {0}", name), connection: connection);
+
+            work.Commit();
         }
-
-        using var drop = connection.CreateCommand();
-        drop.CommandText = "DELETE FROM suppliers WHERE id = $id;";
-        drop.With("$id", id).ExecuteNonQuery();
-
-        ActivityRepository.Record("deleted supplier", "Supplier", id, oldValue: name,
-            detail: ActivityRepository.Say("deleted supplier {0}", name));
+        catch (Microsoft.Data.Sqlite.SqliteException held)
+        {
+            work.Rollback();
+            problem = Loc.T("{0} could not be deleted. ({1})", name, held.Message);
+            return false;
+        }
 
         removed = true;
         return true;

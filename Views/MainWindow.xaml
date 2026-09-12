@@ -193,8 +193,12 @@
                          on a second till it is the one thing a cashier needs to be able to
                          glance at, because it is the difference between "the shop knows about
                          this sale" and "the shop will know when the other machine wakes up". -->
+                    <!-- Padding set here, not inherited: the pill's own 11px above and below
+                         left a 34px chip about 10px for its text, and the tops and tails of the
+                         Arabic letters were cut off - "متصل" read as "متصا". -->
                     <Button x:Name="LinkChip" Style="{StaticResource Button.PillMuted}"
-                            Height="34" Margin="0,0,10,0" Visibility="Collapsed"
+                            Height="34" Padding="14,0" FontSize="12.5"
+                            Margin="0,0,10,0" Visibility="Collapsed"
                             Click="LinkChip_Click"
                             ToolTip="Press to send now">
                         <StackPanel Orientation="Horizontal">
@@ -535,7 +539,7 @@
                                                        Height="32" ClipToBounds="True"
                                                        VerticalAlignment="Top"/>
 
-                                            <TextBlock Grid.Row="2" Text="{Binding Category}" Margin="2,0,0,0"
+                                            <TextBlock Grid.Row="2" Text="{Binding Category, Converter={StaticResource CategoryName}}" Margin="2,0,0,0"
                                                        Style="{StaticResource Text.Muted}" FontSize="11"
                                                        TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Top"/>

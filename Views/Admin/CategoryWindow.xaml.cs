@@ -207,7 +207,7 @@ public partial class CategoryWindow : Window
         if (_existing is null) return;
 
         if (!ConfirmWindow.Ask(this, Loc.T("Delete {0}?", _existing.Name),
-                Loc.T("It goes for good. Products still on the shelves in it have to be moved first.")))
+                Loc.T("It goes for good. Its products stay in stock and on the till, without a category.")))
             return;
 
         if (!Link.Shop.Categories.Delete(_existing.Id, _existing.Name, out var problem))

@@ -85,8 +85,8 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
@@ -110,12 +110,16 @@
                       Content="Only ones I owe" VerticalAlignment="Center" Margin="16,0,0,0"
                       Click="Filter_Changed"/>
 
-            <TextBlock x:Name="Hint" Grid.Column="2" Style="{StaticResource Text.Muted}"
+            <!-- Deactivated suppliers stay off the list unless this is ticked, the same as
+                 hidden categories. It is how one is found again to be reactivated. -->
+            <CheckBox x:Name="ShowHidden" Grid.Column="2" Style="{StaticResource Check.Field}"
+                      Content="Show hidden ones" VerticalAlignment="Center" Margin="16,0,0,0"
+                      Click="Filter_Changed"/>
+
+            <TextBlock x:Name="Hint" Grid.Column="3" Style="{StaticResource Text.Muted}"
                        VerticalAlignment="Center" Margin="18,0,18,0"
                        TextTrimming="CharacterEllipsis"/>
 
-            <Button Grid.Column="3" Style="{StaticResource Button.SmallMuted}" Height="36"
-                    Content="Record a delivery" Click="Purchase_Click" Margin="0,0,10,0"/>
             <Button Grid.Column="4" Style="{StaticResource Button.Small}" Height="36"
                     Content="Add supplier" Click="Add_Click"/>
         </Grid>
@@ -213,11 +217,9 @@
                                                       Data="{StaticResource Icon.Edit}"/>
                                             </Button>
 
-                                            <!-- Removing one. A supplier the shop has bought
-                                                 from is part of the books and is hidden rather
-                                                 than erased; one that was entered by mistake
-                                                 and never used goes for good. The page says
-                                                 which happened. -->
+                                            <!-- Deleting one, with their deliveries and
+                                                 payments. The page asks first when there is
+                                                 history to lose. -->
                                             <Button Style="{StaticResource Button.RowDanger}"
                                                     ToolTip="Remove this supplier"
                                                     Click="Remove_Click" Tag="{Binding Id}">
@@ -447,5 +449,13 @@
                 </StackPanel>
             </Grid>
         </Border>
+
+        <!-- ==================== Adding a supplier ====================
+             Opens here, over the whole page, rather than in a window on top of it: the form is
+             a page of its own, with the list one Save or Cancel away. Everything else on the
+             page is collapsed while it is open. -->
+        <Border x:Name="AddArea" Grid.Row="0" Grid.RowSpan="3" Grid.ColumnSpan="3"
+                Background="{StaticResource Brush.Card}" CornerRadius="16" Padding="22,18"
+                Visibility="Collapsed"/>
     </Grid>
 </local:AdminPageBase>

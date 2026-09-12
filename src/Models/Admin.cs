@@ -149,6 +149,12 @@ public sealed class Supplier
     public decimal TotalPaid { get; set; }
     public decimal Owed => Math.Max(0m, TotalPurchased - TotalPaid);
 
+    /// <summary>
+    /// Paid more than was delivered: a delivery paid for and then cancelled. The shop is owed
+    /// this back, and <see cref="Owed"/> stops at zero, so without it the money is nowhere.
+    /// </summary>
+    public decimal Credit => Math.Max(0m, TotalPaid - TotalPurchased);
+
     public bool IsOwed => Owed > 0m;
 
     /// <summary>A dash rather than a blank, so an empty column reads as "not known".</summary>

@@ -309,7 +309,7 @@ public sealed class SaleViewModel : ViewModelBase
         var groups = Catalog.Products
             .Where(p => p.SoldAtTheTill)
             .Where(p => !p.IsScannable || IsSearching)
-            .GroupBy(p => p.Category)
+            .GroupBy(Shelf)
             .Where(g => MatchesText(g.Key, SearchText))
             .OrderBy(g => g.Key);
 
@@ -325,12 +325,19 @@ public sealed class SaleViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasProductsPageResults));
     }
 
+    /// <summary>
+    /// The tile a product sits under. One whose category was deleted has none, and still has
+    /// to be pressable, so it gets a tile with a name rather than a blank one.
+    /// </summary>
+    private static string Shelf(Product product) =>
+        product.Category.Trim().Length > 0 ? product.Category : Loc.T("No category");
+
     private void LoadCategoryProducts(string category)
     {
         CategoryProducts.Clear();
 
         var products = Catalog.Products
-            .Where(p => p.Category == category)
+            .Where(p => Shelf(p) == category)
             .Where(p => p.SoldAtTheTill)
             .Where(p => !p.IsScannable || IsSearching)
             .Where(p => Matches(p, SearchText))

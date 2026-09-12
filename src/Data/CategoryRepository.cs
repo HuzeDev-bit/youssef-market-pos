@@ -92,12 +92,7 @@ public static class CategoryRepository
     }
 
     /// <summary>
-    /// Deactivates rather than deletes, because products point at this row. A category with
-    /// products still assigned is refused outright — silently orphaning stock is worse than
-    /// an error message.
-    /// </summary>
-    /// <summary>
-    /// Deletes a category outright, and says why if it will not go.
+    /// Deletes a category outright, whatever is still in it.
     ///
     /// <para>
     /// Hiding it was not what the shop meant. A category made by mistake, or one the shop has
@@ -107,12 +102,10 @@ public static class CategoryRepository
     /// </para>
     ///
     /// <para>
-    /// Two things it will not do. It will not empty a category out from underneath the till:
-    /// while products are still on the shelves in it, nothing happens and the shop is told to
-    /// move them first. And it will not touch the sales history — products already taken off
-    /// the shelves go with the category, but only the ones no receipt points at; if one has
-    /// ever been sold, the whole delete is rolled back rather than leave last year's takings
-    /// pointing at nothing.
+    /// Its products are not. They stay in stock and on the till, sold by their barcode, and
+    /// simply stop belonging to a category. They used to be moved into Other instead, which
+    /// could not work when Other was the category being deleted: making a new Other ran into
+    /// the old one's name, and the delete came back as a database error.
     /// </para>
     /// </summary>
     public static bool Delete(int id, string name, out string problem)
@@ -124,22 +117,10 @@ public static class CategoryRepository
         using var work = connection.BeginTransaction();
         try
         {
-            // If any products are currently filed under this category,
-            // move them to 'Other' so stock and receipts are preserved without blocking category deletion.
-            using var counting = connection.CreateCommand();
-            counting.Transaction = work;
-            counting.CommandText = "SELECT COUNT(*) FROM products WHERE category_id = $id;";
-            counting.With("$id", id);
-
-            if (Convert.ToInt32(counting.ExecuteScalar()) > 0)
-            {
-                var elsewhere = Somewhere(connection, work, exceptId: id);
-
-                using var move = connection.CreateCommand();
-                move.Transaction = work;
-                move.CommandText = "UPDATE products SET category_id = $other WHERE category_id = $id;";
-                move.With("$id", id).With("$other", elsewhere).ExecuteNonQuery();
-            }
+            using var move = connection.CreateCommand();
+            move.Transaction = work;
+            move.CommandText = "UPDATE products SET category_id = $none WHERE category_id = $id;";
+            move.With("$id", id).With("$none", NoCategory(connection, work)).ExecuteNonQuery();
 
             using var drop = connection.CreateCommand();
             drop.Transaction = work;
@@ -150,8 +131,8 @@ public static class CategoryRepository
         }
         catch (SqliteException held)
         {
-            // Something else is still holding on -- a delivery line, most likely. The database
-            // says so by refusing, and saying which is more use than saying "cannot".
+            // Something else is still holding on. The database says so by refusing, and
+            // saying which is more use than saying "cannot".
             work.Rollback();
             problem = Loc.T("{0} could not be deleted: something in the shop's records still "
                           + "points at it. ({1})", name, held.Message);
@@ -166,27 +147,22 @@ public static class CategoryRepository
     }
 
     /// <summary>
-    /// Somewhere to file a product whose category is going away.
+    /// Where a product sits once its category has been deleted.
     ///
-    /// Other, which every shop has; and if this one has had it deleted, it comes back. A
-    /// product's category cannot be empty, so there has to be an answer here.
+    /// A product's category column cannot be empty, so "no category" is a row of its own. It
+    /// has no name, which is what keeps it off every list of categories in the app — the
+    /// Categories page, the till's chips and the product forms all pass over a blank name.
     /// </summary>
-    private static int Somewhere(SqliteConnection connection, SqliteTransaction work, int exceptId)
+    private static int NoCategory(SqliteConnection connection, SqliteTransaction work)
     {
-        using var look = connection.CreateCommand();
-        look.Transaction = work;
-        look.CommandText = "SELECT id FROM categories WHERE name = 'Other' AND id <> $id LIMIT 1;";
-        look.With("$id", exceptId);
+        using var command = connection.CreateCommand();
+        command.Transaction = work;
+        command.CommandText = """
+            INSERT INTO categories (name, is_active) VALUES ('', 0) ON CONFLICT(name) DO NOTHING;
+            SELECT id FROM categories WHERE name = '';
+            """;
 
-        if (look.ExecuteScalar() is { } found and not DBNull) return Convert.ToInt32(found);
-
-        using var make = connection.CreateCommand();
-        make.Transaction = work;
-        make.CommandText =
-            "INSERT INTO categories (name, icon, is_active, image) VALUES ('Other', '', 1, '');"
-            + " SELECT last_insert_rowid();";
-
-        return Convert.ToInt32(make.ExecuteScalar());
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 
     public static bool SetActive(int id, string name, bool active, out string problem)

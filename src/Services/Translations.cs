@@ -2461,6 +2461,30 @@ public static class Translations
             ["{0} was removed."] =
                 ("{0} a été supprimé.",
                  "تمت إزالة {0}."),
+            ["Delete {0}?"] =
+                ("Supprimer {0} ?",
+                 "حذف {0}؟"),
+            ["Their deliveries and payments are deleted with them. This cannot be undone."] =
+                ("Leurs livraisons et leurs paiements sont supprimés avec eux. Impossible d'annuler.",
+                 "ستُحذف توصيلاته ودفعاته معه. لا يمكن التراجع عن ذلك."),
+            ["{0} could not be deleted. ({1})"] =
+                ("{0} n'a pas pu être supprimé. ({1})",
+                 "تعذر حذف {0}. ({1})"),
+            ["No category"] =
+                ("Sans catégorie",
+                 "بدون فئة"),
+            ["It goes for good. Its products stay in stock and on the till, without a category."] =
+                ("Elle part définitivement. Ses produits restent en stock et en caisse, sans catégorie.",
+                 "سيتم حذفها نهائياً. تبقى منتجاتها في المخزون وفي الصندوق، بدون فئة."),
+            ["{0} of it is credit with suppliers"] =
+                ("dont {0} d'avoir chez les fournisseurs",
+                 "منها {0} رصيد لدى الموردين"),
+            ["They owe the shop {0}: a delivery paid for was cancelled."] =
+                ("Ils doivent {0} au magasin : une livraison payée a été annulée.",
+                 "عليهم للمتجر {0}: أُلغي توصيل مدفوع."),
+            ["Delivery from {0} (supplier deleted)"] =
+                ("Livraison de {0} (fournisseur supprimé)",
+                 "توصيل من {0} (مورد محذوف)"),
             ["{0} still has {1} product in it. Move it to another category first."] =
                 ("{0} contient encore {1} produit. Déplacez-le vers une autre catégorie d'abord.",
                  "{0} ما زالت تحتوي على {1} منتج. انقله إلى فئة أخرى أولاً."),

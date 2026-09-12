@@ -52,7 +52,9 @@ public static class ProductRepository
     {
         using var connection = Database.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT name FROM categories ORDER BY name;";
+        // A blank name is where the products of a deleted category went. It is not a
+        // category anyone made, so it is not a chip on the till.
+        command.CommandText = "SELECT name FROM categories WHERE TRIM(name) <> '' ORDER BY name;";
 
         var categories = new List<string>();
         using var reader = command.ExecuteReader();

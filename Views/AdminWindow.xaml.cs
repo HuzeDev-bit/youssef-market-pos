@@ -367,7 +367,16 @@ public partial class AdminWindow : Window
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Escape) Close();
+        if (e.Key == Key.Escape)
+        {
+            // An open dropdown takes Escape for itself: it closes the list, nothing more.
+            if (Mouse.Captured is ComboBox { IsDropDownOpen: true }) return;
+
+            // Halfway through adding a supplier, Escape means "not this one", not "close the
+            // back office and lose what was typed".
+            if (Current?.GoBack() == true) { e.Handled = true; return; }
+            Close();
+        }
         else if (e.Key == Key.F5) Refresh_Click(sender, e);
     }
 

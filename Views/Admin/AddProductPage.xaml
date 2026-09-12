@@ -91,7 +91,7 @@
                                                                    FontSize="11"/>
                                                     </StackPanel>
 
-                                                    <TextBlock Grid.Column="1" Text="{Binding Category}"
+                                                    <TextBlock Grid.Column="1" Text="{Binding Category, Converter={StaticResource CategoryName}}"
                                                                Style="{StaticResource Text.CellMuted}"/>
                                                     <TextBlock Grid.Column="2" Text="{Binding CostLabel}"
                                                                Style="{StaticResource Text.Money}"

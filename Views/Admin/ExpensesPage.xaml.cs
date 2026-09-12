@@ -72,7 +72,15 @@ public partial class ExpensesPage : AdminPageBase
 
     // ============================== Filter ==============================
 
-    private sealed record KindChoice(int? Id, string Display);
+    /// <summary>
+    /// One entry in the kind filter. ToString is what the closed box shows: this theme's combo
+    /// draws the chosen item itself and DisplayMemberPath does not reach it, which is how the
+    /// box came to read "KindChoice { Id = ... }" instead of the kind, in the shop's language.
+    /// </summary>
+    private sealed record KindChoice(int? Id, string Display)
+    {
+        public override string ToString() => Display;
+    }
 
     private void FillKindFilter()
     {

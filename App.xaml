@@ -14,6 +14,7 @@
             <conv:StringToVisibilityConverter x:Key="StrVis"/>
             <conv:InverseStringToVisibilityConverter x:Key="InvStrVis"/>
             <conv:ImagePathConverter x:Key="ProductImage"/>
+            <conv:CategoryNameConverter x:Key="CategoryName"/>
 
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Theme/Theme.xaml"/>

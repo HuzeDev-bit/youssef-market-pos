@@ -301,13 +301,14 @@ public static class StockRepository
     /// <summary>
     /// The category to file this product under.
     ///
-    /// The schema insists on one, so "no category" has to be a real shelf rather than a
-    /// missing link. It used to be an empty name, which made a category called "" — a
-    /// nameless card in the back office and a blank shelf on the till, with nothing looking
-    /// wrong until somebody went looking. Anything unfiled goes to Other, which a shopkeeper
-    /// can find and move things out of.
+    /// The schema insists on one, so "no category" has to be a real row rather than a
+    /// missing link: the one with no name, which is also where a deleted category's products
+    /// go. It was Other for a while, which quietly brought back an Other the shop had deleted
+    /// the first time a delivery arrived with something new on it. The blank row is kept off
+    /// every list of categories — the Categories page, the product forms, the till's chips —
+    /// and reads "No category" wherever a product's own category is shown.
     /// </summary>
-    private const string Unfiled = "Other";
+    private const string Unfiled = "";
 
     private static string Grouping(StockItem item) =>
         string.IsNullOrWhiteSpace(item.Category) ? Unfiled : item.Category.Trim();

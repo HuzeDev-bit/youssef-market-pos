@@ -48,6 +48,13 @@ public abstract class AdminPageBase : UserControl
         }
     }
 
+    /// <summary>
+    /// Escape, on a page that has a form open in place of its own content: the form closes
+    /// and the page comes back. False when there is nothing to step back from, and Escape
+    /// leaves the back office as it always has.
+    /// </summary>
+    public virtual bool GoBack() => false;
+
     public virtual void OnRangeChanged()
     {
         if (UsesDateRange) Refresh();
