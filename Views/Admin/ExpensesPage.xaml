@@ -110,7 +110,7 @@
                       SelectionChanged="Filter_Changed"/>
 
             <Button Grid.Column="3" Style="{StaticResource Button.Small}" Height="36"
-                    Content="إضافة مصروف" Click="Add_Click"/>
+                    Content="Add expense" Click="Add_Click"/>
         </Grid>
 
         <!-- ==================== Every bill ==================== -->
@@ -136,7 +136,7 @@
                     <TextBlock Grid.Column="1" Text="WHAT FOR" Style="{StaticResource Text.ColumnHead}"/>
                     <TextBlock Grid.Column="2" Text="KIND" Style="{StaticResource Text.ColumnHead}"/>
                     <TextBlock Grid.Column="3" Text="PAID BY" Style="{StaticResource Text.ColumnHead}"/>
-                    <TextBlock Grid.Column="4" Text="المبلغ" Style="{StaticResource Text.ColumnHead}"
+                    <TextBlock Grid.Column="4" Text="AMOUNT" Style="{StaticResource Text.ColumnHead}"
                                TextAlignment="Right"/>
                 </Grid>
 

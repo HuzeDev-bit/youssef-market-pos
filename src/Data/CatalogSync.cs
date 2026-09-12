@@ -1,4 +1,4 @@
-using MarketPos.Link;
+﻿using MarketPos.Link;
 using MarketPos.Models;
 
 namespace MarketPos.Data;
@@ -45,7 +45,7 @@ public static class CatalogSync
                     UPDATE products SET barcode = 'replaced-' || id, is_active = 0, show_in_pos = 0
                     WHERE barcode = $barcode AND id <> $id;
                     """;
-                displace.With("$barcode", item.Barcode).With("$id", item.Id);
+                displace.WithBarcode("$barcode", item.Barcode).With("$id", item.Id);
                 displace.ExecuteNonQuery();
             }
 
@@ -67,7 +67,7 @@ public static class CatalogSync
                     updated_at  = excluded.updated_at;
                 """;
             upsert.With("$id", item.Id)
-                  .With("$barcode", item.Barcode)
+                  .WithBarcode("$barcode", item.Barcode)
                   .With("$name", item.Name)
                   .With("$category", categories[Grouping(item.Category)])
                   .WithMoney("$price", item.Price)
@@ -116,9 +116,13 @@ public static class CatalogSync
         return ids;
     }
 
-    /// <summary>A product with no category still has to land somewhere.</summary>
+    /// <summary>
+    /// A product with no category still has to land somewhere: on the blank row, the same
+    /// place the shop's own database keeps it. Filing it under Other would bring back on the
+    /// till a category the shop deleted.
+    /// </summary>
     private static string Grouping(string category) =>
-        string.IsNullOrWhiteSpace(category) ? "Other" : category.Trim();
+        string.IsNullOrWhiteSpace(category) ? string.Empty : category.Trim();
 
     /// <summary>
     /// What the till last saw, so it can ask the server only for what has changed since.
@@ -127,7 +131,51 @@ public static class CatalogSync
     /// </summary>
     public static string Stamp
     {
-        get => Meta.Get("catalog_stamp");
-        set => Meta.Set("catalog_stamp", value);
+        get => Services.Catalog.BelongsToAServer ? _inMemoryStamp : Meta.Get("catalog_stamp");
+        set
+        {
+            // A till remembers what it last saw for as long as it is open, and writes nothing
+            // down. The stamp describes a copy that lives in memory and dies with the app;
+            // storing it would have the till tell the server it was up to date about a
+            // catalogue it no longer has.
+            if (Services.Catalog.BelongsToAServer) _inMemoryStamp = value;
+            else Meta.Set("catalog_stamp", value);
+        }
+    }
+
+    private static string _inMemoryStamp = string.Empty;
+
+    /// <summary>Whether this database has ever been handed a catalogue by a server.</summary>
+    public static bool HasEverSynced => Stamp.Length > 0;
+
+    /// <summary>
+    /// Takes everything off this till's shelves, because none of it is this till's to sell.
+    ///
+    /// A till is a copy of a shop. A machine that has never been handed that copy has no
+    /// business showing products at all — but if the app was ever run on it as a shop of its
+    /// own, or a database was carried over from somewhere, it has rows, and it will happily
+    /// put them on screen and sell them. Somebody opens the till on their laptop and sees a
+    /// shop: the wrong products, the wrong prices, and sales that no book in the world will
+    /// ever record.
+    ///
+    /// Retired rather than deleted, and the same way the server retires them, because a sale
+    /// already taken on this machine may point at one of them.
+    /// </summary>
+    public static int ForgetEverything()
+    {
+        using var connection = Database.Open();
+
+        int cleared;
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "UPDATE products SET show_in_pos = 0, is_active = 0 WHERE is_active = 1;";
+            cleared = command.ExecuteNonQuery();
+        }
+
+        // And the note saying what this till last saw. Without this the server would compare
+        // the till's stamp to its own, decide nothing had changed, send nothing — and the
+        // shelves just emptied would stay empty while the chip said connected.
+        Stamp = string.Empty;
+        return cleared;
     }
 }

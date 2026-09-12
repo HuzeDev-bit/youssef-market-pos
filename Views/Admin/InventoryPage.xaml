@@ -80,6 +80,13 @@
                     Height="36" Margin="10,0,0,0" HorizontalAlignment="Left"
                     Content="Clear filters" Click="Clear_Click" Visibility="Collapsed"/>
 
+            <!-- A removed product is not deleted, so there has to be somewhere to see it and
+                 a way back. Without this, taking something off the shelf is one-way and the
+                 owner's only recourse is to type the whole product in again. -->
+            <CheckBox x:Name="ShowRemoved" Grid.Column="6" Style="{StaticResource Check.Field}"
+                      Content="Show removed" VerticalAlignment="Center"
+                      HorizontalAlignment="Right" Margin="10,0,0,0" Click="Filter_Changed"/>
+
             <TextBlock x:Name="Summary" Grid.Row="1" Grid.ColumnSpan="7"
                        Style="{StaticResource Text.Muted}" Margin="2,10,0,0"
                        TextTrimming="CharacterEllipsis"/>
@@ -101,7 +108,7 @@
                         <ColumnDefinition Width="160"/>
                         <ColumnDefinition Width="170"/>
                         <ColumnDefinition Width="170"/>
-                        <ColumnDefinition Width="44"/>
+                        <ColumnDefinition Width="78"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="PRODUCT" Style="{StaticResource Text.ColumnHead}"/>
                     <TextBlock Grid.Column="1" Text="EXPIRES" Style="{StaticResource Text.ColumnHead}"/>
@@ -120,7 +127,7 @@
                         <ItemsControl x:Name="Rows">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Button Style="{StaticResource Button.Row}" Padding="12,0"
+                                    <Button x:Name="row" Style="{StaticResource Button.Row}" Padding="12,0"
                                             Click="Row_Click" Tag="{Binding Id}"
                                             ToolTip="Adjust or count this stock">
                                         <Grid Height="38">
@@ -129,12 +136,29 @@
                                                 <ColumnDefinition Width="160"/>
                                                 <ColumnDefinition Width="170"/>
                                                 <ColumnDefinition Width="170"/>
-                                                <ColumnDefinition Width="44"/>
+                                                <ColumnDefinition Width="78"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <TextBlock Grid.Column="0" Style="{StaticResource Text.Cell}"
-                                                       FontWeight="SemiBold" Text="{Binding Name}"
-                                                       TextTrimming="CharacterEllipsis"/>
+                                            <Grid Grid.Column="0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0" Style="{StaticResource Text.Cell}"
+                                                           FontWeight="SemiBold" Text="{Binding Name}"
+                                                           TextTrimming="CharacterEllipsis"/>
+
+                                                <!-- Says which of the two lists you are looking
+                                                     at. A removed product only appears at all
+                                                     when Show removed is on, and then it has to
+                                                     be obvious which rows those are. -->
+                                                <Border x:Name="removedTag" Grid.Column="1"
+                                                        Style="{StaticResource Badge.Neutral}"
+                                                        Margin="10,0,0,0" Visibility="Collapsed">
+                                                    <TextBlock Text="Removed"/>
+                                                </Border>
+                                            </Grid>
 
                                             <!-- Quiet until the week it matters, then the one
                                                  thing on the row worth reading. -->
@@ -155,13 +179,30 @@
                                                  press away, because until now the only way to
                                                  reach it was to wait for the thing to run low
                                                  and open it from the dashboard. -->
-                                            <Button Grid.Column="4" Style="{StaticResource Button.RowAction}"
-                                                    HorizontalAlignment="Right"
-                                                    Click="Edit_Click" Tag="{Binding Id}"
-                                                    ToolTip="Edit this product — price, photo, barcode">
-                                                <Path Style="{StaticResource Icon.Small}"
-                                                      Data="{StaticResource Icon.Edit}"/>
-                                            </Button>
+                                            <StackPanel Grid.Column="4" Orientation="Horizontal"
+                                                        HorizontalAlignment="Right">
+                                                <Button Style="{StaticResource Button.RowAction}"
+                                                        Click="Edit_Click" Tag="{Binding Id}"
+                                                        ToolTip="Edit this product — price, photo, barcode">
+                                                    <Path Style="{StaticResource Icon.Small}"
+                                                          Data="{StaticResource Icon.Edit}"/>
+                                                </Button>
+
+                                                <!-- Takes the product off the shelf. Not a
+                                                     delete: last year's receipts point at this
+                                                     row and have to keep resolving, so it is
+                                                     hidden rather than destroyed and the button
+                                                     turns into the one that puts it back. -->
+                                                <Button x:Name="removeButton"
+                                                        Style="{StaticResource Button.RowDanger}"
+                                                        Margin="4,0,0,0"
+                                                        Click="Remove_Click" Tag="{Binding Id}"
+                                                        ToolTip="Remove this product from the shop">
+                                                    <Path x:Name="removeGlyph"
+                                                          Style="{StaticResource Icon.Small}"
+                                                          Data="{StaticResource Icon.Trash}"/>
+                                                </Button>
+                                            </StackPanel>
                                         </Grid>
                                     </Button>
 
@@ -178,6 +219,21 @@
                                                     Value="{StaticResource Brush.Danger}"/>
                                             <Setter TargetName="expiry" Property="FontWeight"
                                                     Value="SemiBold"/>
+                                        </DataTrigger>
+
+                                        <!-- A removed product reads as retired rather than as
+                                             one more thing on the shelf, and its one remaining
+                                             action is to come back. -->
+                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                            <Setter TargetName="row" Property="Opacity" Value="0.55"/>
+                                            <Setter TargetName="removedTag" Property="Visibility"
+                                                    Value="Visible"/>
+                                            <Setter TargetName="removeGlyph" Property="Data"
+                                                    Value="{StaticResource Icon.Undo}"/>
+                                            <Setter TargetName="removeButton" Property="Foreground"
+                                                    Value="{StaticResource Brush.Muted}"/>
+                                            <Setter TargetName="removeButton" Property="ToolTip"
+                                                    Value="Put this product back in the shop"/>
                                         </DataTrigger>
                                     </DataTemplate.Triggers>
                                 </DataTemplate>

@@ -5,7 +5,10 @@
 Nothing to set up. Run `MarketPos.exe`. The till and the back office are the same program, and
 the database lives at `%AppData%\MarketPos\marketpos.db`.
 
-Leave **Settings → Back office address** empty. The shop never touches the network.
+Leave **Settings → Shop server** empty. The shop never touches the network.
+
+The back office asks for a password the first time it is opened. A new install starts with
+**123456**; change it from the lock beside your name in the back office.
 
 ---
 
@@ -14,20 +17,36 @@ Leave **Settings → Back office address** empty. The shop never touches the net
 One machine owns the books. Everything else is a till that keeps its own copy of the
 catalogue, sells with or without the network, and hands its sales over afterwards.
 
-### On the back-office machine
+### Which file goes where
 
-Start the server. It reads and writes the same `marketpos.db` the back office uses.
+| File | Machine | What it is |
+|---|---|---|
+| `MarketPos.Server.exe` | the server | the shop's database and nothing else. No window. |
+| `MarketPosTill.exe` | the cashier | the till. Does not serve anybody. |
+| `MarketPos.exe` | one computer only | both of the above in one program |
 
-```bash
-dotnet run --project server
+`MarketPosTill.exe` and `MarketPos.exe` are the same build under two names — the name is how a
+copy knows which machine it is on, so nobody has to remember a flag typed into a shortcut.
+
+### On the server machine
+
+Run `MarketPos.Server.exe`. It owns the database, listens on port 5000 on every network the
+machine is on, and shows nothing:
+
+```
+%AppData%\MarketPos\marketpos.db
 ```
 
-It listens on port 5000 on every network the machine is on, and prints the addresses a till
-should be pointed at:
+Find the machine's address with `ipconfig` — the IPv4 line, e.g. `192.168.1.20`. The tills are
+pointed at `http://192.168.1.20:5000`.
 
-```
-Tills should be pointed at http://192.168.1.20:5000
-```
+Put a shortcut to it in `shell:startup` so it comes back by itself after a power cut. It stops
+from Task Manager, or by shutting the machine down.
+
+**The back office runs here too.** The books are on this machine, so this is where products,
+prices and staff are managed: run `MarketPos.exe` on it when you need the back office. It finds
+port 5000 already taken, leaves it to the server, and reads the same database file directly —
+two programs on one machine is the only place SQLite is safe to share.
 
 Two things to check the first time:
 
@@ -40,11 +59,14 @@ database file on the one machine, which is the only place SQLite is safe to shar
 
 ### On each till
 
-**Settings → Back office address**: type what the server printed, e.g. `192.168.1.20:5000`
-(the `http://` is added for you). Give the till a name while you are there — it goes on every
-sale that came from it.
+Install `MarketPosTill.exe`. One file, nothing else.
 
-Press **Test**. It will say which shop it found, or what is wrong in words you can act on.
+**Settings → Shop server**: type the back-office machine's address, e.g. `192.168.1.20:5000`
+(the `http://` and the port are filled in for you). Give the till a name while you are there —
+it goes on every sale that came from it.
+
+Without it the till has nowhere to send anything: it would keep its own books on the cashier's
+machine, which is the one place they should not be.
 
 From then on the till shows a small chip in its top corner:
 

@@ -25,17 +25,24 @@ namespace MarketPos.Services;
 /// </summary>
 public static class ShopLink
 {
-    private static readonly HttpClient Http = new()
-    {
-        // Short on purpose. This runs while somebody is standing at a counter; a request that
-        // hangs for thirty seconds has already failed as far as the shop is concerned.
-        Timeout = TimeSpan.FromSeconds(6),
-    };
+    // Short on purpose. This runs while somebody is standing at a counter; a request that
+    // hangs for thirty seconds has already failed as far as the shop is concerned. Pinned to
+    // the paired shop, so the token it carries goes nowhere else.
+    private static readonly HttpClient Http = Link.PinnedShop.Client(TimeSpan.FromSeconds(6));
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     /// <summary>Where the back office answers. Empty means this machine works alone.</summary>
-    public static string Address => AppSettings.Current.ServerAddress.Trim().TrimEnd('/');
+    public static string Address
+    {
+        get
+        {
+            var text = AppSettings.Current.ServerAddress.Trim().TrimEnd('/');
+            if (text.Length == 0) return string.Empty;
+            if (!text.Contains("://", StringComparison.Ordinal)) text = "http://" + text;
+            return text;
+        }
+    }
 
     public static bool IsConfigured => Address.Length > 0;
 
@@ -75,10 +82,17 @@ public static class ShopLink
         }
     }
 
-    /// <summary>Sales taken here that the server has not confirmed.</summary>
+    /// <summary>
+    /// Sales taken here that the server has not confirmed. Never any, on a till: a till makes
+    /// no sale of its own to hold on to, and has no database to hold one in.
+    /// </summary>
     public static int Waiting
     {
-        get { try { return OutboxRepository.PendingCount(); } catch { return 0; } }
+        get
+        {
+            if (Catalog.BelongsToAServer) return 0;
+            try { return OutboxRepository.PendingCount(); } catch { return 0; }
+        }
     }
 
     // ---------------------------------------------------------------- queueing
@@ -119,6 +133,29 @@ public static class ShopLink
     {
         if (!IsConfigured) return false;
 
+        if (await Greet() is { } first) return first;
+
+        // Refused over a key that changed, on an address a person chose.
+        //
+        // The shop's server writes itself a new certificate whenever it is rebuilt or moved to
+        // another machine, and a till that met the old one turns away every connection to the
+        // new one from then on -- for ever, in red, telling the cashier to clear a paired key
+        // in a screen that had nothing to clear it with. That is not a shop being protected,
+        // it is a shop being shut. This address is the one somebody typed or the search agreed
+        // on, so the key belonging to it is learned again, once, and pinned afresh.
+        if (Link.PinnedShop.LastRefusal.Length == 0) return false;
+
+        Link.PinnedShop.Forget();
+        return await Greet() ?? false;
+    }
+
+    /// <summary>
+    /// One hello. True when the shop answered and agrees on the version, false when it answered
+    /// with something wrong, and null when the connection itself did not happen -- which is the
+    /// case the caller above may be able to do something about.
+    /// </summary>
+    private static async Task<bool?> Greet()
+    {
         try
         {
             var hello = await Http.GetFromJsonAsync<Hello>($"{Address}/hello", Json);
@@ -133,7 +170,8 @@ public static class ShopLink
         }
         catch (Exception error)
         {
-            return Fail(Explain(error));
+            Fail(Explain(error));
+            return null;
         }
     }
 
@@ -154,8 +192,34 @@ public static class ShopLink
 
             Succeed();
 
-            // Not complete means nothing had changed, so the copy on this till still stands.
+            // Not complete means nothing had changed, so what is already in memory still stands.
             if (!page.Complete) return -1;
+
+            // A till puts the shop's answer straight into memory. It is not written to this
+            // computer at all: there is no products table to go stale, nothing for a second
+            // copy of the app to find, and nothing that can be shown when the shop is not
+            // answering. What is on screen came over the wire or it is not on screen.
+            if (Catalog.BelongsToAServer)
+            {
+                Catalog.TakeFromTheServer(page.Items.Select(item => new Models.Product
+                {
+                    Id = item.Id,
+                    Barcode = item.Barcode,
+                    Name = item.Name,
+                    Category = item.Category,
+                    Price = item.Price,
+                    TaxRate = item.TaxRate,
+                    Unit = item.Unit == nameof(Models.Unit.Kg) ? Models.Unit.Kg : Models.Unit.Each,
+                    Stock = item.Stock,
+
+                    // Not a path -- this machine has no picture files. A token the tile's
+                    // converter knows how to turn back into a photo by asking the shop.
+                    ImagePath = item.HasPhoto ? ShopImages.ProductToken(item.Id) : null,
+                }));
+
+                CatalogSync.Stamp = page.Stamp;
+                return page.Items.Count;
+            }
 
             var written = CatalogSync.Apply(page.Items);
             CatalogSync.Stamp = page.Stamp;
@@ -183,6 +247,12 @@ public static class ShopLink
             if (staff is null) return 0;
 
             Succeed();
+
+            // A till is handed the staff list every time it needs one and writes none of it
+            // down. Storing it locally put a copy of every cashier's password hash on the
+            // cashier's own machine, to answer a question the shop is there to answer.
+            if (Catalog.BelongsToAServer) return staff.Count;
+
             return WorkerRepository.ReplaceFromServer(staff);
         }
         catch (Exception error)
@@ -202,6 +272,12 @@ public static class ShopLink
     public static async Task<int> PushSales()
     {
         if (!IsConfigured) return 0;
+
+        // Never from a till. The outbox is the old arrangement: ring the sale up here, keep it
+        // in a local queue, hand it over later. A till makes no sale of its own now — it asks
+        // the shop to make one and waits — so there is nothing to queue, and the queue itself
+        // lives in a database this machine does not have.
+        if (Catalog.BelongsToAServer) return 0;
 
         var waiting = OutboxRepository.Pending();
         if (waiting.Count == 0) return 0;
@@ -248,6 +324,391 @@ public static class ShopLink
     }
 
     /// <summary>
+    /// Puts a product a cashier filled in at the counter into the shop's own database.
+    ///
+    /// <para>
+    /// Straight to the server, and not into this machine's copy. Everything in a till's
+    /// database arrived from the server and is overwritten by the server on the next sync, so
+    /// a product written only here would be sold once and then quietly disappear — and would
+    /// never reach the back office, the stock list, or the till on the other counter.
+    /// </para>
+    ///
+    /// <para>
+    /// This one is not queued like a sale is. A sale has already happened and the money is in
+    /// the drawer whatever the network is doing; a product that has not reached the books is
+    /// not yet a product, and the cashier standing there is the only person who can be told so.
+    /// </para>
+    /// </summary>
+    public static async Task<ProductAccepted?> AddProduct(NewProduct product)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/products/scanned", product, Json);
+            response.EnsureSuccessStatusCode();
+
+            var made = await response.Content.ReadFromJsonAsync<ProductAccepted>(Json);
+            if (made is null) { Fail("The server did not say what it did with the product."); return null; }
+
+            Succeed();
+            return made;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Asks the shop's server to make a sale, and waits for it.
+    ///
+    /// <para>
+    /// This is the till's checkout. Not a copy of a sale already made here — the till makes no
+    /// sale. The server writes the ticket, its lines, the stock and the movements in one
+    /// transaction over the shop's own database, and answers with the invoice number or the
+    /// reason there is not one. Until that answer arrives nothing has been sold.
+    /// </para>
+    ///
+    /// <para>
+    /// The reference travels with it so a retry after a timeout cannot bank the same sale
+    /// twice: the server recognises it and hands back the invoice number it gave the first
+    /// time. That is why a lost answer is survivable and why the till may safely ask again.
+    /// </para>
+    /// </summary>
+    public static async Task<CheckoutDone> Checkout(SaleUpload sale)
+    {
+        if (!IsConfigured)
+            return new CheckoutDone(false, 0, false, "This till has no shop to sell for.");
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/checkout", sale, Json);
+
+            // A refusal is an answer, not a failure: the server says why, in words the cashier
+            // can act on — most often that the last one went on the other counter.
+            var said = await response.Content.ReadFromJsonAsync<CheckoutDone>(Json);
+            if (said is not null)
+            {
+                if (said.Ok) Succeed();
+                return said;
+            }
+
+            Fail("The server did not say what it did with the sale.");
+            return new CheckoutDone(false, 0, false, LastProblem);
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return new CheckoutDone(false, 0, false, LastProblem);
+        }
+    }
+
+    // ---------------------------------------------------------------- what a till asks for
+    //
+    // Each of these is a question a till used to answer out of a database on the cashier's own
+    // machine. It has no such database — its catalogue is a copy the shop sends and is thrown
+    // away when the app closes — so every one of them is asked of the shop instead. They all
+    // fail the same way: null, with the reason on the link's status, and never a stale answer
+    // dressed up as a current one.
+
+    /// <summary>What a scanned or typed thing is, and what it costs.</summary>
+    public static async Task<PriceAnswer?> PriceCheck(string query, bool forTheOwner)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var answer = await Http.GetFromJsonAsync<PriceAnswer>(
+                $"{Address}/pricecheck?q={Uri.EscapeDataString(query)}&owner={forTheOwner}", Json);
+
+            if (answer is not null) Succeed();
+            return answer;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>The shop's tickets, today's takings, and the numbers a reprint may offer.</summary>
+    public static async Task<TicketList?> Tickets(string? search)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var where = $"{Address}/tickets";
+            if (!string.IsNullOrWhiteSpace(search))
+                where += $"?search={Uri.EscapeDataString(search)}";
+
+            var list = await Http.GetFromJsonAsync<TicketList>(where, Json);
+            if (list is not null) Succeed();
+            return list;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>One whole ticket, for printing or reprinting. Null when the shop has no such sale.</summary>
+    public static async Task<TicketDetail?> Ticket(int invoiceNumber)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var response = await Http.GetAsync($"{Address}/tickets/{invoiceNumber}");
+
+            // A ticket that is not there is an answer, and the shop gave it: the link is fine.
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                Succeed();
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            var ticket = await response.Content.ReadFromJsonAsync<TicketDetail>(Json);
+            if (ticket is not null) Succeed();
+            return ticket;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>The settings the whole shop shares.</summary>
+    public static async Task<ShopWideSettings?> Settings()
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var settings = await Http.GetFromJsonAsync<ShopWideSettings>($"{Address}/settings", Json);
+            if (settings is not null) Succeed();
+            return settings;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Asks the shop whether this is the owner's password.
+    ///
+    /// Null means the shop could not be asked, which is not the same as a wrong password and
+    /// must never be treated as one — nor as a right one.
+    /// </summary>
+    public static async Task<SignedInAs?> SignInAsOwner(string password)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/auth/owner/signin",
+                new OwnerSignIn(password), Json);
+
+            // A wrong password is the shop answering, not the link failing.
+            if (response.StatusCode is System.Net.HttpStatusCode.Unauthorized)
+            {
+                Succeed();
+                return await response.Content.ReadFromJsonAsync<SignedInAs>(Json);
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            var said = await response.Content.ReadFromJsonAsync<SignedInAs>(Json);
+            if (said is null) return null;
+
+            Succeed();
+
+            // Held for as long as the app is open, and sent with everything after this. It is
+            // what the shop checks; nothing this machine says about itself counts.
+            if (said.Ok) ShopSession.Keep(said.Token, said.Name);
+
+            return said;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>Asks the shop's server to change the owner password.</summary>
+    public static async Task<bool> ChangeAdminPassword(string currentPassword, string newPassword)
+    {
+        if (!IsConfigured) return false;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/auth/owner/change-password",
+                new Link.ChangeOwnerPasswordRequest(currentPassword, newPassword), Json);
+            if (response.IsSuccessStatusCode)
+            {
+                Succeed();
+                return true;
+            }
+            return false;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return false;
+        }
+    }
+
+    /// <summary>Asks the shop's server to reset the owner password using the recovery key.</summary>
+    public static async Task<bool> ResetAdminPassword(string recoveryKey)
+    {
+        if (!IsConfigured) return false;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/auth/owner/reset-password",
+                new Link.ResetOwnerPasswordRequest(recoveryKey), Json);
+            if (response.IsSuccessStatusCode)
+            {
+                Succeed();
+                return true;
+            }
+            return false;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return false;
+        }
+    }
+
+    /// <summary>The shop's categories.</summary>
+    public static async Task<List<CategoryName>?> Categories() => await Ask<List<CategoryName>>("categories");
+
+    /// <summary>The shop's suppliers.</summary>
+    public static async Task<List<SupplierName>?> Suppliers() => await Ask<List<SupplierName>>("suppliers/names");
+
+    /// <summary>One plain GET, for the answers that are just a list.</summary>
+    private static async Task<T?> Ask<T>(string what) where T : class
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var answer = await Http.GetFromJsonAsync<T>($"{Address}/{what}", Json);
+            if (answer is not null) Succeed();
+            return answer;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>Who may sign in at a till, as the shop knows them.</summary>
+    public static async Task<List<StaffMember>?> Staff()
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var staff = await Http.GetFromJsonAsync<List<StaffMember>>($"{Address}/staff", Json);
+            if (staff is not null) Succeed();
+            return staff;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Checks a cashier's password, on the shop's machine.
+    ///
+    /// The password never leaves this method, and the answer never comes from this machine:
+    /// a till that decided for itself who was allowed to sign in would be a till anybody could
+    /// let themselves into by unplugging the network.
+    /// </summary>
+    public static async Task<SignedIn?> SignIn(int workerId, string password)
+    {
+        if (!IsConfigured) return null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Address}/auth/staff/signin",
+                new SignInRequest(workerId, password), Json);
+
+            // A wrong password is an answer, not a failure of the link.
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                Succeed();
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            var said = await response.Content.ReadFromJsonAsync<SignedInAs>(Json);
+            if (said is null || !said.Ok) return null;
+
+            Succeed();
+            ShopSession.Keep(said.Token, said.Name);
+
+            return new SignedIn(workerId, said.Name, said.Role);
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>Waits for one of the calls above on a thread that is not the one drawing the till.</summary>
+    public static T Now<T>(Func<Task<T>> ask) =>
+        Task.Run(ask).GetAwaiter().GetResult();
+
+    /// <summary>Whether the shop's server is answering, and what it says it is serving.</summary>
+    public static async Task<Health?> Ask()
+    {
+        if (!IsConfigured) return null;
+
+        var health = await Asking();
+        if (health is not null) return health;
+
+        // The same re-pairing Ping does, for the same reason: the shop's key changes when its
+        // server is rebuilt, and a till that will not learn the new one is a till that never
+        // works again.
+        if (Link.PinnedShop.LastRefusal.Length == 0) return null;
+
+        Link.PinnedShop.Forget();
+        return await Asking();
+    }
+
+    private static async Task<Health?> Asking()
+    {
+        try
+        {
+            var health = await Http.GetFromJsonAsync<Health>($"{Address}/health", Json);
+            if (health is not null) Succeed();
+            return health;
+        }
+        catch (Exception error)
+        {
+            Fail(Explain(error));
+            return null;
+        }
+    }
+
+    /// <summary>
     /// The whole exchange: is it there, what has changed, what do we owe it. Safe to call on
     /// a timer and safe to call while nothing is configured.
     /// </summary>
@@ -289,11 +750,12 @@ public static class ShopLink
     /// do anything with "No connection could be made because the target machine actively
     /// refused it", but "the back office computer is not answering" tells them where to walk.
     /// </summary>
-    private static string Explain(Exception error) => error switch
+    private static string Explain(Exception error)
     {
-        TaskCanceledException => "The back office is not answering. It may be asleep.",
-        HttpRequestException => $"Cannot reach the back office at {Address}. "
-                              + "Check it is switched on and both machines are on the shop's wifi.",
-        _ => error.Message,
-    };
+        var msg = error is AggregateException bundle && bundle.InnerException is not null
+            ? bundle.InnerException.Message
+            : error.Message;
+
+        return $"Cannot reach server at {Address}: {msg}";
+    }
 }

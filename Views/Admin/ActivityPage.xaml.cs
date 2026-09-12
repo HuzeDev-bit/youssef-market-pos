@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.Services;
@@ -33,7 +33,13 @@ public partial class ActivityPage : AdminPageBase
             : At.ToString("d MMM HH:mm");
     }
 
-    private static readonly string[] Kinds = ["Everything", "People", "Stock movements"];
+    /// <summary>
+    /// Translated where it is built, not in the XAML: this is a bound list, and bound text is
+    /// the shop's own data as far as the translator is concerned. These three words are the
+    /// app's.
+    /// </summary>
+    private static string[] Kinds =>
+        [Loc.T("Everything"), Loc.T("People"), Loc.T("Stock movements")];
 
     private List<Entry> _rows = new();
     private bool _building;
@@ -55,12 +61,12 @@ public partial class ActivityPage : AdminPageBase
 
         if (KindFilter.SelectedIndex != 2)
         {
-            rows.AddRange(ActivityRepository.List(Dates.Range, search).Select(a => new Entry
+            rows.AddRange(Link.Shop.Activity.List(Dates.Range, search).Select(a => new Entry
             {
                 At = a.HappenedAt,
                 Initial = a.Initial,
                 Sentence = a.Sentence,
-                Kind = a.Entity.Length > 0 ? a.Entity : "Shop",
+                Kind = Loc.T(a.Entity.Length > 0 ? a.Entity : "Shop"),
                 IsStock = false,
             }));
         }
@@ -85,7 +91,7 @@ public partial class ActivityPage : AdminPageBase
     /// </summary>
     private IEnumerable<Entry> Movements(string search)
     {
-        var moves = InventoryRepository.ListMovements(Dates.Range);
+        var moves = Link.Shop.Stock.Movements(Dates.Range);
 
         if (search.Length > 0)
         {
@@ -99,7 +105,7 @@ public partial class ActivityPage : AdminPageBase
 
         return moves.Select(m =>
         {
-            var who = m.WorkerName.Length > 0 ? m.WorkerName : "The till";
+            var who = m.WorkerName.Length > 0 ? m.WorkerName : Loc.T("The till");
             var size = Math.Abs(m.Quantity);
 
             var sentence = m.Quantity >= 0m
@@ -147,7 +153,7 @@ public partial class ActivityPage : AdminPageBase
 
         var filtered = search.Length > 0 || KindFilter.SelectedIndex > 0;
 
-        EmptyTitle.Text = filtered ? "Nothing matches" : "Nothing happened";
+        EmptyTitle.Text = Loc.T(filtered ? "Nothing matches" : "Nothing happened");
         EmptyBody.Text = filtered
             ? "Try a different search, or another kind."
             : Loc.T("No changes and no stock moved {0}.",

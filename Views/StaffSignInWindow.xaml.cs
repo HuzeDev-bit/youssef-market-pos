@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -38,10 +38,8 @@ public partial class StaffSignInWindow : Window
         Services.Localizer.Apply(this);
         Services.Responsive.Fit(this);
 
-        _choices = WorkerRepository.List()
-            .Where(w => w.HasPin)
-            .Select(w => new Choice(w.Name, w))
-            .ToList();
+        // Asked of the shop on a till, which is the only machine that knows who works here.
+        _choices = WhoMaySignIn();
 
         // The owner comes first and is always there, password set or not.
         _choices.Insert(0, new Choice(Session.OwnerLabel, null));
@@ -57,12 +55,74 @@ public partial class StaffSignInWindow : Window
     }
 
     /// <summary>Shows the lock and signs the person in. True when the caller may proceed.</summary>
-    public static bool Ask(Window owner)
+    /// <summary>
+    /// Asks who is at the machine, unless somebody already said this run.
+    ///
+    /// The owner window may be nothing at all: on the shop's server there is no till behind
+    /// this, and the sign-in is the first thing on screen.
+    /// </summary>
+    public static bool Ask(Window? owner)
     {
         if (Session.Current is not null) return true;    // somebody signed in this run
         if (Session.IsOwnerUnlocked) return true;
 
-        return new StaffSignInWindow { Owner = owner }.ShowDialog() == true;
+        var asking = new StaffSignInWindow().By(owner);
+        if (asking.Owner is null) asking.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
+        return asking.ShowDialog() == true;
+    }
+
+    /// <summary>
+    /// Who the shop says may sign in at this till.
+    ///
+    /// On the shop's own machine that is a question for its own staff table. On a cashier's
+    /// machine it is a question for the shop: this computer has no staff list, and one kept
+    /// here would be a copy of every cashier's password hash sitting on the counter.
+    /// </summary>
+    private List<Choice> WhoMaySignIn()
+    {
+        if (!Catalog.BelongsToAServer)
+        {
+            return Link.Shop.Workers.List()
+                .Where(w => w.HasPin)
+                .Select(w => new Choice(w.Name, w))
+                .ToList();
+        }
+
+        var staff = ShopLink.Now(() => ShopLink.Staff());
+
+        // With no answer the list is the owner alone, which is the one sign-in this machine can
+        // still check for itself. Nobody is quietly let in.
+        return (staff ?? new List<Link.StaffMember>())
+            .Where(w => w.IsActive && w.PinHash.Length > 0)
+            .Select(w => new Choice(w.Name, new Worker
+            {
+                Id = w.Id,
+                Name = w.Name,
+                Role = Enum.TryParse<WorkerRole>(w.Role, out var role) ? role : WorkerRole.Cashier,
+                IsActive = w.IsActive,
+                HasPin = true,
+            }))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Asks the shop whether this password is right. The answer is never worked out here.
+    /// </summary>
+    private static Worker? AskTheShop(Worker who, string password)
+    {
+        var signedIn = ShopLink.Now(() => ShopLink.SignIn(who.Id, password));
+
+        return signedIn is null
+            ? null
+            : new Worker
+            {
+                Id = signedIn.WorkerId,
+                Name = signedIn.Name,
+                Role = Enum.TryParse<WorkerRole>(signedIn.Role, out var role) ? role : WorkerRole.Cashier,
+                IsActive = true,
+                HasPin = true,
+            };
     }
 
     /// <summary>
@@ -84,7 +144,7 @@ public partial class StaffSignInWindow : Window
     /// A password is asked for only when there is one to check. The owner of a shop that has
     /// set no admin password would otherwise be typing into a box that can never be right.
     /// </summary>
-    private bool NeedsPassword(Choice who) => who.Worker is not null || AdminAccount.IsConfigured;
+    private bool NeedsPassword(Choice who) => who.Worker is not null || AdminAccount.WantsAPassword();
 
     private void Retune(bool focus = false)
     {
@@ -100,7 +160,7 @@ public partial class StaffSignInWindow : Window
             : "No admin password is set, so this opens on a press. Set one under Settings, "
             + "and give your staff their own under Workers.";
 
-        ConfirmButton.Content = needs ? "Sign in" : "Continue";
+        ConfirmButton.Content = Loc.T(needs ? "Sign in" : "Continue");
 
         if (!focus) return;
         if (needs) PasswordBox.Focus(); else ConfirmButton.Focus();
@@ -118,7 +178,10 @@ public partial class StaffSignInWindow : Window
 
         if (who.Worker is not null)
         {
-            var worker = WorkerRepository.SignIn(who.Worker.Id, PasswordBox.Password);
+            var worker = Catalog.BelongsToAServer
+                ? AskTheShop(who.Worker, PasswordBox.Password)
+                : WorkerRepository.SignIn(who.Worker.Id, PasswordBox.Password);
+
             if (worker is null) { Fail("Wrong password."); return; }
 
             Session.SignIn(worker);
@@ -126,10 +189,17 @@ public partial class StaffSignInWindow : Window
             return;
         }
 
-        if (AdminAccount.IsConfigured && !AdminAccount.Verify(PasswordBox.Password))
+        // Three answers. A shop that cannot be reached is not a wrong password and is not a
+        // right one: nobody is let in, and the reason says which it was.
+        switch (AdminAccount.Opens(PasswordBox.Password))
         {
-            Fail("Wrong password.");
-            return;
+            case null:
+                Fail(Loc.T("Cannot reach the shop's server. {0}", ShopLink.LastProblem));
+                return;
+
+            case false:
+                Fail("Wrong password.");
+                return;
         }
 
         // The typed name sticks, so it only has to be given once.
@@ -147,7 +217,7 @@ public partial class StaffSignInWindow : Window
 
     private void Fail(string message)
     {
-        ErrorText.Text = message;
+        ErrorText.Text = Loc.T(message);
         PasswordBox.Clear();
         PasswordBox.Focus();
     }

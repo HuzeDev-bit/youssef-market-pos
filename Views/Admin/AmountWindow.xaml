@@ -24,7 +24,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
-                    <TextBlock x:Name="AmountLabel" Text="المبلغ" Style="{StaticResource Text.FieldLabel}"/>
+                    <TextBlock x:Name="AmountLabel" Text="AMOUNT" Style="{StaticResource Text.FieldLabel}"/>
                     <TextBox x:Name="AmountBox" Style="{StaticResource TextBox.Field}"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
@@ -47,7 +47,7 @@
                                     Converter={StaticResource StrVis}}"/>
 
             <Grid Margin="0,22,0,0">
-                <Button Style="{StaticResource Button.PillMuted}" Content="إلغاء"
+                <Button Style="{StaticResource Button.PillMuted}" Content="Cancel"
                         HorizontalAlignment="Left" Width="110" Click="Cancel_Click"/>
                 <Button x:Name="ConfirmButton" Style="{StaticResource Button.Pill}"
                         HorizontalAlignment="Right" MinWidth="160" Click="Save_Click"/>

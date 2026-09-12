@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using MarketPos.Data;
 using MarketPos.Models;
@@ -72,8 +72,8 @@ public partial class DashboardPage : AdminPageBase
     protected override void Load()
     {
         var range = Dates.Range;
-        var money = Finance.For(range);
-        var sold = SalesHistoryRepository.ProductPerformance(range);
+        var money = Link.Shop.Reports.Money(range);
+        var sold = Link.Shop.Sales.ProductPerformance(range);
 
         FillSummary(range, money);
         FillChart(range);
@@ -145,8 +145,8 @@ public partial class DashboardPage : AdminPageBase
         SoldValue.Text = $"{money.ItemsSold:0.###}";
         SoldNote.Text = Loc.T(money.ItemsSold <= 0m ? "nothing left the shelf" : "items sold");
 
-        var low = StockRepository.LowStock().Count;
-        var outOf = StockRepository.OutOfStock().Count;
+        var low = Link.Shop.Stock.LowStock().Count;
+        var outOf = Link.Shop.Stock.OutOfStock().Count;
 
         RestockValue.Text = (low + outOf).ToString();
         RestockNote.Text = outOf > 0
@@ -169,7 +169,7 @@ public partial class DashboardPage : AdminPageBase
             return;
         }
 
-        var missing = StockRepository.List().Count(p => p.Cost <= 0m);
+        var missing = Link.Shop.Stock.List().Count(p => p.Cost <= 0m);
         CostWarning.Visibility = Visibility.Visible;
         CostWarningText.Text = Loc.T(
             "{0} products have no purchase price, so profit cannot be worked out yet. "
@@ -189,13 +189,13 @@ public partial class DashboardPage : AdminPageBase
     /// </summary>
     private void FillChart(DateRange range)
     {
-        var points = Trim(Finance.Series(range, SeriesKind.Revenue));
+        var points = Trim(Link.Shop.Reports.Series(range, SeriesKind.Revenue));
         var ownPeriod = points.Count > 1;
 
         if (!ownPeriod)
         {
             range = DateRange.Custom(DateTime.Today.AddDays(-13), DateTime.Today);
-            points = Trim(Finance.Series(range, SeriesKind.Revenue));
+            points = Trim(Link.Shop.Reports.Series(range, SeriesKind.Revenue));
         }
 
         // Nothing to draw is nothing to draw. A flat line along the bottom says less than the
@@ -262,7 +262,7 @@ public partial class DashboardPage : AdminPageBase
         // Two different empty rooms. A shop with no products has not been set up; a shop with
         // products and no sales has simply not sold anything yet, and telling it to go and add
         // products would be nonsense.
-        var stocked = StockRepository.List().Count > 0;
+        var stocked = Link.Shop.Stock.List().Count > 0;
         MostSoldEmptyTitle.Text = Loc.T(stocked ? "No sales in this period" : "Nothing to sell yet");
         MostSoldEmptyBody.Text = Loc.T(stocked
             ? "Change the period above, or ring something up at the till — the best sellers appear here."
@@ -272,7 +272,7 @@ public partial class DashboardPage : AdminPageBase
     private void FillRestock()
     {
         // Empty shelves first, then whatever is closest to running out.
-        var all = StockRepository.List()
+        var all = Link.Shop.Stock.List()
             .Where(p => p.Status is StockStatus.OutOfStock or StockStatus.LowStock)
             .OrderBy(p => p.Status == StockStatus.OutOfStock ? 0 : 1)
             .ThenBy(p => p.Stock)
@@ -294,7 +294,7 @@ public partial class DashboardPage : AdminPageBase
             ? string.Empty
             : Loc.T(all.Count == 1 ? "{0} product" : "{0} products", all.Count);
 
-        var anyStock = StockRepository.List().Count > 0;
+        var anyStock = Link.Shop.Stock.List().Count > 0;
         RestockEmptyTitle.Text = Loc.T(anyStock ? "Nothing to reorder" : "No products yet");
         RestockEmptyBody.Text = Loc.T(anyStock
             ? "A product appears here once it drops to the smallest amount you set for it."
@@ -317,7 +317,7 @@ public partial class DashboardPage : AdminPageBase
     {
         if (Shell is null || sender is not FrameworkElement { Tag: int id }) return;
 
-        var product = StockRepository.Find(id);
+        var product = Link.Shop.Stock.Find(id);
         if (product is null) return;
 
         if (ProductWindow.Edit(Shell, product)) ReloadAll();

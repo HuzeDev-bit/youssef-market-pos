@@ -52,7 +52,8 @@ public static class ShiftRepository
         var id = Convert.ToInt32(command.ExecuteScalar());
 
         ActivityRepository.Record("started a shift", "Shift", id, newValue: $"{openingCash:0.00} DH",
-            detail: $"started a shift with {openingCash:0.00} DH in the drawer");
+            detail: ActivityRepository.Say("started a shift with {0} in the drawer",
+                                          $"{openingCash:0.00} DH"));
         return id;
     }
 
@@ -76,7 +77,9 @@ public static class ShiftRepository
         ActivityRepository.Record("ended a shift", "Shift", shiftId,
             oldValue: $"{shift.ExpectedCash:0.00} DH expected",
             newValue: $"{countedCash:0.00} DH counted",
-            detail: $"ended a shift {(difference == 0m ? "exactly on" : difference > 0m ? "over" : "short")}");
+            detail: ActivityRepository.Say(difference == 0m ? "ended a shift exactly on"
+                                          : difference > 0m ? "ended a shift over"
+                                          : "ended a shift short"));
         return difference;
     }
 
@@ -214,7 +217,9 @@ public static class ShiftRepository
 
         ActivityRepository.Record(amount > 0 ? "put cash in the drawer" : "took cash out of the drawer",
             "Cash", null, newValue: $"{Math.Abs(amount):0.00} DH",
-            detail: $"{(amount > 0 ? "added" : "removed")} {Math.Abs(amount):0.00} DH ({reason})");
+            detail: ActivityRepository.Say(amount > 0 ? "put {0} in the drawer ({1})"
+                                                     : "took {0} out of the drawer ({1})",
+                                          $"{Math.Abs(amount):0.00} DH", reason));
     }
 
     public static List<CashMovement> ListCash(DateRange? range = null, int limit = 200)

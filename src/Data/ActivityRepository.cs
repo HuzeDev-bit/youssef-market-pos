@@ -14,6 +14,36 @@ namespace MarketPos.Data;
 public static class ActivityRepository
 {
     /// <summary>
+    /// Separates a stored sentence's pattern from the shop's own words inside it.
+    ///
+    /// A unit separator, which is a control character no product name, supplier or reason can
+    /// contain — so splitting on it can never cut a sentence in the wrong place.
+    /// </summary>
+    public const char Apart = '';
+
+    /// <summary>
+    /// Builds a detail that can still be read back in another language.
+    ///
+    /// The log used to store finished English sentences — "deactivated Cahier de notes" — and
+    /// that is a sentence nothing can ever translate: the words and the shop's own data are
+    /// baked together, and there is no way to tell which is which afterwards. So the pattern
+    /// and its values are kept apart here and only joined when they are shown, by which time
+    /// the pattern has been looked up in whatever language the shop is running in.
+    ///
+    /// Storing the translation instead would be worse than leaving it English: the log would
+    /// then be written in whatever language happened to be selected on the day, and an audit
+    /// trail nobody can read end to end is not an audit trail.
+    /// </summary>
+    /// <param name="pattern">
+    /// English, with {0} where each value goes. It is the key the translation is found by, so
+    /// it must not be built from anything that varies.
+    /// </param>
+    public static string Say(string pattern, params object?[] values) =>
+        values.Length == 0
+            ? pattern
+            : pattern + Apart + string.Join(Apart, values.Select(v => v?.ToString() ?? string.Empty));
+
+    /// <summary>
     /// Writes one entry. Pass an open connection when the caller is inside a transaction, so
     /// the log lands or rolls back with the thing it describes.
     /// </summary>

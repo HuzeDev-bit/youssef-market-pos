@@ -66,7 +66,7 @@
                 <Border Grid.Column="3" Style="{StaticResource Divider.V}"/>
 
                 <StackPanel Grid.Column="4" Margin="18,16">
-                    <TextBlock Text="المدفوع" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock Text="Paid" Style="{StaticResource Summary.Label}"/>
                     <TextBlock x:Name="PaidValue" Style="{StaticResource Summary.Value}"/>
                     <TextBlock x:Name="PaidNote" Style="{StaticResource Summary.Note}"/>
                 </StackPanel>
@@ -85,8 +85,8 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
@@ -110,10 +110,18 @@
                       Content="Only ones I owe" VerticalAlignment="Center" Margin="16,0,0,0"
                       Click="Filter_Changed"/>
 
-            <Button Grid.Column="3" Style="{StaticResource Button.SmallMuted}" Height="36"
-                    Content="Record a delivery" Click="Purchase_Click" Margin="0,0,10,0"/>
+            <!-- Deactivated suppliers stay off the list unless this is ticked, the same as
+                 hidden categories. It is how one is found again to be reactivated. -->
+            <CheckBox x:Name="ShowHidden" Grid.Column="2" Style="{StaticResource Check.Field}"
+                      Content="Show hidden ones" VerticalAlignment="Center" Margin="16,0,0,0"
+                      Click="Filter_Changed"/>
+
+            <TextBlock x:Name="Hint" Grid.Column="3" Style="{StaticResource Text.Muted}"
+                       VerticalAlignment="Center" Margin="18,0,18,0"
+                       TextTrimming="CharacterEllipsis"/>
+
             <Button Grid.Column="4" Style="{StaticResource Button.Small}" Height="36"
-                    Content="إضافة مورد" Click="Add_Click"/>
+                    Content="Add supplier" Click="Add_Click"/>
         </Grid>
 
         <!-- ==================== The suppliers ==================== -->
@@ -136,10 +144,10 @@
                         <ColumnDefinition Width="92"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="SUPPLIER" Style="{StaticResource Text.ColumnHead}"/>
-                    <TextBlock Grid.Column="1" Text="الهاتف" Style="{StaticResource Text.ColumnHead}"/>
+                    <TextBlock Grid.Column="1" Text="PHONE" Style="{StaticResource Text.ColumnHead}"/>
                     <TextBlock Grid.Column="2" Text="BOUGHT" Style="{StaticResource Text.ColumnHead}"
                                TextAlignment="Right"/>
-                    <TextBlock Grid.Column="3" Text="المدفوع" Style="{StaticResource Text.ColumnHead}"
+                    <TextBlock Grid.Column="3" Text="PAID" Style="{StaticResource Text.ColumnHead}"
                                TextAlignment="Right"/>
                     <TextBlock Grid.Column="4" Text="OWED" Style="{StaticResource Text.ColumnHead}"
                                TextAlignment="Right"/>
@@ -207,6 +215,16 @@
                                                     Tag="{Binding Id}">
                                                 <Path Style="{StaticResource Icon.Small}"
                                                       Data="{StaticResource Icon.Edit}"/>
+                                            </Button>
+
+                                            <!-- Deleting one, with their deliveries and
+                                                 payments. The page asks first when there is
+                                                 history to lose. -->
+                                            <Button Style="{StaticResource Button.RowDanger}"
+                                                    ToolTip="Remove this supplier"
+                                                    Click="Remove_Click" Tag="{Binding Id}">
+                                                <Path Style="{StaticResource Icon.Small}"
+                                                      Data="{StaticResource Icon.Trash}"/>
                                             </Button>
                                         </StackPanel>
                                     </Grid>
@@ -328,7 +346,7 @@
                         <Border Style="{StaticResource Rule}" Margin="0,6,0,0"
                                 Background="{StaticResource Brush.Panel}"/>
 
-                        <TextBlock Text="التسليمات" Style="{StaticResource Text.Eyebrow}"
+                        <TextBlock Text="Deliveries" Style="{StaticResource Text.Eyebrow}"
                                    Margin="0,16,0,8"/>
                         <ItemsControl x:Name="Deliveries">
                             <ItemsControl.ItemTemplate>
@@ -431,5 +449,13 @@
                 </StackPanel>
             </Grid>
         </Border>
+
+        <!-- ==================== Adding a supplier ====================
+             Opens here, over the whole page, rather than in a window on top of it: the form is
+             a page of its own, with the list one Save or Cancel away. Everything else on the
+             page is collapsed while it is open. -->
+        <Border x:Name="AddArea" Grid.Row="0" Grid.RowSpan="3" Grid.ColumnSpan="3"
+                Background="{StaticResource Brush.Card}" CornerRadius="16" Padding="22,18"
+                Visibility="Collapsed"/>
     </Grid>
 </local:AdminPageBase>

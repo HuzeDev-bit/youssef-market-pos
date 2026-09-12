@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -22,7 +23,7 @@ public partial class PurchaseWindow : Window
         Services.Localizer.Apply(this);
         Services.Responsive.Fit(this);
 
-        var suppliers = SupplierRepository.List();
+        var suppliers = Link.Shop.Suppliers.List();
         SupplierBox.ItemsSource = suppliers;
         SupplierBox.SelectedItem = suppliers.FirstOrDefault(s => s.Id == supplierId) ?? suppliers.FirstOrDefault();
 
@@ -42,7 +43,7 @@ public partial class PurchaseWindow : Window
 
     public static bool Show(Window owner, int? supplierId = null)
     {
-        if (SupplierRepository.List().Count == 0)
+        if (Link.Shop.Suppliers.List().Count == 0)
         {
             ConfirmWindow.Ask(owner, "Add a supplier first",
                 "A delivery has to belong to someone. Add the supplier, then record what they brought.");
@@ -52,7 +53,7 @@ public partial class PurchaseWindow : Window
         // A delivery is made of products. On a shop that has not entered any yet this dialog
         // would open with an empty list and no way to add a line — an unexplained dead end,
         // and exactly what a brand new shop meets first.
-        if (StockRepository.List().Count == 0)
+        if (Link.Shop.Stock.List().Count == 0)
         {
             ConfirmWindow.Ask(owner, "Add some products first",
                 "A delivery is a list of things the shop sells. Put them in under Add product, "
@@ -60,7 +61,7 @@ public partial class PurchaseWindow : Window
             return false;
         }
 
-        return new PurchaseWindow(supplierId) { Owner = owner }.ShowDialog() == true;
+        return new PurchaseWindow(supplierId).By(owner).ShowDialog() == true;
     }
 
     // ------------------------------- Lines -------------------------------
@@ -103,12 +104,12 @@ public partial class PurchaseWindow : Window
 
         if (SupplierBox.SelectedItem is not Supplier supplier)
         {
-            ErrorText.Text = "Choose the supplier this delivery came from.";
+            ErrorText.Text = Loc.T("Choose the supplier this delivery came from.");
             return;
         }
         if (Editor.Lines.Count == 0)
         {
-            ErrorText.Text = "Add at least one product line.";
+            ErrorText.Text = Loc.T("Add at least one product line.");
             return;
         }
 
@@ -117,7 +118,7 @@ public partial class PurchaseWindow : Window
 
         if (paid < 0m)
         {
-            ErrorText.Text = "The amount paid cannot be negative.";
+            ErrorText.Text = Loc.T("The amount paid cannot be negative.");
             return;
         }
         if (paid > total)
@@ -150,7 +151,7 @@ public partial class PurchaseWindow : Window
 
         try
         {
-            SupplierRepository.RecordPurchase(purchase, paid);
+            Link.Shop.Suppliers.RecordPurchase(purchase, paid);
             DialogResult = true;
             Close();
         }

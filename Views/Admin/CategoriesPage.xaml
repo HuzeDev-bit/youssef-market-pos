@@ -46,7 +46,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Margin="18,16">
-                    <TextBlock Text="الفئات" Style="{StaticResource Summary.Label}"/>
+                    <TextBlock Text="CATEGORIES" Style="{StaticResource Summary.Label}"/>
                     <TextBlock x:Name="CountValue" Style="{StaticResource Summary.Value}"/>
                     <TextBlock x:Name="CountNote" Style="{StaticResource Summary.Note}"/>
                 </StackPanel>
@@ -90,7 +90,7 @@
                        TextTrimming="CharacterEllipsis"/>
 
             <Button Grid.Column="2" Style="{StaticResource Button.Small}" Height="36"
-                    Content="إضافة فئة" Click="Add_Click"/>
+                    Content="Add category" Click="Add_Click"/>
         </Grid>
 
         <!-- ==================== The categories ====================
@@ -132,6 +132,20 @@
                                                     Margin="8" Visibility="Collapsed">
                                                 <TextBlock Text="Hidden"/>
                                             </Border>
+
+                                            <!-- On the card rather than inside the editor: a
+                                                 category made by mistake is seen here, and
+                                                 opening a dialog to undo one press is a poor
+                                                 trade on a touchscreen. Opposite corner from
+                                                 the Hidden badge so the two never overlap. -->
+                                            <Button Style="{StaticResource Button.RowDanger}"
+                                                    HorizontalAlignment="Left" VerticalAlignment="Top"
+                                                    Margin="6"
+                                                    Click="Remove_Click" Tag="{Binding Id}"
+                                                    ToolTip="Remove this category">
+                                                <Path Style="{StaticResource Icon.Small}"
+                                                      Data="{StaticResource Icon.Trash}"/>
+                                            </Button>
                                         </Grid>
                                     </Border>
 
@@ -182,7 +196,7 @@
                     <Path Style="{StaticResource Icon}" Data="{StaticResource Nav.Categories}"
                           Width="30" Height="30" StrokeThickness="1.4"
                           Stroke="{StaticResource Brush.Muted}"/>
-                    <TextBlock Text="لا توجد فئات بعد" Style="{StaticResource Text.EmptyTitle}"/>
+                    <TextBlock Text="No categories yet" Style="{StaticResource Text.EmptyTitle}"/>
                     <TextBlock Style="{StaticResource Text.EmptyBody}"
                                Text="Categories are how a cashier finds something with no barcode. Add one for each kind of shelf."/>
                 </StackPanel>

@@ -15,6 +15,26 @@ public sealed class SaleViewModel : ViewModelBase
     public ObservableCollection<HeldTicket> HeldTickets { get; } = new();
 
     public ObservableCollection<string> Categories { get; } = new(Catalog.Categories);
+
+    /// <summary>
+    /// The same categories, as something the first screen can draw as pressable boxes and
+    /// light up one of. Pressing one narrows the grid below it; that is the whole of what a
+    /// category does at the till.
+    /// </summary>
+    public ObservableCollection<CategoryChoice> CategoryChoices { get; } = new();
+
+    /// <summary>Rebuilds the boxes from the category list, keeping whichever is chosen lit.</summary>
+    private void FillCategoryChoices()
+    {
+        CategoryChoices.Clear();
+        foreach (var name in Categories)
+            CategoryChoices.Add(new CategoryChoice { Name = name, IsChosen = name == SelectedCategory });
+    }
+
+    private void MarkChosenCategory()
+    {
+        foreach (var choice in CategoryChoices) choice.IsChosen = choice.Name == SelectedCategory;
+    }
     public IReadOnlyList<string> SortOptions { get; } = new[] { "Name", "Price: Low to High", "Price: High to Low" };
 
     /// <summary>Backing list for the product grid; filtered and sorted live via a CollectionView.</summary>
@@ -26,8 +46,10 @@ public sealed class SaleViewModel : ViewModelBase
         get => _selectedCategory;
         set
         {
-            if (SetField(ref _selectedCategory, value))
-                RefreshProducts();
+            if (!SetField(ref _selectedCategory, value)) return;
+
+            MarkChosenCategory();
+            RefreshProducts();
         }
     }
 
@@ -166,6 +188,13 @@ public sealed class SaleViewModel : ViewModelBase
     public event EventHandler<string>? Refused;
 
     /// <summary>
+    /// A barcode was scanned that the shop does not sell. Carries the number, so the till can
+    /// offer to put it in the books there and then — the cashier has the thing in their hand,
+    /// which is the only moment anybody knows what it is and what it costs.
+    /// </summary>
+    public event EventHandler<string>? ScannedSomethingUnknown;
+
+    /// <summary>
     /// A typed quantity was brought down to what the shelf holds. Said out loud, because
     /// silently changing a number somebody just typed is how a cashier stops trusting the till.
     /// </summary>
@@ -280,7 +309,7 @@ public sealed class SaleViewModel : ViewModelBase
         var groups = Catalog.Products
             .Where(p => p.SoldAtTheTill)
             .Where(p => !p.IsScannable || IsSearching)
-            .GroupBy(p => p.Category)
+            .GroupBy(Shelf)
             .Where(g => MatchesText(g.Key, SearchText))
             .OrderBy(g => g.Key);
 
@@ -296,12 +325,19 @@ public sealed class SaleViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasProductsPageResults));
     }
 
+    /// <summary>
+    /// The tile a product sits under. One whose category was deleted has none, and still has
+    /// to be pressable, so it gets a tile with a name rather than a blank one.
+    /// </summary>
+    private static string Shelf(Product product) =>
+        product.Category.Trim().Length > 0 ? product.Category : Loc.T("No category");
+
     private void LoadCategoryProducts(string category)
     {
         CategoryProducts.Clear();
 
         var products = Catalog.Products
-            .Where(p => p.Category == category)
+            .Where(p => Shelf(p) == category)
             .Where(p => p.SoldAtTheTill)
             .Where(p => !p.IsScannable || IsSearching)
             .Where(p => Matches(p, SearchText))
@@ -362,6 +398,46 @@ public sealed class SaleViewModel : ViewModelBase
     public void LoadTickets()
     {
         Tickets.Clear();
+
+        // A till asks the shop for its tickets. They are the shop's sales, not this machine's:
+        // a ticket rung up on the other counter belongs on this list too, and a ticket this
+        // counter rang up half an hour ago lives on the machine that banked it.
+        if (Catalog.BelongsToAServer)
+        {
+            var list = ShopLink.Now(() => ShopLink.Tickets(SearchText));
+
+            if (list is null)
+            {
+                // Nothing shown rather than something stale. A list of yesterday's sales
+                // presented as today's is worse than an empty one with a reason under it.
+                TicketsHeadline = Loc.T("Cannot reach the shop's server. {0}", ShopLink.LastProblem);
+                OnPropertyChanged(nameof(HasTickets));
+                return;
+            }
+
+            foreach (var ticket in list.Tickets)
+            {
+                Tickets.Add(new SaleSummary
+                {
+                    InvoiceNumber = ticket.InvoiceNumber,
+                    SoldAt = ticket.SoldAt,
+                    Total = ticket.Total,
+                    DiscountAmount = ticket.DiscountAmount,
+                    PaymentMethod = Enum.TryParse<PaymentMethod>(ticket.PaymentMethod, out var how)
+                        ? how
+                        : PaymentMethod.Cash,
+                    LineCount = ticket.LineCount,
+                });
+            }
+
+            TicketsHeadline = list.TodayCount == 0
+                ? "No sales today yet"
+                : $"{list.TodayCount} {(list.TodayCount == 1 ? "sale" : "sales")} today  ·  {list.TodayTotal:N2} DH";
+
+            OnPropertyChanged(nameof(HasTickets));
+            return;
+        }
+
         foreach (var sale in SaleRepository.ListSales(SearchText))
             Tickets.Add(sale);
 
@@ -452,7 +528,16 @@ public sealed class SaleViewModel : ViewModelBase
     public string ItemCountLabel => ItemCount == 1 ? "1 item" : $"{ItemCount} items";
 
     public RelayCommand SubmitBarcodeCommand { get; }
+    /// <summary>
+    /// Recomputes the sale after a line's quantity was set from the screen — a pressed weight,
+    /// say. The totals are worked out from the lines, so they have to be asked to look again.
+    /// </summary>
+    public void RefreshTotals() => RaiseTotalsChanged();
+
     public RelayCommand AddProductCommand { get; }
+
+    /// <summary>Narrows the grid to one category. Never adds anything to the sale.</summary>
+    public RelayCommand ChooseCategoryCommand { get; }
     public RelayCommand IncrementCommand { get; }
     public RelayCommand DecrementCommand { get; }
     public RelayCommand RemoveLineCommand { get; }
@@ -480,9 +565,18 @@ public sealed class SaleViewModel : ViewModelBase
     public SaleViewModel()
     {
         ProductsView = BuildProductsView();
+        FillCategoryChoices();
 
         SubmitBarcodeCommand = new RelayCommand(_ => SubmitBarcode());
         AddProductCommand = new RelayCommand(p => { if (p is Product product) AddProduct(product); });
+
+        // A category narrows the grid and never sells anything. Bound to its own command
+        // rather than sharing AddProductCommand with a different parameter type, so there is
+        // no arrangement of bindings that could put a category on the sale.
+        ChooseCategoryCommand = new RelayCommand(c =>
+        {
+            if (c is CategoryChoice choice) SelectedCategory = choice.Name;
+        });
         IncrementCommand = new RelayCommand(l => { if (l is CartLine line) line.Quantity += line.Step; RaiseTotalsChanged(); });
         DecrementCommand = new RelayCommand(l => { if (l is CartLine line) Decrement(line); });
         RemoveLineCommand = new RelayCommand(l => { if (l is CartLine line) RemoveLine(line); });
@@ -522,6 +616,7 @@ public sealed class SaleViewModel : ViewModelBase
         Categories.Clear();
         foreach (var category in Catalog.Categories) Categories.Add(category);
         SelectedCategory = Categories.Contains(selected) ? selected : "All";
+        FillCategoryChoices();
 
         if (Page == PageKind.Products) LoadCategories();
         ApplySort();
@@ -649,9 +744,33 @@ public sealed class SaleViewModel : ViewModelBase
                 // A long run of digits is a scanner, so the miss means the shop does not sell
                 // this yet — which is a different problem from a search with no results, and
                 // one the cashier cannot fix from the till.
-                SetStatus(LooksLikeABarcode(query)
-                    ? Loc.T("Error: {0} not found in stock.", query)
-                    : Loc.T("Nothing matches \"{0}\"", query), isError: true);
+                if (LooksLikeABarcode(query))
+                {
+                    // "The shop does not sell this" and "I cannot reach the shop" are different
+                    // answers, and only the first one is a reason to offer to add a product.
+                    //
+                    // A till reads its catalogue from the server. With the server down that
+                    // catalogue is whatever last arrived, so every scan of anything added since
+                    // would "not be found" — and the cashier would be invited to create a
+                    // product the shop already has, on a machine that cannot save it. Said
+                    // plainly instead: the shop cannot be reached.
+                    if (Catalog.BelongsToAServer && !ShopLink.IsOnline)
+                    {
+                        SetStatus(Loc.T("Cannot reach the shop's server, so this barcode cannot "
+                                      + "be looked up. {0}", ShopLink.LastProblem), isError: true);
+                        break;
+                    }
+
+                    // Not a search that found nothing — a product the shop does not have yet.
+                    // The till offers to add it; until somebody says yes, nothing has changed.
+                    SetStatus(Loc.T("Error: {0} not found in stock.", query), isError: true);
+                    ScannedSomethingUnknown?.Invoke(this, query);
+                }
+                else
+                {
+                    SetStatus(Loc.T("Nothing matches \"{0}\"", query), isError: true);
+                }
+
                 break;
             default:
                 // Leave the text in place so the grid stays filtered to the candidates.
@@ -661,11 +780,15 @@ public sealed class SaleViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Long enough to be a scan rather than a search. Six digits is comfortably past any
-    /// quantity or price a cashier would type into the box by hand.
+    /// A barcode or SKU code rather than a text search with spaces.
+    /// Can be digits (EAN, UPC) or alphanumeric (Code 128, Code 39, QR, SKU).
     /// </summary>
     private static bool LooksLikeABarcode(string query) =>
-        query.Length >= 6 && query.All(char.IsDigit);
+        query.Length >= 2 && !query.Contains(' ') && query.All(c =>
+            (c >= '0' && c <= '9') ||
+            (c >= 'a' && c <= 'z') ||
+            (c >= 'A' && c <= 'Z') ||
+            c is '-' or '_' or '.' or '/' or '+' or '*' or '#' or '@' or '$' or '%' or ':');
 
     /// <summary>
     /// Puts a product the cashier has just created onto the sale, at the quantity or weight
@@ -713,11 +836,16 @@ public sealed class SaleViewModel : ViewModelBase
         var existing = Cart.FirstOrDefault(l => l.Product.Barcode == product.Barcode);
         var wanted = existing?.Step ?? (product.Unit == Unit.Kg ? 1.0m : 1m);
 
-        // The shelf has the last word only on the first one. A product already on the sale is
-        // a product the cashier is holding: scanning it again means "another of these", and
-        // the sale carries on. What the shelf says then is a matter for the stock count, not
-        // for a red banner in front of a waiting customer.
-        if (existing is null && RoomFor(product) < wanted)
+        // The shelf has the last word, on the first one and on every one after it.
+        //
+        // A product already on the sale used to be waved through: scanning it again meant
+        // "another of these", and the count was a matter for the stock report rather than a red
+        // banner in front of a waiting customer. That was right while the count could go
+        // negative. It cannot any more — the shop stops at nothing left, because with a second
+        // till the count being behind is usually the other cashier having just sold it — so a
+        // basket allowed past the shelf is a basket that would be refused at payment, with the
+        // customer's shopping already packed. Better to say it at the scan.
+        if (RoomFor(product) < wanted)
         {
             Refuse(Loc.T("Error: {0} is out of stock.", product.Name));
             return;
@@ -884,11 +1012,22 @@ public sealed class SaleViewModel : ViewModelBase
     /// </summary>
     public void CompleteSale(PaymentMethod method, decimal amountTendered)
     {
+        // LastInvoiceNumber is the only signal the window uses to tell a saved sale from a
+        // failed one. Left over from the previous sale it would announce a success that never
+        // happened, so it is cleared before a stroke of work — a return of 0 is the contract
+        // that says "nothing was saved".
+        LastInvoiceNumber = 0;
+
         try
         {
-            var invoiceNumber = SaleRepository.Save(
-                Cart.Select(l => l.AsSaleItem).ToList(), GrossBeforeDiscount, DiscountKind, DiscountValue, DiscountAmount,
-                Subtotal, Tax, Total, method, amountTendered);
+            var invoiceNumber = Catalog.BelongsToAServer
+                ? SellThroughTheShop(method, amountTendered)
+                : SaleRepository.Save(
+                    Cart.Select(l => l.AsSaleItem).ToList(), GrossBeforeDiscount, DiscountKind,
+                    DiscountValue, DiscountAmount, Subtotal, Tax, Total, method, amountTendered);
+
+            // Nothing was sold, and the reason is already on screen.
+            if (invoiceNumber == 0) return;
 
             LastInvoiceNumber = invoiceNumber;
             ClearCart();
@@ -915,6 +1054,54 @@ public sealed class SaleViewModel : ViewModelBase
         {
             SetStatus(Loc.T("Could not save the sale: {0}", ex.Message), isError: true);
         }
+    }
+
+    /// <summary>
+    /// Asks the shop's server to make this sale, and waits for its answer.
+    ///
+    /// <para>
+    /// A cashier's machine holds no books. It has a copy of the catalogue for as long as the
+    /// app is open and nothing else, so a sale written here would be written nowhere: not in
+    /// the shop's takings, not against the shop's stock, and not on the ticket the customer
+    /// might bring back next week. The sale is made on the machine that owns the database, in
+    /// one transaction, and this till waits to be told the invoice number.
+    /// </para>
+    ///
+    /// <para>
+    /// Returns zero when there is no sale, having already said why. The commonest reason is
+    /// the honest one that only a shop with two counters ever sees: the last one was sold on
+    /// the other till while this basket was being filled.
+    /// </para>
+    /// </summary>
+    private int SellThroughTheShop(PaymentMethod method, decimal amountTendered)
+    {
+        // Minted here and sent with the sale. If the answer is lost on the way back — the
+        // network blinks, the cashier's machine is unplugged mid-payment — asking again with
+        // the same reference returns the invoice number the shop already gave it, rather than
+        // banking the money twice.
+        var reference = ShopLink.NewReference();
+
+        var upload = new Link.SaleUpload(
+            reference, DateTime.Now, Session.CurrentId, Session.CurrentName,
+            method.ToString(), amountTendered,
+            GrossBeforeDiscount, DiscountKind.ToString(), DiscountValue, DiscountAmount,
+            Subtotal, Tax, Total,
+            Cart.Select(l => new Link.SaleLineDto(
+                l.Product.Id, l.Product.Barcode, l.Product.Name, l.Quantity,
+                l.Product.Price, l.Product.TaxRate, l.Product.Unit.ToString())).ToList());
+
+        // Waited for on this thread. A checkout is the one thing in the app that must not carry
+        // on without its answer: the drawer opens on the strength of it.
+        var done = System.Threading.Tasks.Task.Run(() => ShopLink.Checkout(upload))
+                                              .GetAwaiter().GetResult();
+
+        if (done.Ok) return done.InvoiceNumber;
+
+        ReloadCatalogue();
+        SetStatus(done.Problem.Length > 0
+                      ? done.Problem
+                      : Loc.T("The shop's server did not take the sale."), isError: true);
+        return 0;
     }
 
     /// <summary>

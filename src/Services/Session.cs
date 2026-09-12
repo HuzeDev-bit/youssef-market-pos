@@ -87,10 +87,24 @@ public static class Session
     public static string CurrentName =>
         Current?.Name ?? (IsOwnerUnlocked ? OwnerLabel : Loc.T("The till"));
 
-    /// <summary>The owner's own name, or the plain word until they have given one.</summary>
-    public static string OwnerLabel =>
-        string.IsNullOrWhiteSpace(AppSettings.Current.OwnerName)
-            ? Loc.T("Owner") : AppSettings.Current.OwnerName.Trim();
+    /// <summary>
+    /// The owner's own name, or the plain word until they have given one.
+    ///
+    /// A stored name of exactly "Owner" counts as not having given one. That is the word this
+    /// app puts in the name box itself, so a shop that pressed Continue without typing has the
+    /// English word saved as the owner's name — and it then turned up in English on an Arabic
+    /// sidebar, and on every line of the activity log that person had ever written. It is the
+    /// app's word rather than a name, so it is translated like one. A name anybody actually
+    /// typed is never touched.
+    /// </summary>
+    public static string OwnerLabel
+    {
+        get
+        {
+            var given = AppSettings.Current.OwnerName.Trim();
+            return given.Length == 0 || given == "Owner" ? Loc.T("Owner") : given;
+        }
+    }
     public static int? CurrentId => Current?.Id;
 
     /// <summary>

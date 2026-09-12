@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -11,8 +11,8 @@ namespace MarketPos.Views;
 /// <summary>
 /// Find a past sale by ticket number and print another copy of it.
 ///
-/// Strictly read-only: it calls SaleRepository.FindByInvoiceNumber and nothing else, so a
-/// reprint cannot create a sale, charge again, move stock or change revenue. The copy is
+/// Strictly read-only: it asks <see cref="Receipts"/> for the ticket and does nothing else, so
+/// a reprint cannot create a sale, charge again, move stock or change revenue. The copy is
 /// stamped DUPLICATA so it cannot be mistaken for a new transaction at cash-up.
 /// </summary>
 public partial class ReprintWindow : Window
@@ -32,7 +32,7 @@ public partial class ReprintWindow : Window
 
     private void LoadRecent()
     {
-        var recent = SaleRepository.RecentInvoiceNumbers();
+        var recent = Receipts.Recent();
         RecentList.Items.Clear();
 
         foreach (var number in recent)
@@ -64,7 +64,7 @@ public partial class ReprintWindow : Window
     private void Load(int invoiceNumber)
     {
         NumberBox.Text = invoiceNumber.ToString();
-        _receipt = SaleRepository.FindByInvoiceNumber(invoiceNumber);
+        _receipt = Receipts.Find(invoiceNumber);
 
         if (_receipt is null)
         {

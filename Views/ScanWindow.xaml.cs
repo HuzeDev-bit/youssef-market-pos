@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 
 namespace MarketPos.Views;
@@ -31,7 +31,7 @@ public partial class ScanWindow : Window
     /// </summary>
     public static string? Ask(Window owner)
     {
-        var window = new ScanWindow { Owner = owner };
+        var window = new ScanWindow().By(owner);
         return window.ShowDialog() == true ? window.Code : null;
     }
 

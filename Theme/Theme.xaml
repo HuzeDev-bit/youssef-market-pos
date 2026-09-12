@@ -71,8 +71,16 @@
          Both are compiled into the exe. A shop machine has whatever Windows shipped with, so
          a family named but not embedded falls back to Segoe UI and takes the identity with it. -->
 
-    <FontFamily x:Key="Font.Brand">pack://application:,,,/Assets/Fonts/#Nunito</FontFamily>
-    <FontFamily x:Key="Font.Base">pack://application:,,,/Assets/Fonts/#Inter</FontFamily>
+    <!-- Segoe UI after each one, and it is not decoration.
+
+         Inter and Nunito are Latin fonts: neither carries a single Arabic letter. With the app
+         in Arabic every label was drawn through whatever WPF fell back to on its own, one glyph
+         at a time, so the letters never joined: "متصل" came out as "متص" with a stray mark where
+         the lam should have been. Naming the fallback here means Arabic is shaped by a font that
+         has the letters, and Latin still gets the identity the design was drawn with. -->
+
+    <FontFamily x:Key="Font.Brand">pack://application:,,,/Assets/Fonts/#Nunito, Segoe UI, Tahoma</FontFamily>
+    <FontFamily x:Key="Font.Base">pack://application:,,,/Assets/Fonts/#Inter, Segoe UI, Tahoma</FontFamily>
 
     <!-- One step per purpose, not per size. Anything that needs a size not on this list is
          usually a sign the thing itself is in the wrong place. -->
@@ -103,6 +111,14 @@
     <!-- ===================== Motion ===================== -->
     <Duration x:Key="Anim.Fast">0:0:0.15</Duration>
     <CubicEase x:Key="Ease.Out" EasingMode="EaseOut"/>
+
+    <!-- Touch screen fluid panning for all scrollable views -->
+    <Style TargetType="ScrollViewer">
+        <Setter Property="PanningMode" Value="Both"/>
+        <Setter Property="PanningDeceleration" Value="0.002"/>
+        <Setter Property="PanningRatio" Value="1"/>
+        <Setter Property="IsManipulationEnabled" Value="True"/>
+    </Style>
 
     <!-- ===================== Type ===================== -->
 
@@ -290,6 +306,91 @@
 
     <!-- Muted pill — Cancel / Hold. Border eases to the brand green on hover, never a filled
          chip and never red; the confirm dialog is what guards the destructive action. -->
+    <!-- A category on the till's first screen.
+
+         Deliberately not a product card: square-ish, flat, no picture and no price, so that a
+         box the cashier presses to LOOK is never mistaken for a tile they press to SELL. The
+         chosen one fills with the accent colour, which is the only thing on this screen that
+         does — you can see where you are from across the counter.
+
+         Sized for a fingertip: 56 tall and 118 wide before the text stretches it. -->
+    <!-- A weight a cashier can press instead of typing: 250 g, 500 g, 1 kg. Quiet, small and
+         only ever shown on a line sold by the kilo. -->
+    <Style x:Key="Button.Weight" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Margin" Value="0,0,5,0"/>
+        <Setter Property="FontFamily" Value="{StaticResource Font.Base}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Muted}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" CornerRadius="9"
+                            Background="{StaticResource Brush.Page}"
+                            BorderThickness="1" BorderBrush="{StaticResource Brush.Border}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Brush.Accent}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Brush.AccentSoft}"/>
+                            <Setter Property="Foreground" Value="{StaticResource Brush.AccentDark}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Button.CategoryBox" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Height" Value="56"/>
+        <Setter Property="MinWidth" Value="118"/>
+        <Setter Property="Margin" Value="0,0,10,10"/>
+        <Setter Property="Padding" Value="18,0"/>
+        <Setter Property="FontFamily" Value="{StaticResource Font.Base}"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="box" CornerRadius="14"
+                            Background="{StaticResource Brush.Card}"
+                            BorderThickness="1" BorderBrush="{StaticResource Brush.Border}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="box" Property="BorderBrush"
+                                    Value="{StaticResource Brush.Accent}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="box" Property="Background"
+                                    Value="{StaticResource Brush.AccentSoft}"/>
+                        </Trigger>
+
+                        <!-- The aisle the cashier is standing in. -->
+                        <DataTrigger Binding="{Binding IsChosen}" Value="True">
+                            <Setter TargetName="box" Property="Background"
+                                    Value="{StaticResource Brush.Accent}"/>
+                            <Setter TargetName="box" Property="BorderBrush"
+                                    Value="{StaticResource Brush.Accent}"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="Button.PillMuted" TargetType="Button" BasedOn="{StaticResource Button.Pill}">
         <Setter Property="Background" Value="{StaticResource Brush.Card}"/>
         <Setter Property="Foreground" Value="{StaticResource Brush.Muted}"/>

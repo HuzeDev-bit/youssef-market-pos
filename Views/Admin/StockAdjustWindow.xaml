@@ -36,7 +36,7 @@
                              TextChanged="Quantity_Changed"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="السبب" Style="{StaticResource Text.FieldLabel}"/>
+                    <TextBlock Text="REASON" Style="{StaticResource Text.FieldLabel}"/>
                     <ComboBox x:Name="ReasonBox" Style="{StaticResource ComboBox.Form}"
                               SelectionChanged="Quantity_Changed"/>
                 </StackPanel>
@@ -59,7 +59,7 @@
                                     Converter={StaticResource StrVis}}"/>
 
             <Grid Margin="0,22,0,0">
-                <Button Style="{StaticResource Button.PillMuted}" Content="إلغاء"
+                <Button Style="{StaticResource Button.PillMuted}" Content="Cancel"
                         HorizontalAlignment="Left" Width="110" Click="Cancel_Click"/>
                 <Button Style="{StaticResource Button.Pill}" Content="Save movement"
                         HorizontalAlignment="Right" Width="170" Click="Save_Click"/>

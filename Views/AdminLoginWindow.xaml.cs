@@ -25,33 +25,45 @@ public partial class AdminLoginWindow : Window
         Services.Responsive.Fit(this);
 
         _isChangingPassword = changePassword;
-        _isOpen = !changePassword && !AdminAccount.IsConfigured;
+        _isOpen = !changePassword && !AdminAccount.WantsAPassword();
 
         if (_isChangingPassword)
         {
             var replacing = AdminAccount.IsConfigured;
-            HeadingText.Text = replacing ? "Change admin password" : "Set admin password";
+            HeadingText.Text = Loc.T(replacing ? "Change admin password" : "Set admin password");
             SubText.Text = replacing
                 ? "Enter the new password twice. The old one stops working straight away."
                 : "This will start protecting the back office. Leave both boxes empty and save "
                   + "to turn the password off again.";
-            FirstLabel.Text = replacing ? "NEW PASSWORD" : "PASSWORD";
+            FirstLabel.Text = Loc.T(replacing ? "NEW PASSWORD" : "PASSWORD");
             ConfirmSection.Visibility = Visibility.Visible;
-            SubmitButton.Content = replacing ? "Change" : "Set password";
+            SubmitButton.Content = Loc.T(replacing ? "Change" : "Set password");
         }
         else if (_isOpen)
         {
             HeadingText.Text = Loc.T("Back office");
-            SubText.Text = Loc.T("No admin password is set, so anyone at this machine can open the ")
-                         + "back office. You can set one under Settings → Access.";
+            SubText.Text = Loc.T("No admin password is set, so anyone at this machine can open the "
+                               + "back office. You can set one under Settings → Access.");
             PasswordSection.Visibility = Visibility.Collapsed;
             SubmitButton.Content = Loc.T("Unlock");
         }
         else
         {
             HeadingText.Text = Loc.T("Admin");
-            SubText.Text = Loc.T("Enter the admin password to continue.");
+
+            // While it is still 123456 there is no secret to keep, and the useful thing to
+            // say is where to change it. The moment the owner does, this goes away.
+            SubText.Text = AdminAccount.IsStillTheStartingOne
+                ? Loc.T("The password is {0} until you change it — the lock beside your name in "
+                      + "the back office.", AdminAccount.Starting)
+                : Loc.T("Enter the admin password to continue.");
+
             SubmitButton.Content = Loc.T("Unlock");
+        }
+
+        if (_isChangingPassword || _isOpen)
+        {
+            ForgotPasswordButton.Visibility = Visibility.Collapsed;
         }
 
         Loaded += (_, _) =>
@@ -63,7 +75,7 @@ public partial class AdminLoginWindow : Window
 
     /// <summary>Shows the prompt; true when the owner is through the gate.</summary>
     public static bool Ask(Window owner, bool changePassword = false) =>
-        new AdminLoginWindow(changePassword) { Owner = owner }.ShowDialog() == true;
+        new AdminLoginWindow(changePassword).By(owner).ShowDialog() == true;
 
     private void Submit_Click(object sender, RoutedEventArgs e)
     {
@@ -88,7 +100,7 @@ public partial class AdminLoginWindow : Window
                         + "and salaries, and clear the sales history."))
                     return;
 
-                AdminAccount.ClearPassword();
+                AdminAccount.ChangePassword(string.Empty, string.Empty);
                 DialogResult = true;
                 Close();
                 return;
@@ -105,13 +117,26 @@ public partial class AdminLoginWindow : Window
                 return;
             }
 
-            AdminAccount.SetPassword(password);
+            if (!AdminAccount.ChangePassword(string.Empty, password))
+            {
+                Fail(Loc.T("Cannot change password: {0}", ShopLink.LastProblem));
+                return;
+            }
+
             DialogResult = true;
             Close();
             return;
         }
 
-        if (!AdminAccount.Verify(password))
+        var opens = AdminAccount.Opens(password);
+
+        if (opens is null)
+        {
+            Fail(Loc.T("Cannot reach the shop's server. {0}", ShopLink.LastProblem));
+            return;
+        }
+
+        if (opens is false)
         {
             Fail("Wrong password.");
             return;
@@ -123,10 +148,29 @@ public partial class AdminLoginWindow : Window
 
     private void Fail(string message)
     {
-        ErrorText.Text = message;
+        ErrorText.Text = Loc.T(message);
         PasswordBox.Clear();
         ConfirmBox.Clear();
         PasswordBox.Focus();
+    }
+
+    private void ForgotPassword_Click(object sender, RoutedEventArgs e)
+    {
+        if (!ConfirmWindow.Ask(this,
+                Loc.T("Reset admin password?"),
+                Loc.T("This will reset the admin password back to the default {0}. You can then unlock and set a new one.", AdminAccount.Starting)))
+            return;
+
+        if (AdminAccount.ResetPassword("9988"))
+        {
+            PasswordBox.Password = AdminAccount.Starting;
+            ErrorText.Text = Loc.T("Password reset to {0}. Press Unlock to continue.", AdminAccount.Starting);
+            ErrorText.Foreground = (System.Windows.Media.Brush)FindResource("Brush.Accent");
+        }
+        else
+        {
+            Fail(Loc.T("Could not reset password: {0}", ShopLink.LastProblem));
+        }
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)

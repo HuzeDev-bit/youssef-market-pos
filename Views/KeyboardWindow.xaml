@@ -1,0 +1,178 @@
+﻿<!-- The on-screen keyboard, for a shop whose till is a touchscreen.
+
+     A window of its own rather than a panel inside the till, because half the typing in this
+     app happens in a modal dialog — Add product, Add supplier, Settings — and a panel in the
+     window underneath one of those cannot be pressed. This sits above everything, including
+     the dialogs, and never takes focus away from the box being typed into. See TouchKeyboard
+     for how that is arranged, and KeyStrokes for why the keys go through Windows rather than
+     into the TextBox directly. -->
+<Window x:Class="MarketPos.Views.KeyboardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Keyboard"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowActivated="False"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ResizeMode="NoResize"
+        FontFamily="{StaticResource Font.Base}"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Ideal">
+
+    <Window.Resources>
+        <CubicEase x:Key="Ease.Key" EasingMode="EaseOut"/>
+
+        <!-- One key. Sized from code, because the whole panel is measured against the width of
+             the screen it lands on rather than against the one it was drawn on.
+
+             Focusable is false on purpose and matters more than it looks: a key that took
+             focus would take it from the box being typed into, and the first press would move
+             the caret out of the field the shop was filling in. -->
+        <Style x:Key="Key" TargetType="Button">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="19"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text}"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Card}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="press" ScaleX="1" ScaleY="1"/>
+                            </Grid.RenderTransform>
+
+                            <Border x:Name="face" CornerRadius="10"
+                                    Background="{TemplateBinding Background}"
+                                    BorderThickness="1" BorderBrush="{StaticResource Brush.Border}"/>
+
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="face" Property="Background"
+                                        Value="{StaticResource Brush.CardHover}"/>
+                            </Trigger>
+
+                            <!-- The press has to be visible on a touchscreen, where the finger
+                                 is covering the key at the moment it happens. It shrinks and
+                                 goes green under the fingertip, and springs back after it. -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="face" Property="Background"
+                                        Value="{StaticResource Brush.AccentSoft}"/>
+                                <Setter TargetName="face" Property="BorderBrush"
+                                        Value="{StaticResource Brush.Accent}"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="press"
+                                                             Storyboard.TargetProperty="ScaleX"
+                                                             To="0.90" Duration="0:0:0.07"/>
+                                            <DoubleAnimation Storyboard.TargetName="press"
+                                                             Storyboard.TargetProperty="ScaleY"
+                                                             To="0.90" Duration="0:0:0.07"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="press"
+                                                             Storyboard.TargetProperty="ScaleX"
+                                                             To="1" Duration="0:0:0.22"
+                                                             EasingFunction="{StaticResource Ease.Key}"/>
+                                            <DoubleAnimation Storyboard.TargetName="press"
+                                                             Storyboard.TargetProperty="ScaleY"
+                                                             To="1" Duration="0:0:0.22"
+                                                             EasingFunction="{StaticResource Ease.Key}"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Backspace, Enter, Shift, the layout switch: the keys that are not letters. Quieter
+             than a letter, so the alphabet stays the thing the eye lands on. -->
+        <Style x:Key="Key.Command" TargetType="Button" BasedOn="{StaticResource Key}">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.Muted}"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Page}"/>
+        </Style>
+
+        <!-- The one key that finishes what was being typed. -->
+        <Style x:Key="Key.Enter" TargetType="Button" BasedOn="{StaticResource Key.Command}">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
+        </Style>
+
+        <Style x:Key="Key.Chosen" TargetType="Button" BasedOn="{StaticResource Key.Command}">
+            <Setter Property="Foreground" Value="{StaticResource Brush.AccentDark}"/>
+            <Setter Property="Background" Value="{StaticResource Brush.AccentSoft}"/>
+        </Style>
+    </Window.Resources>
+
+    <!-- Slides up from below the screen edge rather than appearing. On a till the keyboard
+         covers whatever was at the bottom of the screen, and a panel that simply blinks into
+         existence over the buttons reads as something having gone wrong. -->
+    <Border x:Name="Panel" CornerRadius="20,20,0,0"
+            Background="{StaticResource Brush.Panel}"
+            BorderThickness="1,1,1,0" BorderBrush="{StaticResource Brush.Border}"
+            Padding="14,12,14,14" VerticalAlignment="Bottom">
+        <Border.RenderTransform>
+            <TranslateTransform x:Name="Slide" Y="400"/>
+        </Border.RenderTransform>
+        <Border.Effect>
+            <DropShadowEffect Color="#1B2126" Opacity="0.18" BlurRadius="28"
+                              ShadowDepth="0" Direction="90"/>
+        </Border.Effect>
+
+        <DockPanel>
+            <!-- The handle. A keyboard docked along the bottom covers whatever was there, and
+                 on a till that is sometimes the total or the Pay button — so it can be picked
+                 up and put somewhere else, and it stays where it is put. -->
+            <Border x:Name="Grip" DockPanel.Dock="Top" Background="Transparent"
+                    Cursor="SizeAll" ToolTip="Drag to move the keyboard"
+                    MouseLeftButtonDown="Grip_Down"
+                    MouseMove="Grip_Move"
+                    MouseLeftButtonUp="Grip_Up">
+                <!-- Left to right like the keys below it. In Arabic the window is laid out
+                     right to left, which put the two size buttons against the left edge with
+                     the drag handle beside them instead of the tidy handle-in-the-middle,
+                     buttons-at-the-end the row is drawn to be. -->
+                <!-- A row, not a stack of things on top of each other. The two size buttons
+                     take the end they need and the drag bar gets the room that is left — laid
+                     over one another in a Grid, the bar ran underneath the buttons as soon as
+                     the panel was narrow, which is exactly what the number pad is.
+
+                     Bigger and smaller are two presses rather than a corner to drag: a corner
+                     grip is a mouse idea, and on a touchscreen it is a four-pixel target under
+                     a fingertip. Their size comes from PadKeyboard.Grip so they grow with the
+                     keys they resize. -->
+                <DockPanel FlowDirection="LeftToRight" LastChildFill="True" Margin="14,0">
+                    <StackPanel x:Name="SizeButtons" DockPanel.Dock="Right"
+                                Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="SmallerButton" Style="{StaticResource Key.Command}"
+                                Content="−" ToolTip="Smaller keyboard" Click="Smaller_Click"/>
+                        <Button x:Name="BiggerButton" Style="{StaticResource Key.Command}"
+                                Content="+" ToolTip="Bigger keyboard" Click="Bigger_Click"/>
+                    </StackPanel>
+
+                    <Rectangle x:Name="DragBar" Height="4" RadiusX="2" RadiusY="2"
+                               MaxWidth="56" Margin="0,0,14,0"
+                               Fill="{StaticResource Brush.Border}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </DockPanel>
+            </Border>
+
+            <StackPanel x:Name="Rows"/>
+        </DockPanel>
+    </Border>
+</Window>

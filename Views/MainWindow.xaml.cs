@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -28,7 +29,11 @@ public partial class MainWindow : Window
         // Translated here as well as on load. Waiting for an event is what left the sidebar in
         // English while every other part of this same window was Arabic.
         Services.Localizer.Apply(this);
-        Services.Responsive.Fit(this);
+
+        // The whole till scales to the screen it is on: rail, header, product grid and cart
+        // together, as one piece. 1100x700 is the smallest it is genuinely usable at - three
+        // product tiles beside a full cart - and above that size nothing happens at all.
+        Services.Responsive.Shell(this, 1100, 700);
 
         // Opens filling the screen, which is right for a till and was wrong as the only
         // thing it could ever do: there was no way to move it and no way to make it smaller.
@@ -55,12 +60,20 @@ public partial class MainWindow : Window
 
         Loaded += (_, _) => FocusBarcode();
         Activated += (_, _) => FocusBarcode();
+
+        // The on-screen keyboard, for a till with no keyboard on the counter. Started here
+        // rather than in App, because the diagnostics build this window without ever showing
+        // it — and a floating keyboard raised by a headless run is a window nobody asked for
+        // that nothing is left to close.
+        Loaded += (_, _) => TouchKeyboard.Start();
+        Closed += (_, _) => TouchKeyboard.Stop();
         PreviewMouseDown += Window_PreviewMouseDown;
         PreviewKeyDown += Window_PreviewKeyDown;
 
         Vm.RequestBarcodeFocus += (_, _) => FocusBarcode();
         Vm.PaymentRequested += Vm_PaymentRequested;
         Vm.CartLineTouched += Vm_CartLineTouched;
+        Vm.ScannedSomethingUnknown += Vm_ScannedSomethingUnknown;
 
         StartTalkingToTheBackOffice();
     }
@@ -70,19 +83,127 @@ public partial class MainWindow : Window
     private DispatcherTimer? _sync;
 
     /// <summary>
-    /// Keeps this till and the back office in step, when there is a back office to keep step
-    /// with. A shop with one computer never enters any of this.
+    /// Connects this till to the shop that owns it.
     ///
-    /// Everything here is best-effort on purpose: the till sells from its own database, so a
-    /// failed exchange is a message in the corner of the screen, never an interruption.
+    /// The all-in-one MarketPos.exe is the shop and the till in one program and needs none of
+    /// this. A till on another machine — MarketPosTill.exe — belongs to a server somewhere,
+    /// and one that starts with no address would quietly keep its own books on the cashier's
+    /// computer, which is the one place they must not be. So a till with no address searches
+    /// the network for the shop, and asks the person setting it up where the shop is when
+    /// it cannot be found.
     /// </summary>
     private void StartTalkingToTheBackOffice()
     {
-        if (!ShopLink.IsConfigured) return;
+        if (App.CurrentJob != App.Job.Till) return;
 
         LinkChip.Visibility = Visibility.Visible;
-        ShowLinkState();
 
+        // Empty shelves, every single time it opens.
+        //
+        // A till is a window onto the shop's database, not a shop. The file it keeps its copy
+        // in is an ordinary database on an ordinary laptop: the app may have been run there as
+        // a shop of its own, a database may have been carried over, or the copy may simply be
+        // out of date. Any of those and the till shows products — its own, in green, looking
+        // exactly like the shop's — and sells them into books that do not exist.
+        //
+        // So nothing carries over between openings. What is on this screen came from the
+        // server this time, or it is not on this screen. If the server cannot be reached the
+        // till says so in red and has nothing to sell, which is the truth: this machine does
+        // not have a shop on it.
+        // Nothing is done to this machine's database, because nothing on this machine's
+        // database is ever read. A till's catalogue lives in memory, put there by the shop's
+        // answer and gone when the app closes.
+
+        if (!ShopLink.IsConfigured)
+        {
+            // The search runs once the till's own window is up, so the setup question it may
+            // end in is asked in front of the till it belongs to. A till that is already
+            // connected by then skips straight to the usual syncing.
+            ShowLinkState();
+            Loaded += async (_, _) => await FindTheShop();
+            return;
+        }
+
+        SetupSyncing();
+        Loaded += async (_, _) =>
+        {
+            await ShopLink.Sync();
+            Vm.ReloadProducts();
+        };
+    }
+
+    /// <summary>
+    /// Finds the shop a till with no address belongs to, and either connects it or asks
+    /// where the shop is. Called once, when the till's window is already on screen.
+    /// </summary>
+    private async System.Threading.Tasks.Task FindTheShop()
+    {
+        // An address that works is the end of it.
+        //
+        // A till now starts out pointed at pos-server, which is right when the shop's server
+        // machine carries that name and useless when it does not -- and "configured" used to be
+        // enough to stop the search below from ever running. So the address is tried, and only
+        // an address that actually answers counts as configured.
+        if (ShopLink.IsConfigured)
+        {
+            SetupSyncing();
+            await ShopLink.Sync();
+
+            if (ShopLink.IsOnline)
+            {
+                Vm.ReloadProducts();
+                return;
+            }
+        }
+
+        ShowLooking();
+
+        var found = await ShopFinder.Look();
+
+        // Never itself. A machine that answers from this very computer is not the shop this
+        // till belongs to — it is something serving on this laptop, and connecting to it makes
+        // the till a mirror of its own database while the chip says, truthfully and uselessly,
+        // that it is connected. That is the exact shape of "he opened it and saw his own
+        // products": connected, in green, to himself.
+        if (found is not null && ShopFinder.IsThisMachine(found.Address)) found = null;
+
+        if (found is not null)
+        {
+            AppSettings.Current.ServerAddress = found.Address;
+            AppSettings.Current.Save();
+        }
+
+        if (ShopLink.IsConfigured && await ShopLink.Ping())
+        {
+            await ShopLink.Sync();
+            Vm.ReloadProducts();
+            SetupSyncing();
+            return;
+        }
+
+        // No shop answered. The person setting the till up can type the address or press
+        // Find again; choosing to work alone leaves the till visibly unconnected in red,
+        // rather than silently running a second shop that nobody knows about.
+        if (ServerSetupWindow.Ask(this, out _))
+        {
+            await ShopLink.Sync();
+            Vm.ReloadProducts();
+            SetupSyncing();
+        }
+        else
+        {
+            ShowLinkState();
+        }
+    }
+
+    /// <summary>
+    /// The steady-state conversation with the back office: a half-minute watch, an indicator
+    /// that follows it, and nothing that can interrupt a sale. Everything here is best-effort
+    /// on purpose — the till sells from its own database, so a failed exchange is a message in
+    /// the corner of the screen, never an interruption.
+    /// </summary>
+    private void SetupSyncing()
+    {
         EventHandler linkChanged = (_, _) => Dispatcher.BeginInvoke(ShowLinkState);
         ShopLink.Changed += linkChanged;
         Closed += (_, _) => ShopLink.Changed -= linkChanged;
@@ -94,17 +215,40 @@ public partial class MainWindow : Window
         _sync.Start();
         Closed += (_, _) => _sync?.Stop();
 
-        Loaded += (_, _) => _ = ShopLink.Sync();
+        ShowLinkState();
     }
 
     private void ShowLinkState()
     {
+        // A till with no shop to belong to must look nothing like a till that has one.
+        // This is the state the previous builds never showed: it is the honest face of a
+        // till that would otherwise be a second, hidden shop.
+        if (!ShopLink.IsConfigured)
+        {
+            LinkStatus.Text = Loc.T("Not connected to the shop");
+            LinkDot.Fill = (System.Windows.Media.Brush)FindResource("Brush.Danger");
+            LinkChip.ToolTip = Loc.T("Press to connect this till to the shop's server.");
+            return;
+        }
+
         LinkStatus.Text = ShopLink.Status;
         LinkDot.Fill = (System.Windows.Media.Brush)FindResource(
             ShopLink.IsOnline ? "Brush.Accent" : "Brush.Danger");
+
+        // The address, not just the word "connected". Which machine a till is talking to is
+        // the one thing that goes wrong when two computers are set up, and it was the one
+        // thing the chip would not say.
         LinkChip.ToolTip = ShopLink.IsOnline
-            ? $"Connected to {ShopLink.ShopName}. Press to send now."
+            ? Loc.T("Connected to {0} at {1}. Press to send now.",
+                    ShopLink.ShopName, Loc.Ltr(ShopLink.Address))
             : $"{ShopLink.LastProblem} Press to try again.";
+    }
+
+    private void ShowLooking()
+    {
+        LinkStatus.Text = Loc.T("Looking for the shop…");
+        LinkDot.Fill = (System.Windows.Media.Brush)FindResource("Brush.Danger");
+        LinkChip.ToolTip = Loc.T("Searching this network for the shop's server. This takes a moment.");
     }
 
     /// <summary>
@@ -113,16 +257,108 @@ public partial class MainWindow : Window
     /// </summary>
     private async void LinkChip_Click(object sender, RoutedEventArgs e)
     {
-        LinkStatus.Text = Loc.T("Sending…");
-        await ShopLink.Sync();
-        ShowLinkState();
-        FocusBarcode();
+        LinkChip.IsEnabled = false;
+
+        try
+        {
+            // Already talking to the shop: this is the "send what is waiting" button, and
+            // saying so is the whole of its job.
+            if (ShopLink.IsConfigured && ShopLink.IsOnline)
+            {
+                LinkStatus.Text = Loc.T("Sending…");
+                await ShopLink.Sync();
+                return;
+            }
+
+            // Not talking to the shop. A till starts out pointed at pos-server, so being
+            // unconnected almost always means that machine is off, is called something else,
+            // or is on another network -- and the cashier pressing this needs it either fixed
+            // or explained, not a chip that flickers and says the same thing again.
+            LinkStatus.Text = Loc.T("Sending…");
+            await ShopLink.Sync();
+            if (ShopLink.IsOnline)
+            {
+                Vm.ReloadProducts();
+                SetupSyncing();
+                return;
+            }
+
+            ShowLooking();
+            var found = await ShopFinder.Look();
+            if (found is not null && ShopFinder.IsThisMachine(found.Address)) found = null;
+
+            if (found is not null)
+            {
+                AppSettings.Current.ServerAddress = found.Address;
+                AppSettings.Current.Save();
+
+                await ShopLink.Sync();
+                if (ShopLink.IsOnline)
+                {
+                    Vm.ReloadProducts();
+                    SetupSyncing();
+                    return;
+                }
+            }
+
+            // Nothing answered by name and nothing answered on this network. The address is
+            // the thing to correct, so the screen that corrects it is what opens.
+            if (ServerSetupWindow.Ask(this, out _))
+            {
+                await ShopLink.Sync();
+                Vm.ReloadProducts();
+                SetupSyncing();
+            }
+        }
+        finally
+        {
+            LinkChip.IsEnabled = true;
+            ShowLinkState();
+            FocusBarcode();
+        }
     }
 
     /// <summary>
     /// Brings the just-scanned cart line into view. Runs at Background priority because the
     /// container for a brand new row does not exist until after the layout pass.
     /// </summary>
+    /// <summary>
+    /// Something was scanned that the shop does not sell. Offers to add it, there and then.
+    ///
+    /// <para>
+    /// This is the one moment anybody knows what the thing is: it is in the cashier's hand,
+    /// the price is on the box, and the delivery it came out of is on the floor beside them.
+    /// The alternative was a red line saying "not found", a note on paper, and somebody in the
+    /// back office that evening working out what 6111245830021 was.
+    /// </para>
+    ///
+    /// <para>
+    /// It asks first, because a scan that finds nothing is often a scan of the wrong thing —
+    /// a loyalty card, a customer's own shopping, a barcode on the shelf edge — and a form
+    /// opening by itself in the middle of a queue is worse than the red line was. Saying yes
+    /// opens the same form the back office uses, with the barcode already in it, and what it
+    /// saves goes into the shop's own database exactly as it would from Inventory.
+    /// </para>
+    /// </summary>
+    private void Vm_ScannedSomethingUnknown(object? sender, string barcode)
+    {
+        // There has to be a window on screen to own the dialog.
+        if (!Owned.CanOwn(this)) return;
+
+        // Open the Add Product popup directly so the cashier can add the product immediately.
+        if (Views.Admin.ProductWindow.AddScanned(this, barcode))
+        {
+            // Straight onto the sale it interrupted. The cashier scanned it because a customer
+            // is buying it.
+            Catalog.Reload();
+            Vm.ReloadProducts();
+            Vm.SearchText = barcode;
+            Vm.SubmitBarcodeCommand.Execute(null);
+        }
+
+        FocusBarcode();
+    }
+
     private void Vm_CartLineTouched(object? sender, CartLine line)
     {
         // Off the Sale page the cart sidebar does not exist, so a toast is the only
@@ -340,7 +576,7 @@ public partial class MainWindow : Window
             // The back office is its own window rather than a fourth page in the till. The
             // till stays a single-purpose screen that a cashier cannot get lost in, and the
             // office gets the width its tables need.
-            new AdminWindow { Owner = this }.ShowDialog();
+            new AdminWindow().By(this).ShowDialog();
 
             Catalog.Reload();
             Vm.ReloadProducts();
@@ -387,6 +623,23 @@ public partial class MainWindow : Window
         FocusBarcode();
     }
 
+    /// <summary>
+    /// Sets a weighed line to an amount the cashier pressed rather than typed.
+    ///
+    /// Only ever reaches a line already on the sale, and only changes how much of it there is
+    /// — the price per kilo is the product's and is not touched, so the line total follows
+    /// from the weight the way it does when the figure is typed.
+    /// </summary>
+    private void Weight_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string tag, DataContext: CartLine line }) return;
+        if (!decimal.TryParse(tag, NumberStyles.Number, CultureInfo.InvariantCulture, out var kilos)) return;
+
+        line.Quantity = kilos;
+        Vm.RefreshTotals();
+        FocusBarcode();
+    }
+
     private void CategoryBack_Click(object sender, RoutedEventArgs e)
     {
         Vm.CloseCategoryProducts();
@@ -398,10 +651,10 @@ public partial class MainWindow : Window
     {
         if (sender is not Button { Tag: int invoiceNumber }) return;
 
-        var receipt = SaleRepository.FindByInvoiceNumber(invoiceNumber);
+        var receipt = Receipts.Find(invoiceNumber);
         if (receipt is null) return;
 
-        new ReceiptWindow(receipt, allowReprint: true) { Owner = this }.ShowDialog();
+        new ReceiptWindow(receipt, allowReprint: true).By(this).ShowDialog();
         FocusBarcode();
     }
 
@@ -417,7 +670,7 @@ public partial class MainWindow : Window
 
     private void Reprint_Click(object sender, RoutedEventArgs e)
     {
-        new ReprintWindow { Owner = this }.ShowDialog();
+        new ReprintWindow().By(this).ShowDialog();
         FocusBarcode();
     }
 
@@ -443,31 +696,16 @@ public partial class MainWindow : Window
 
         ConfirmDetail.Text = $"{Loc.T("Ticket #{0}", Vm.LastInvoiceNumber)}  ·  {Loc.Ltr($"{total:N2} DH")}";
 
-        // Print before the animation so paper starts moving immediately; any failure is
-        // reported in the confirmation line rather than stopping the till, because the sale
-        // is already banked by this point.
-        var paper = SaleRepository.FindByInvoiceNumber(Vm.LastInvoiceNumber);
-        string? printProblem = null;
+        var paper = Receipts.Find(Vm.LastInvoiceNumber);
 
-        if (AppSettings.Current.AutoPrintReceipts && paper is not null)
+        // Print directly to the configured printer without asking.
+        if (paper is not null)
         {
-            // Never silently routes to Print-to-PDF: PrintSilent refuses virtual printers
-            // and says so, rather than throwing a Save-As box at the cashier mid-queue.
-            printProblem = ReceiptPrinter.PrintSilent(paper, isDuplicate: false);
-            if (printProblem is not null) ConfirmDetail.Text = printProblem;
+            var problem = ReceiptPrinter.PrintSilent(paper, isDuplicate: false);
+            if (problem is not null) ConfirmDetail.Text = problem;
         }
 
         ((Storyboard)FindResource("PaymentConfirmed")).Begin(this);
-
-        // The customer still has to be handed something. With a printer attached the paper is
-        // already coming out and the counter must not be held up, so nothing more happens
-        // here. With no printer — or a printer that just refused — the receipt is put on
-        // screen instead: the sale is banked either way, and the shop can read the total back
-        // to the customer or print it from this window once the machine arrives.
-        var printerDidIt = AppSettings.Current.AutoPrintReceipts && printProblem is null;
-        if (paper is not null && !printerDidIt)
-            new ReceiptWindow(paper, allowReprint: true) { Owner = this }.ShowDialog();
-
         FocusBarcode();
     }
 
@@ -492,6 +730,20 @@ public partial class MainWindow : Window
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => CloseApp("Close the app?");
+
+    /// <summary>
+    /// Settings, from the till.
+    ///
+    /// No permission check and no admin password. Settings holds the language and nothing else
+    /// now — which is a display preference, not a business decision, and the person it matters
+    /// most to is the cashier standing at this screen for eight hours. Everything that was
+    /// worth protecting on this window is protected where it is done: the back office is behind
+    /// its own password, and the repositories refuse a write nobody is allowed to make.
+    ///
+    /// Nothing to refresh afterwards. A language arrives when windows are built, so the dialog
+    /// offers the restart itself and this window is gone by the time it matters.
+    /// </summary>
+    private void Settings_Click(object sender, RoutedEventArgs e) => SettingsWindow.Ask(this);
 
     /// <summary>
     /// The power icon does whichever of the two things is actually on the table. With somebody

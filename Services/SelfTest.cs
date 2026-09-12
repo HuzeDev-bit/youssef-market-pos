@@ -19,7 +19,8 @@ namespace MarketPos.Services;
 /// </summary>
 public static class SelfTest
 {
-    public static void Run(Application app)
+    /// <summary>Runs every check and answers how many failed.</summary>
+    public static int Run(Application app)
     {
         var report = new StringBuilder();
         var failures = 0;
@@ -49,6 +50,7 @@ public static class SelfTest
         CheckTopBarLayout(report, ref failures, shell);
         CheckComboDisplay(report, ref failures);
         CheckEveryDropDownReads(report, ref failures);
+        CheckTheLanguageBoxOffersTheShopsTwo(report, ref failures);
         CheckScannerRule(report, ref failures);
         CheckAddProductFields(report, ref failures, shell);
         CheckDashboardLayout(report, ref failures, shell);
@@ -61,6 +63,7 @@ public static class SelfTest
         Check(report, ref failures, "Notifications.Build", () => Notifications.Build());
 
         CheckTheShopsOwnLanguage(report, ref failures);
+        CheckTheActivityLogSpeaksTheShopsLanguage(report, ref failures);
         CheckScanningPutsItOnTheSale(report, ref failures);
         CheckTheBasketAsksOneThing(report, ref failures);
         CheckTheTillRefusesWhatIsNotThere(report, ref failures);
@@ -69,6 +72,10 @@ public static class SelfTest
         CheckTheStockListNarrows(report, ref failures);
         CheckTheWindowsCanBeMoved(report, ref failures);
         CheckEveryDialogFitsASmallScreen(report, ref failures);
+        CheckADialogFitsTheWindowItOpensOver(report, ref failures);
+        CheckTheShellsFitASmallScreen(report, ref failures);
+        CheckTheKeyboardFitsEveryScreen(report, ref failures);
+        CheckAFilterStaysWhereItIsPut(report, ref failures);
         CheckEveryDialogSpeaksTheShopsLanguage(report, ref failures);
         CheckTheNavigationSpeaksTheShopsLanguage(report, ref failures);
         CheckPriceCheck(report, ref failures);
@@ -97,8 +104,32 @@ public static class SelfTest
             "MarketPos", "selftest.log");
         File.WriteAllText(path, report.ToString());
 
+        // Nothing this run built is left on the desktop, whatever happened during it. A
+        // check that throws between showing a window and closing it would otherwise leave that
+        // window behind — no title bar, nothing in the taskbar, and outliving the run.
+        CloseEverythingLeftOpen();
+
         Console.WriteLine(report.ToString());
-        app.Shutdown(failures == 0 ? 0 : 1);
+        return failures;
+    }
+
+    /// <summary>
+    /// Shuts every window this run opened.
+    ///
+    /// The diagnostics build and show real windows on purpose — measuring a layout means
+    /// laying it out — and each one is closed where it was opened. This is the backstop for
+    /// when that does not happen, because the thing it prevents is a fragment of the back
+    /// office sitting on the shop's desktop with no way to close it.
+    /// </summary>
+    private static void CloseEverythingLeftOpen()
+    {
+        if (Application.Current is not { } app) return;
+
+        foreach (var window in app.Windows.OfType<Window>().ToList())
+        {
+            try { window.Close(); }
+            catch { /* already going, or gone */ }
+        }
     }
 
     /// <summary>
@@ -181,6 +212,39 @@ public static class SelfTest
     /// something it can read — which is the half that broke, on the language list, in a screen
     /// nobody looks at twice.
     /// </summary>
+    /// <summary>
+    /// The language box offers the two languages this shop is run in, and not the one the code
+    /// happens to be written in.
+    ///
+    /// English is still the source text every translation is keyed by, so it cannot leave the
+    /// codebase — which is exactly why it is easy to let it back onto the screen without
+    /// noticing. Nobody at this counter reads it.
+    /// </summary>
+    private static void CheckTheLanguageBoxOffersTheShopsTwo(StringBuilder report, ref int failures)
+    {
+        try
+        {
+            var settings = new Views.SettingsWindow();
+            var box = Descendants((FrameworkElement)settings.Content)
+                .OfType<System.Windows.Controls.ComboBox>()
+                .FirstOrDefault(c => c.Name == "LanguageBox");
+
+            var offered = box?.ItemsSource?.Cast<object>().Select(o => o?.ToString() ?? "").ToList()
+                       ?? new List<string>();
+
+            Verdict(report, ref failures, "the language box offers Arabic and French, and only those",
+                offered.Count == 2
+                    && offered.Contains(Loc.NativeName(Models.Language.Arabic))
+                    && offered.Contains(Loc.NativeName(Models.Language.French)),
+                offered.Count == 0 ? "no language box found" : string.Join(", ", offered));
+        }
+        catch (Exception error)
+        {
+            failures++;
+            report.AppendLine($"FAIL  language box: {error.GetType().Name}: {error.Message}");
+        }
+    }
+
     private static void CheckEveryDropDownReads(StringBuilder report, ref int failures)
     {
         var settings = new Views.SettingsWindow();
@@ -459,14 +523,14 @@ public static class SelfTest
             BarcodeScanner.Classify("7", human) == BarcodeScanner.Keystroke.PossibleStart,
             "120ms between digits passes straight through");
 
-        Verdict(report, ref failures, "letters are never treated as a barcode",
-            BarcodeScanner.Classify("a", machine) == BarcodeScanner.Keystroke.NotAScan
-            && BarcodeScanner.Classify(".", machine) == BarcodeScanner.Keystroke.NotAScan,
-            "a product name typed quickly stays in its field");
+        Verdict(report, ref failures, "alphanumeric characters are supported as barcode scans",
+            BarcodeScanner.Classify("A", machine) == BarcodeScanner.Keystroke.Burst
+            && BarcodeScanner.Classify("-", machine) == BarcodeScanner.Keystroke.Burst,
+            "barcodes with letters and hyphens are recognized");
 
         // char.IsDigit is true for Arabic-Indic ٠١٢ as well, and no barcode is
         // written in those. Same trap the money boxes fell into.
-        Verdict(report, ref failures, "only 0-9 counts as a scanned digit",
+        Verdict(report, ref failures, "only standard ASCII barcode chars count",
             BarcodeScanner.Classify("٨", machine) == BarcodeScanner.Keystroke.NotAScan,
             "Arabic-Indic digits are not a barcode");
 
@@ -569,10 +633,16 @@ public static class SelfTest
     /// </summary>
     private static void CheckScanningPutsItOnTheSale(StringBuilder report, ref int failures)
     {
-        var scanned = Catalog.Products.FirstOrDefault(p => p.IsScannable);
+        // Barcoded is not enough: it also has to be something the till will actually sell. An
+        // empty shelf is refused at the scanner by design, and picking the first barcode in
+        // the catalogue regardless landed on one — so this read as "scanning is broken" and
+        // then took the whole diagnostic run down with it on the next line.
+        var scanned = Catalog.Products.FirstOrDefault(
+            p => p.IsScannable && p.SoldAtTheTill && !p.IsOutOfStock);
+
         if (scanned is null)
         {
-            report.AppendLine("ok    scanning (nothing in the shop has a printed barcode)");
+            report.AppendLine("ok    scanning (nothing in the shop is both barcoded and on the shelf)");
             return;
         }
 
@@ -590,9 +660,14 @@ public static class SelfTest
             line is not null && line.Product.Name.Length > 0 && line.Product.Price > 0m,
             line is null ? "no line" : $"\"{line.Product.Name}\", {line.LineTotal:N2} DH");
 
+        // Nothing landed, so there is nothing left to ask. Reported above and stopped here:
+        // every check below reads Cart[0], and a diagnostic that crashes on the first fault
+        // it finds reports one fault and hides all the others.
+        if (line is null) return;
+
         // The same item again: one line, two of them. A second line for the same product is
         // how a receipt ends up unreadable and a cashier ends up recounting by hand.
-        var wasQuantity = line?.Quantity ?? 0m;
+        var wasQuantity = line.Quantity;
         till.Vm.SearchText = scanned.Barcode;
         till.Vm.SubmitBarcodeCommand.Execute(null);
 
@@ -668,6 +743,79 @@ public static class SelfTest
     /// translated: a product the shop called "Total" must come out of the database exactly as
     /// they typed it, on the receipt the customer takes away.
     /// </summary>
+    /// <summary>
+    /// The activity log speaks the shop's language, and still names things the shop's own way.
+    ///
+    /// The log stores a pattern and the values that go in it, kept apart, so that the sentence
+    /// can be assembled in whatever language is running — see <c>ActivityRepository.Say</c>.
+    /// Before that it stored finished English sentences, which no amount of translating could
+    /// ever have rescued: the words and the product names were baked together.
+    ///
+    /// Two halves, and the second is the one worth guarding. The pattern must translate, and
+    /// the product's name must come through it untouched — a shop that calls something "Pay"
+    /// has a product called Pay, not a button.
+    /// </summary>
+    private static void CheckTheActivityLogSpeaksTheShopsLanguage(StringBuilder report, ref int failures)
+    {
+        var was = Loc.Current;
+
+        try
+        {
+            Loc.Use(Models.Language.Arabic);
+
+            var entry = new Models.ActivityEntry
+            {
+                WorkerName = "Ahmed",
+                Action = "deactivated product",
+                Detail = Data.ActivityRepository.Say("deactivated {0}", "Cahier de notes"),
+            };
+
+            var said = entry.Sentence;
+
+            Verdict(report, ref failures, "the activity log is written in the shop's language",
+                !said.Contains("deactivated", StringComparison.OrdinalIgnoreCase),
+                said);
+
+            Verdict(report, ref failures, "and the product keeps the name the shop gave it",
+                said.Contains("Cahier de notes", StringComparison.Ordinal)
+                    && said.Contains("Ahmed", StringComparison.Ordinal),
+                said);
+
+            // An entry written before the log kept its words apart. The sentence is finished
+            // English with the shop's name already inside it — and it still has to come out in
+            // Arabic, or a shop that has been running for a year opens its log and finds the
+            // language stops halfway down the page.
+            var old = new Models.ActivityEntry
+            {
+                WorkerName = "Ahmed",
+                Action = "added product",
+                Detail = "added product Cahier de notes",
+            };
+
+            Verdict(report, ref failures, "and so is one written before the log knew how",
+                !old.Sentence.Contains("added product", StringComparison.OrdinalIgnoreCase)
+                    && old.Sentence.Contains("Cahier de notes", StringComparison.Ordinal),
+                old.Sentence);
+
+            // The one it must not do: a sentence no pattern fits is left exactly as recorded.
+            // Reaching for the nearest pattern would rewrite history to make it prettier.
+            var strange = new Models.ActivityEntry
+            {
+                WorkerName = "Ahmed",
+                Action = "did something",
+                Detail = "wandered off with the till key",
+            };
+
+            Verdict(report, ref failures, "and one that fits nothing is left exactly as recorded",
+                strange.Sentence.Contains("wandered off with the till key", StringComparison.Ordinal),
+                strange.Sentence);
+        }
+        finally
+        {
+            Loc.Use(was);
+        }
+    }
+
     private static void CheckTheShopsOwnLanguage(StringBuilder report, ref int failures)
     {
         var was = Loc.Current;
@@ -907,10 +1055,11 @@ public static class SelfTest
     private static void CheckEveryDialogFitsASmallScreen(StringBuilder report, ref int failures)
     {
         // 1366x768 is the shop laptop, and Windows ships those at 125% scaling, which leaves
-        // WPF 614 device-independent pixels to lay a dialog out in. Testing against 768 was
-        // testing against a machine nobody has: the Add supplier dialog passed here and still
-        // ran off the bottom of the screen in the shop, with Save out of reach.
+        // WPF 1093x614 device-independent pixels to lay a dialog out in. Testing against 768
+        // was testing against a machine nobody has: the Add supplier dialog passed here and
+        // still ran off the bottom of the screen in the shop, with Save out of reach.
         const double smallScreen = 614;
+        const double smallScreenWidth = 1093;
 
         (string Name, Func<Window> Make)[] dialogs =
         [
@@ -924,6 +1073,8 @@ public static class SelfTest
         ];
 
         var overflowing = new List<string>();
+        var outOfReach = new List<string>();
+        var scrolled = new List<string>();
 
         foreach (var (name, make) in dialogs)
         {
@@ -931,23 +1082,389 @@ public static class SelfTest
             try { window = make(); }
             catch { continue; }
 
-            var root = (FrameworkElement)window.Content;
-            root.Measure(new Size(window.Width is double.NaN ? 940 : window.Width, smallScreen));
+            // Put on a screen this machine does not have, through exactly the code the shop's
+            // machine runs — not through a re-implementation of it that can drift.
+            var fitted = Responsive.FitTo(window, new Size(smallScreenWidth, smallScreen));
 
-            // Either it fits, or it can be scrolled. Anything else is content the shop cannot
-            // reach.
-            var fits = root.DesiredSize.Height <= smallScreen;
-            var scrolls = root is System.Windows.Controls.ScrollViewer;
+            if (fitted.Width > smallScreenWidth + 1 || fitted.Height > smallScreen + 1)
+                overflowing.Add($"{name} still wants {fitted.Width:0}x{fitted.Height:0}px");
 
-            if (!fits && !scrolls)
-                overflowing.Add($"{name} wants {root.DesiredSize.Height:0}px and cannot scroll");
+            // And then the question the shop actually cares about: laid out at the size it
+            // ended up, is all of it on the screen? Shrunk content is not lost content, so
+            // this asks the fitted dialog how much room it needs — which for one that was
+            // scaled is its scaled height, and for one that was left long is the scroller's.
+            //
+            // This is the half that failed in the shop. Add supplier fitted the screen by
+            // being cut off at the Save button, and every check here called that a pass.
+            var content = (FrameworkElement)window.Content;
+            content.Measure(new Size(fitted.Width, smallScreen));
+
+            if (window.Content is System.Windows.Controls.ScrollViewer) scrolled.Add(name);
+
+            if (content.DesiredSize.Height > smallScreen + 1)
+                outOfReach.Add($"{name} needs {content.DesiredSize.Height:0}px "
+                             + $"of a {smallScreen:0}px screen and cannot be scrolled");
         }
 
-        Verdict(report, ref failures, "every dialog fits a small screen, or scrolls",
+        Verdict(report, ref failures, "every dialog fits a small screen",
             overflowing.Count == 0,
             overflowing.Count == 0
-                ? $"{dialogs.Length} dialogs checked against a {smallScreen:0}px screen"
+                ? $"{dialogs.Length} dialogs checked against a {smallScreenWidth:0}x{smallScreen:0} screen"
                 : string.Join("; ", overflowing));
+
+        Verdict(report, ref failures, "and nothing on one is out of reach",
+            outOfReach.Count == 0,
+            outOfReach.Count == 0
+                ? scrolled.Count == 0
+                    ? "all of them fit whole, none had to scroll"
+                    : $"scrolled rather than shrunk past reading size: {string.Join(", ", scrolled)}"
+                : string.Join("; ", outOfReach));
+    }
+
+    /// <summary>
+    /// A dialog belongs to a window, not to a monitor.
+    ///
+    /// Every check above puts dialogs on a small screen, and every one of them passed while
+    /// the shop was still seeing the fault: pull the back office off full screen on a large
+    /// monitor and Settings went on opening at its full 500x1042 over a 900px window, hanging
+    /// off both ends of the thing it belongs to, because the screen behind it had room to
+    /// spare. The screen was never the right question.
+    /// </summary>
+    private static void CheckADialogFitsTheWindowItOpensOver(StringBuilder report, ref int failures)
+    {
+        try
+        {
+            // A back office pulled down to well under the monitor it is running on.
+            const double width = 900, height = 620;
+
+            var shell = new AdminWindow
+            {
+                Width = width,
+                Height = height,
+
+                // Shown, because WPF refuses to make a window an Owner until it has been, and
+                // because a window that has never been shown has no layout to measure.
+                //
+                // Invisible rather than off-screen. It used to be put at -30000,-30000 on the
+                // assumption that was past every monitor — but Windows will not leave a window
+                // entirely outside the desktop and clamps it back to the top-left corner, so a
+                // diagnostic run left a fragment of the back office sitting at 0,0 over
+                // whatever the shop was doing, with no title bar and nothing in the taskbar to
+                // close it by. Zero opacity is honest about the intent: it lays out and
+                // measures exactly as it would on screen, and nobody sees it.
+                Opacity = 0,
+                ShowActivated = false,
+                ShowInTaskbar = false,
+            };
+            shell.ShowWhatThisPersonMaySee();
+            shell.Show();
+
+            var tooBig = new List<string>();
+
+            (string Name, Func<Window> Make)[] dialogs =
+            [
+                ("Settings", () => new Views.SettingsWindow()),
+                ("Add supplier", () => new SupplierWindow(null)),
+                ("Add product", () => new ProductWindow(null)),
+                ("Record a delivery", () => new PurchaseWindow(null)),
+            ];
+
+            foreach (var (name, make) in dialogs)
+            {
+                Window dialog;
+                try { dialog = make(); }
+                catch { continue; }
+
+                dialog.Owner = shell;
+
+                var fitted = Responsive.FitTo(dialog, Responsive.RoomFor(dialog));
+
+                if (fitted.Width > width + 1 || fitted.Height > height + 1)
+                    tooBig.Add($"{name} opens at {fitted.Width:0}x{fitted.Height:0} "
+                             + $"over a {width:0}x{height:0} window");
+            }
+
+            shell.Close();
+
+            Verdict(report, ref failures, "a dialog fits the window it opens over, not the screen",
+                tooBig.Count == 0,
+                tooBig.Count == 0
+                    ? $"{dialogs.Length} dialogs over a {width:0}x{height:0} back office "
+                    + $"on a {SystemParameters.WorkArea.Width:0}x{SystemParameters.WorkArea.Height:0} screen"
+                    : string.Join("; ", tooBig));
+        }
+        catch (Exception error)
+        {
+            failures++;
+            CloseEverythingLeftOpen();
+            report.AppendLine($"FAIL  dialog fits its window: {error.GetType().Name}: {error.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Lets the window finish what it was asked to do — lay out, and build the rows a
+    /// drop-down generates only once it is on screen. A diagnostic runs without ever giving
+    /// the dispatcher a turn, so nothing happens between one line and the next unless it is
+    /// asked for.
+    /// </summary>
+    private static void Settle(System.Windows.Threading.DispatcherObject window) =>
+        window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Background);
+
+    /// <summary>
+    /// A filter stays where the shop put it.
+    ///
+    /// Every one of these pages reloads itself when a filter changes, and a reload that also
+    /// rebuilds the filter puts it back to its first entry — so the list flicks back to
+    /// "Everything" the instant you choose anything else, and the page looks broken in a way
+    /// that is very hard to argue with.
+    /// </summary>
+    private static void CheckAFilterStaysWhereItIsPut(StringBuilder report, ref int failures)
+    {
+        try
+        {
+            // Shown, and far off the side of every monitor. A drop-down builds no rows until
+            // it is on a screen, so the half of this that matters — pressing one — cannot be
+            // checked on a window that was only ever measured.
+            var shell = new AdminWindow
+            {
+                // Invisible, not off-screen: Windows clamps a window that is entirely outside
+                // the desktop back to the corner, which is how a diagnostic run came to leave
+                // a piece of the back office on the shop's desktop. See the note above.
+                Opacity = 0,
+                ShowActivated = false,
+                ShowInTaskbar = false,
+            };
+            shell.ShowWhatThisPersonMaySee();
+            shell.Show();
+            shell.GoTo(Models.AdminPage.Activity);
+            Settle(shell);
+
+            var page = (ActivityPage)((System.Windows.Controls.ContentControl)shell.FindName("PageHost")).Content;
+            var box = page.FindName("KindFilter") as System.Windows.Controls.ComboBox;
+
+            if (box is null)
+            {
+                Verdict(report, ref failures, "the activity filter stays where it is put",
+                    false, "no filter found on the page");
+
+                // Closed on the way out. Returning past this left a back office open for the
+                // life of the run, which is how a piece of it ended up on the shop's desktop.
+                shell.Close();
+                return;
+            }
+
+            var offered = box.Items.Count;
+            box.SelectedIndex = 1;
+            page.Refresh();
+
+            Verdict(report, ref failures, "the activity filter stays where it is put",
+                box.SelectedIndex == 1,
+                $"{offered} choices, chose 1, came back {box.SelectedIndex}");
+
+            // And the way a finger does it. Pressing a row in the drop-down is not the same
+            // code path as setting the index: the row's container marks itself selected and
+            // the box is meant to follow. If it does not, the list opens, the shop taps, and
+            // the box goes on showing whatever it showed before.
+            box.SelectedIndex = 0;
+            box.IsDropDownOpen = true;
+            Settle(shell);
+
+            var row = box.ItemContainerGenerator.ContainerFromIndex(2) as System.Windows.Controls.ComboBoxItem;
+            if (row is not null) row.IsSelected = true;
+            box.IsDropDownOpen = false;
+            Settle(shell);
+
+            Verdict(report, ref failures, "and follows a row pressed in the drop-down",
+                row is not null && box.SelectedIndex == 2,
+                row is null
+                    ? "the drop-down built no rows to press"
+                    : $"pressed row 2, box shows {box.SelectedIndex} ({box.SelectionBoxItem})");
+
+            // And what is actually painted in the closed box, which is a different question
+            // from what the property says. The shop reported the list filtering correctly
+            // while the word above it never changed.
+            var painted = string.Concat(Descendants(box)
+                .OfType<System.Windows.Controls.TextBlock>()
+                .Select(t => t.Text)
+                .Where(t => t is not "▾" and not ""));
+
+            var stuck = Descendants(box).OfType<System.Windows.Controls.TextBlock>()
+                .FirstOrDefault(t => t.Text is not "▾" and not "");
+
+            var how = stuck is null ? "no text block" :
+                $"bound={System.Windows.Data.BindingOperations.GetBindingExpressionBase(stuck, System.Windows.Controls.TextBlock.TextProperty) is not null}, " +
+                $"templated={stuck.TemplatedParent?.GetType().Name ?? "none"}";
+
+            Verdict(report, ref failures, "and the closed box paints what was chosen",
+                painted.Contains(box.SelectionBoxItem?.ToString() ?? "", StringComparison.Ordinal),
+                $"box says \"{box.SelectionBoxItem}\", screen says \"{painted}\" — {how}");
+
+            shell.Close();
+        }
+        catch (Exception error)
+        {
+            failures++;
+            CloseEverythingLeftOpen();
+            report.AppendLine($"FAIL  activity filter: {error.GetType().Name}: {error.Message}");
+        }
+    }
+
+    /// <summary>
+    /// The on-screen keyboard, on every screen a shop might run it on.
+    ///
+    /// A keyboard is the one part of this app that has to fit. Everything else can scroll, be
+    /// scaled, or be read later; a key that is off the bottom edge is a letter the shop cannot
+    /// type, and a key too small to hit with a finger is the same thing more slowly.
+    ///
+    /// So: never wider or taller than the screen, never more than a share of it — the thing
+    /// being typed into has to stay visible above it — and never smaller than a fingertip.
+    /// </summary>
+    private static void CheckTheKeyboardFitsEveryScreen(StringBuilder report, ref int failures)
+    {
+        (double Width, double Height, string What)[] screens =
+        [
+            (1920, 1032, "counter display"),
+            (1366, 768, "shop laptop"),
+            (1093, 614, "shop laptop at 125%"),
+            (1024, 600, "netbook"),
+            (800, 480, "smallest thing anyone would try"),
+        ];
+
+        var was = AppSettings.Current.KeyboardScale;
+
+        try
+        {
+            var keyboard = new Views.KeyboardWindow();
+            var faults = new List<string>();
+            var sizes = new List<string>();
+
+            // Every screen at the smallest and biggest the shop can make it. The largest
+            // setting on the smallest screen is the one that has to be checked: a keyboard the
+            // shop grew until it was comfortable must not then bury the till it types into.
+            foreach (var scale in new[] { 0.7, 1.0, 1.4 })
+            foreach (var (width, height, what) in screens)
+            {
+                AppSettings.Current.KeyboardScale = scale;
+
+                var fitted = keyboard.FitTo(new Size(width, height));
+                if (scale == 1.0) sizes.Add($"{what} {fitted.Width:0}x{fitted.Height:0}");
+
+                if (fitted.Width > width + 1 || fitted.Height > height + 1)
+                    faults.Add($"{what} at {scale:0.0}x: {fitted.Width:0}x{fitted.Height:0} does not fit {width:0}x{height:0}");
+
+                // Half the screen is already generous for keys; past that the box being
+                // filled in is behind the keyboard and the shop is typing blind.
+                else if (fitted.Height > height * 0.56)
+                    faults.Add($"{what} at {scale:0.0}x: {fitted.Height:0}px of a {height:0}px screen");
+
+                // Every row inside the panel, not just the panel itself. The command row was
+                // 14.8 units wide in a panel twelve across: it is centred, so it hung off both
+                // ends and the keys at the edges were not on the screen at all. The first one
+                // lost was the decimal point, which a till cannot do without — and the panel's
+                // own size looked perfectly correct the whole time.
+                // 28 is the panel's own padding, 14 each side.
+                var overflow = WidestRow(keyboard) - (fitted.Width - 28);
+                if (overflow > 1)
+                    faults.Add($"{what} at {scale:0.0}x: a row is {overflow:0}px wider than the panel");
+
+                var key = SmallestKey(keyboard);
+                if (key < 26)
+                    faults.Add($"{what} at {scale:0.0}x: keys down to {key:0}px, too small to hit");
+            }
+
+            keyboard.Close();
+
+            Verdict(report, ref failures, "the keyboard fits every screen it might land on",
+                faults.Count == 0,
+                faults.Count == 0 ? string.Join(", ", sizes) : string.Join("; ", faults));
+        }
+        catch (Exception error)
+        {
+            failures++;
+            report.AppendLine($"FAIL  keyboard scaling: {error.GetType().Name}: {error.Message}");
+        }
+        finally
+        {
+            AppSettings.Current.KeyboardScale = was;
+        }
+    }
+
+    /// <summary>How wide the widest row of keys comes out, margins included.</summary>
+    private static double WidestRow(Views.KeyboardWindow keyboard) =>
+        keyboard.FindName("Rows") is System.Windows.Controls.Panel rows
+            ? rows.Children.OfType<System.Windows.Controls.Panel>()
+                .Select(row => row.Children.OfType<FrameworkElement>()
+                    .Sum(k => k.Width + k.Margin.Left + k.Margin.Right))
+                .DefaultIfEmpty(0)
+                .Max()
+            : 0;
+
+    /// <summary>The narrowest key on the panel — the letters, not the wide command keys.</summary>
+    private static double SmallestKey(Views.KeyboardWindow keyboard) =>
+        keyboard.FindName("Rows") is FrameworkElement rows
+            ? Descendants(rows)
+                .OfType<System.Windows.Controls.Button>()
+                .Select(b => Math.Min(b.Width, b.Height))
+                .DefaultIfEmpty(0)
+                .Min()
+            : 0;
+
+    /// <summary>
+    /// The two windows that fill the screen, on a screen that is not this one.
+    ///
+    /// The till and the back office were laid out on a 1920x1080 monitor, and every number in
+    /// them was typed against it. Handed to a shop with a 1366x768 laptop they kept every one
+    /// of those numbers and simply ran off the bottom: the back office lost the last panel of
+    /// the dashboard, and the till lost the Pay button under the fold.
+    ///
+    /// Both are wrapped in a ScaleHost that draws them at whatever size the screen actually
+    /// is, so this asks the only question that matters — laid out on the shop's screen, does
+    /// any of it end up outside the screen.
+    /// </summary>
+    private static void CheckTheShellsFitASmallScreen(StringBuilder report, ref int failures)
+    {
+        const double width = 1093, height = 614;
+
+        (string Name, Func<Window> Make)[] shells =
+        [
+            ("till", () => new MainWindow()),
+            ("back office", () => new AdminWindow()),
+        ];
+
+        var faults = new List<string>();
+        var scales = new List<string>();
+
+        foreach (var (name, make) in shells)
+        {
+            Window window;
+            try { window = make(); }
+            catch (Exception error) { faults.Add($"{name} would not build: {error.Message}"); continue; }
+
+            var root = (FrameworkElement)window.Content;
+
+            if (root is not Controls.ScaleHost host)
+            {
+                faults.Add($"{name} is not scaled to the screen at all");
+                continue;
+            }
+
+            root.Measure(new Size(width, height));
+            root.Arrange(new Rect(0, 0, width, height));
+            root.UpdateLayout();
+
+            scales.Add($"{name} {host.Scale:0.00}");
+
+            if (root.DesiredSize.Width > width + 1 || root.DesiredSize.Height > height + 1)
+                faults.Add($"{name} overflows by "
+                         + $"{Math.Max(0, root.DesiredSize.Width - width):0}x"
+                         + $"{Math.Max(0, root.DesiredSize.Height - height):0}px");
+        }
+
+        Verdict(report, ref failures, "the till and the back office fit a small screen",
+            faults.Count == 0,
+            faults.Count == 0
+                ? $"laid out at {width:0}x{height:0} — {string.Join(", ", scales)}"
+                : string.Join("; ", faults));
     }
 
     private static void CheckAnEmptyShelfIsReported(StringBuilder report, ref int failures)
@@ -1387,7 +1904,6 @@ public static class SelfTest
                 ("read the catalogue", () => StockRepository.List()),
                 ("read categories", () => CategoryRepository.List()),
                 ("look up a barcode", () => StockRepository.BarcodeTaken("9990000000404")),
-                ("make an in-store code", () => StockRepository.NextInternalBarcode()),
                 ("ask for the scan prompt", () => { _ = new Views.ScanWindow(); }),
             ];
 
@@ -1578,12 +2094,61 @@ public static class SelfTest
             Verdict(report, ref failures, "every money box on Add product is guarded",
                 unguarded.Count == 0,
                 unguarded.Count == 0 ? "cost, price and quantity" : "unguarded: " + string.Join(", ", unguarded));
+
+            CheckDeliveriesCanBeTypedInGrams(report, ref failures, page);
         }
         catch (Exception error)
         {
             failures++;
             report.AppendLine($"FAIL  numeric fields: {error.GetType().Name}: {error.Message}");
         }
+    }
+
+    /// <summary>
+    /// A delivery can be typed the way the supplier wrote it down.
+    ///
+    /// The shop buys 300 g of saffron, and until now the form took kilograms or nothing.
+    /// The list has to offer the ways the supplier writes it, and the number typed has to
+    /// end up in the stored unit — a gram entry that went in as 300 kg
+    /// would price the delivery at a thousand times what it cost, and the mistake would only
+    /// surface in the month's figures.
+    /// </summary>
+    private static void CheckDeliveriesCanBeTypedInGrams(
+        StringBuilder report, ref int failures, AddProductPage page)
+    {
+        var box = page.FindName("AddUnitBox") as System.Windows.Controls.ComboBox;
+        var offered = (box?.ItemsSource as System.Collections.IEnumerable)?
+            .Cast<object>().Count() ?? 0;
+
+        Verdict(report, ref failures, "Add product offers every way of measuring a delivery",
+            offered == 3,
+            offered == 3 ? "per unit, kilo, gram" : $"{offered} in the list");
+
+        if (box is null || offered != 3) return;
+
+        // 500 g bought at 20 DH the kilo is 10 DH of stock, not 10 000.
+        var cost = (System.Windows.Controls.TextBox)page.FindName("AddCostBox");
+        var quantity = (System.Windows.Controls.TextBox)page.FindName("AddQuantityBox");
+        var total = (System.Windows.Controls.TextBlock)page.FindName("AddTotalCost");
+        var label = (System.Windows.Controls.TextBlock)page.FindName("AddQuantityLabel");
+
+        cost.Text = "20";
+        quantity.Text = "500";
+        box.SelectedIndex = 2;
+
+        var grams = total.Text;
+        var named = label.Text;
+
+        box.SelectedIndex = 1;
+        var kilos = total.Text;
+
+        Verdict(report, ref failures, "grams go into stock as kilograms",
+            grams.Contains("10") && !grams.Contains("000") && kilos.Contains("10,000"),
+            $"500 at 20/kg: grams {grams}, kilos {kilos}");
+
+        Verdict(report, ref failures, "the amount box says which unit it wants",
+            named == Loc.T("WEIGHT (G)") && label.Text == Loc.T("WEIGHT (KG)"),
+            $"\"{named}\" then \"{label.Text}\"");
     }
 
     /// <summary>

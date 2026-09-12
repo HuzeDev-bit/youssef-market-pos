@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -72,7 +73,7 @@ public partial class AmountWindow : Window
     /// <summary>Shows the dialog; null when the owner backed out.</summary>
     public static AmountResult? Ask(Window owner, AmountRequest request)
     {
-        var window = new AmountWindow(request) { Owner = owner };
+        var window = new AmountWindow(request).By(owner);
         return window.ShowDialog() == true ? window.Result : null;
     }
 
@@ -83,20 +84,20 @@ public partial class AmountWindow : Window
         if (!decimal.TryParse(AmountBox.Text.Trim().Replace(',', '.'),
                               NumberStyles.Number, CultureInfo.InvariantCulture, out var amount))
         {
-            ErrorText.Text = "Enter an amount, like 250 or 250.50.";
+            ErrorText.Text = Loc.T("Enter an amount, like 250 or 250.50.");
             AmountBox.Focus();
             return;
         }
 
         if (amount == 0m)
         {
-            ErrorText.Text = "Enter an amount other than zero.";
+            ErrorText.Text = Loc.T("Enter an amount other than zero.");
             return;
         }
 
         if (amount < 0m && !_request.AllowNegative)
         {
-            ErrorText.Text = "The amount cannot be negative.";
+            ErrorText.Text = Loc.T("The amount cannot be negative.");
             return;
         }
 

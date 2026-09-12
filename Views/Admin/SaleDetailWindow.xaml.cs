@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -69,13 +70,13 @@ public partial class SaleDetailWindow : Window
         Services.Localizer.Apply(this);
         Services.Responsive.Fit(this);
 
-        _sale = SalesHistoryRepository.Find(invoiceNumber)
+        _sale = Link.Shop.Sales.Find(invoiceNumber)
                 ?? throw new InvalidOperationException($"No sale with receipt number {invoiceNumber}.");
 
         ReasonBox.ItemsSource = new[]
         {
-            "Customer changed their mind", "Wrong item", "Damaged goods",
-            "Expired", "Rung up twice", "Price was wrong",
+            Loc.T("Customer changed their mind"), Loc.T("Wrong item"), Loc.T("Damaged goods"),
+            Loc.T("Expired"), Loc.T("Rung up twice"), Loc.T("Price was wrong"),
         };
 
         Bind();
@@ -85,7 +86,7 @@ public partial class SaleDetailWindow : Window
     {
         try
         {
-            var window = new SaleDetailWindow(invoiceNumber) { Owner = owner };
+            var window = new SaleDetailWindow(invoiceNumber).By(owner);
             window.ShowDialog();
             return window._changed;
         }
@@ -132,7 +133,7 @@ public partial class SaleDetailWindow : Window
         PrintButton.Visibility = _refunding ? Visibility.Collapsed : Visibility.Visible;
 
         RefundPanel.Visibility = _refunding ? Visibility.Visible : Visibility.Collapsed;
-        PrimaryButton.Content = _refunding ? "Confirm refund" : "Close";
+        PrimaryButton.Content = Loc.T(_refunding ? "Confirm refund" : "Close");
         UpdateRefundTotal();
     }
 
@@ -213,14 +214,14 @@ public partial class SaleDetailWindow : Window
         var chosen = _lines.Where(l => l.Selected && l.CanReturn).ToList();
         if (chosen.Count == 0)
         {
-            ErrorText.Text = "Tick at least one line to return.";
+            ErrorText.Text = Loc.T("Tick at least one line to return.");
             return;
         }
 
         var reason = ReasonBox.Text.Trim();
         if (reason.Length == 0)
         {
-            ErrorText.Text = "Say why it is coming back — this goes on the record.";
+            ErrorText.Text = Loc.T("Say why it is coming back — this goes on the record.");
             ReasonBox.Focus();
             return;
         }
@@ -238,14 +239,14 @@ public partial class SaleDetailWindow : Window
 
         try
         {
-            SalesHistoryRepository.Refund(
+            Link.Shop.Sales.Refund(
                 _sale.InvoiceNumber,
                 chosen.Select(l => (l.Source.Id, l.ReturnQuantity)).ToList(),
                 reason, restock);
 
             _changed = true;
             _refunding = false;
-            _sale = SalesHistoryRepository.Find(_sale.InvoiceNumber)!;
+            _sale = Link.Shop.Sales.Find(_sale.InvoiceNumber)!;
             ErrorText.Text = string.Empty;
             Bind();
         }
@@ -264,9 +265,9 @@ public partial class SaleDetailWindow : Window
 
         try
         {
-            SalesHistoryRepository.Cancel(_sale.InvoiceNumber, "Cancelled by " + Session.CurrentName);
+            Link.Shop.Sales.Cancel(_sale.InvoiceNumber, "Cancelled by " + Session.CurrentName);
             _changed = true;
-            _sale = SalesHistoryRepository.Find(_sale.InvoiceNumber)!;
+            _sale = Link.Shop.Sales.Find(_sale.InvoiceNumber)!;
             Bind();
         }
         catch (Exception error)
@@ -281,10 +282,10 @@ public partial class SaleDetailWindow : Window
     /// </summary>
     private void Reprint_Click(object sender, RoutedEventArgs e)
     {
-        var receipt = SaleRepository.FindByInvoiceNumber(_sale.InvoiceNumber);
+        var receipt = Receipts.Find(_sale.InvoiceNumber);
         if (receipt is null)
         {
-            ErrorText.Text = "That receipt could not be read back.";
+            ErrorText.Text = Loc.T("That receipt could not be read back.");
             return;
         }
 

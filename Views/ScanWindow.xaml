@@ -41,11 +41,11 @@
                       Width="30" Height="30" StrokeThickness="1.9"/>
             </Border>
 
-            <TextBlock Text="امسح المنتج" Style="{StaticResource Text.Title}" FontSize="19"
+            <TextBlock Text="Scan the product" Style="{StaticResource Text.Title}" FontSize="19"
                        HorizontalAlignment="Center" Margin="0,18,0,0"/>
             <TextBlock Style="{StaticResource Text.Muted}" HorizontalAlignment="Center"
                        TextAlignment="Center" Margin="0,6,0,0" MaxWidth="280" TextWrapping="Wrap"
-                       Text="وجّه الماسح نحو الباركود. يمكنك أيضاً كتابته أدناه."/>
+                       Text="Point the scanner at the barcode. You can also type it below."/>
 
             <TextBox x:Name="CodeBox" Style="{StaticResource TextBox.Field}" Height="46" Width="300"
                      Margin="0,18,0,0" FontSize="17" TextAlignment="Center"
@@ -57,15 +57,15 @@
                     <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}" Content="إلغاء"
+                <Button Grid.Column="0" Style="{StaticResource Button.PillMuted}" Content="Cancel"
                         Click="Cancel_Click"/>
-                <Button Grid.Column="2" Style="{StaticResource Button.Pill}" Content="استخدام الرمز"
+                <Button Grid.Column="2" Style="{StaticResource Button.Pill}" Content="Use code"
                         Click="Use_Click"/>
             </Grid>
 
             <!-- Loose produce, bread, anything sold from a crate. The till makes an in-store
                  code for it, so the cashier never has to invent one. -->
-            <TextBlock Text="هذا المنتج لا يحتوي على باركود" HorizontalAlignment="Center"
+            <TextBlock Text="This product has no barcode" HorizontalAlignment="Center"
                        Margin="0,16,0,0" FontSize="12" FontWeight="SemiBold" Cursor="Hand"
                        Foreground="{StaticResource Brush.Accent}"
                        MouseLeftButtonDown="NoBarcode_Click"/>

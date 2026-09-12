@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 
 namespace MarketPos.Data;
 
@@ -34,6 +34,19 @@ internal static class Schema
     {
         using var command = connection.CreateCommand();
         command.CommandText = """
+            -- ======================= The shop's own settings =======================
+
+            -- What the business is, as opposed to what a computer is. Every machine in the
+            -- shop reads these, so a second till prints the same shop name on its receipts as
+            -- the first. Machine-specific settings - which printer, which server, what this
+            -- till is called - stay in the settings file on each machine and are deliberately
+            -- not here: they must not travel.
+            CREATE TABLE IF NOT EXISTS shop_settings (
+                key        TEXT PRIMARY KEY,
+                value      TEXT NOT NULL DEFAULT '',
+                updated_at TEXT NOT NULL
+            );
+
             -- ============================ People ============================
 
             -- Staff and logins are the same record: a cashier who can sign in is a worker
@@ -300,6 +313,8 @@ internal static class Schema
     /// </summary>
     private static void Extend(SqliteConnection connection)
     {
+        BarcodeBecomesOptional(connection);
+
         AddColumns(connection, "products", new[]
         {
             ("cost",        "TEXT    NOT NULL DEFAULT '0'"),
@@ -372,6 +387,183 @@ internal static class Schema
         using var tidy = connection.CreateCommand();
         tidy.CommandText = "UPDATE products SET expires_on = NULL WHERE TRIM(COALESCE(expires_on, '')) = '';";
         tidy.ExecuteNonQuery();
+    }
+
+
+    /// <summary>
+    /// Makes <c>products.barcode</c> optional, and throws away the codes the shop invented to
+    /// work around it not being.
+    ///
+    /// <para>
+    /// The column was NOT NULL, so a product with nothing printed on it still needed a value,
+    /// and the shop minted one in the 2xxxxxxxxxxx range that EAN-13 reserves for in-store use.
+    /// It read like a barcode everywhere it was shown, it had to be decoded by pattern to tell
+    /// it apart from a real one, and a cashier could scan it off a screen and find a product
+    /// that has no barcode. A product either carries a barcode somebody printed on it or it
+    /// carries none, and NULL is how a database says none.
+    /// </para>
+    ///
+    /// <para>
+    /// SQLite cannot drop a NOT NULL, so the table is rebuilt. The new one is built from the
+    /// current column list rather than a copy of the original CREATE, because columns have been
+    /// added to this table over time and a hard-coded rebuild would silently drop whichever
+    /// ones this migration was not written against.
+    /// </para>
+    /// </summary>
+    private static void BarcodeBecomesOptional(SqliteConnection connection)
+    {
+        var columns = new List<(string Name, string Type, bool NotNull, string? Default)>();
+        using (var info = connection.CreateCommand())
+        {
+            info.CommandText = "PRAGMA table_info(products);";
+            using var reader = info.ExecuteReader();
+            while (reader.Read())
+            {
+                columns.Add((reader.GetString(1), reader.GetString(2),
+                             reader.GetInt32(3) != 0,
+                             reader.IsDBNull(4) ? null : reader.GetString(4)));
+            }
+        }
+
+        // Nothing to do on a database that has never had the table, and nothing to do on one
+        // that has already been through here.
+        var barcode = columns.FirstOrDefault(c => c.Name == "barcode");
+        if (barcode.Name is null || !barcode.NotNull) return;
+
+        string Spell((string Name, string Type, bool NotNull, string? Default) c)
+        {
+            var line = $"{c.Name} {c.Type}";
+            if (c.Name == "id") return line + " PRIMARY KEY AUTOINCREMENT";
+            if (c.Name != "barcode" && c.NotNull) line += " NOT NULL";
+            if (c.Default is not null) line += $" DEFAULT {c.Default}";
+            if (c.Name == "category_id") line += " REFERENCES categories(id)";
+            if (c.Name == "supplier_id") line += " REFERENCES suppliers(id)";
+            return line;
+        }
+
+        var names = string.Join(", ", columns.Select(c => c.Name));
+        var shape = string.Join(",\n                ", columns.Select(Spell));
+
+        // Foreign keys off for the swap: other tables point at products by name, and the new
+        // table takes that name at the end of it. It cannot be done inside the transaction —
+        // SQLite ignores the pragma there — so it brackets the whole thing.
+        using (var off = connection.CreateCommand())
+        {
+            off.CommandText = "PRAGMA foreign_keys = OFF;";
+            off.ExecuteNonQuery();
+        }
+
+        using (var work = connection.BeginTransaction())
+        {
+            void Run(string sql)
+            {
+                using var command = connection.CreateCommand();
+                command.Transaction = work;
+                command.CommandText = sql;
+                command.ExecuteNonQuery();
+            }
+
+            Run($"CREATE TABLE products_rebuilt (\n                {shape}\n            );");
+
+            // Only an empty barcode becomes NULL. Nothing else is touched.
+            //
+            // An earlier version of this also emptied anything in the 2xxxxxxxxxxx range, on
+            // the grounds that the shop's own minted codes lived there and no manufacturer
+            // prints one. The second half of that is not true: 20-29 is restricted-circulation,
+            // which is exactly what a supplier's own in-store code looks like, and a shop may
+            // well have scanned one off a box and saved it. There is no column recording which
+            // codes this app minted, so a code in that range is genuinely ambiguous — and a
+            // migration that guesses wrong destroys a barcode the shop scans every day and
+            // cannot get back.
+            //
+            // So ambiguity is resolved in favour of the data. A product still carrying a minted
+            // code keeps it and goes on being scannable; clearing the barcode field on its own
+            // form is one edit, and it is the shop's to make. Empty string is not ambiguous:
+            // it was never a barcode, and it would collide with itself under the unique index.
+            var copied = names.Replace(
+                "barcode",
+                "CASE WHEN TRIM(barcode) = '' THEN NULL ELSE barcode END");
+
+            Run($"INSERT INTO products_rebuilt ({names}) SELECT {copied} FROM products;");
+
+            // Nothing may be lost in the copy. A rebuild that silently dropped rows would take
+            // the shop's catalogue with it, and every sale line pointing at those products.
+            using (var count = connection.CreateCommand())
+            {
+                count.Transaction = work;
+                count.CommandText = """
+                    SELECT (SELECT COUNT(*) FROM products),
+                           (SELECT COUNT(*) FROM products_rebuilt),
+                           (SELECT COUNT(*) FROM products p
+                            WHERE NOT EXISTS (SELECT 1 FROM products_rebuilt r WHERE r.id = p.id));
+                    """;
+                using var reader = count.ExecuteReader();
+                reader.Read();
+
+                var was = reader.GetInt32(0);
+                var now = reader.GetInt32(1);
+                var lost = reader.GetInt32(2);
+
+                if (was != now || lost != 0)
+                    throw new InvalidOperationException(
+                        $"The product table could not be rebuilt safely: {was} rows before, {now} after, "
+                        + $"{lost} ids missing. Nothing has been changed.");
+            }
+
+            Run("DROP TABLE products;");
+            Run("ALTER TABLE products_rebuilt RENAME TO products;");
+
+            // Unique only where there is something to be unique about: every product without a
+            // barcode is NULL, and SQLite treats each NULL as distinct, so they do not collide.
+            Run("""
+                CREATE UNIQUE INDEX IF NOT EXISTS ux_products_barcode
+                    ON products(barcode) WHERE barcode IS NOT NULL;
+                """);
+            Run("CREATE INDEX IF NOT EXISTS ix_products_barcode ON products(barcode);");
+            Run("CREATE INDEX IF NOT EXISTS ix_products_name    ON products(name);");
+            Run("CREATE INDEX IF NOT EXISTS ix_products_category ON products(category_id);");
+
+            work.Commit();
+        }
+
+        using (var on = connection.CreateCommand())
+        {
+            on.CommandText = "PRAGMA foreign_keys = ON;";
+            on.ExecuteNonQuery();
+        }
+
+        // Asked of the database itself, after the swap and outside the transaction: does every
+        // sale line, stock movement and purchase line still point at a product that is there,
+        // and is the file itself sound? A rebuild is the one operation in this schema that can
+        // quietly orphan a decade of history, so it is the one that says so out loud.
+        Complain(connection, "PRAGMA foreign_key_check;", "left rows pointing at products that are gone");
+        Complain(connection, "PRAGMA integrity_check;", "left the database itself damaged");
+    }
+
+    /// <summary>Runs a check pragma and throws with what it found, if it found anything.</summary>
+    private static void Complain(SqliteConnection connection, string pragma, string what)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = pragma;
+
+        var wrong = new List<string>();
+        using (var reader = command.ExecuteReader())
+        {
+            while (reader.Read() && wrong.Count < 10)
+            {
+                var row = string.Join(", ",
+                    Enumerable.Range(0, reader.FieldCount)
+                              .Select(i => reader.IsDBNull(i) ? "null" : reader.GetValue(i).ToString()));
+
+                // integrity_check answers with the single word "ok" when all is well.
+                if (row == "ok") return;
+                wrong.Add(row);
+            }
+        }
+
+        if (wrong.Count > 0)
+            throw new InvalidOperationException(
+                $"Rebuilding the product table {what}: {string.Join(" | ", wrong)}");
     }
 
     private static void AddColumns(SqliteConnection connection, string table,

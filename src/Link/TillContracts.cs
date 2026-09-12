@@ -1,0 +1,119 @@
+namespace MarketPos.Link;
+
+/// <summary>
+/// What a till asks the shop for beyond the catalogue and the sale.
+///
+/// <para>
+/// A cashier's machine holds no books, so everything on its screen has to be asked for: what
+/// a scanned thing costs, what was sold today, what a ticket said when it was printed, what
+/// the shop calls itself. These are the shapes those answers travel in.
+/// </para>
+///
+/// <para>
+/// Deliberately flat and deliberately not the domain types. A till needs to draw these, not to
+/// reason about them, and a shape that crosses a wire is a promise — a field is added rather
+/// than changed, and nothing here is renamed casually.
+/// </para>
+/// </summary>
+public static class TillContracts
+{
+    public const int Version = 1;
+}
+
+/// <summary>The answer to "what is this and what does it cost", without touching the sale.</summary>
+public sealed record PriceAnswer(
+    string Query,
+    bool Found,
+    int Matches,
+    int ProductId,
+    string Name,
+    string Category,
+    string? Barcode,
+    string Shelf,
+    decimal Price,
+    decimal Cost,
+    string Unit,
+    decimal Stock,
+    bool IsActive);
+
+/// <summary>One ticket as the till's list draws it.</summary>
+public sealed record TicketSummary(
+    int InvoiceNumber,
+    DateTime SoldAt,
+    decimal Total,
+    decimal DiscountAmount,
+    string PaymentMethod,
+    int LineCount);
+
+/// <summary>Today's takings, for the line under the ticket list.</summary>
+public sealed record TicketList(
+    IReadOnlyList<TicketSummary> Tickets,
+    int TodayCount,
+    decimal TodayTotal,
+    IReadOnlyList<int> RecentInvoiceNumbers);
+
+/// <summary>One line of a ticket, exactly as it was rung up.</summary>
+public sealed record TicketLine(
+    string Name,
+    decimal Quantity,
+    string Unit,
+    decimal UnitPrice,
+    decimal LineTotal);
+
+/// <summary>
+/// A whole ticket, for printing and for reprinting.
+///
+/// Everything needed to put it on paper travels with it, including the shop's own details:
+/// the till has no database to look them up in, and a receipt printed with the wrong shop
+/// name on it is worse than one not printed at all.
+/// </summary>
+public sealed record TicketDetail(
+    int InvoiceNumber,
+    DateTime SoldAt,
+    IReadOnlyList<TicketLine> Lines,
+    decimal GrossBeforeDiscount,
+    string DiscountKind,
+    decimal DiscountValue,
+    decimal DiscountAmount,
+    decimal Subtotal,
+    decimal Tax,
+    decimal Total,
+    string PaymentMethod,
+    decimal AmountTendered,
+    decimal ChangeGiven);
+
+/// <summary>
+/// The owner proving who they are, to a machine that can actually check.
+///
+/// The owner's password is not a worker's: there is no staff row for it, and it is what opens
+/// the back office. On the shop's own machine it is checked against that machine's settings.
+/// On any other machine there is nothing to check it against, and a till that decided for
+/// itself who the owner was would be a back office anybody could open by unplugging the
+/// network. So the shop checks it.
+/// </summary>
+public sealed record OwnerSignIn(string Password);
+
+/// <summary>Request to change the owner/admin password.</summary>
+public sealed record ChangeOwnerPasswordRequest(string CurrentPassword, string NewPassword);
+
+/// <summary>Request to reset the owner/admin password using a recovery key.</summary>
+public sealed record ResetOwnerPasswordRequest(string RecoveryKey);
+
+/// <summary>What the shop says about an owner sign-in.</summary>
+public sealed record OwnerSignedIn(bool Ok, string Name, bool PasswordIsSet);
+
+/// <summary>One category, as a till's dropdown needs it.</summary>
+public sealed record CategoryName(int Id, string Name);
+
+/// <summary>One supplier, as a till's dropdown needs it.</summary>
+public sealed record SupplierName(int Id, string Name);
+
+/// <summary>The settings that belong to the shop rather than to a computer.</summary>
+public sealed record ShopWideSettings(
+    string BusinessName,
+    string BusinessAddress,
+    string BusinessPhone,
+    string TaxId,
+    string Currency,
+    string ReceiptFooter,
+    decimal DefaultLowStock);

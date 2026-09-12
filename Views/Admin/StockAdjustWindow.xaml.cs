@@ -1,8 +1,10 @@
+﻿using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using MarketPos.Data;
 using MarketPos.Models;
+using MarketPos.Services;
 
 namespace MarketPos.Views.Admin;
 
@@ -50,7 +52,7 @@ public partial class StockAdjustWindow : Window
     }
 
     public static bool Show(Window owner, StockItem item) =>
-        new StockAdjustWindow(item) { Owner = owner }.ShowDialog() == true;
+        new StockAdjustWindow(item).By(owner).ShowDialog() == true;
 
     private bool IsCount => ModeCount.IsChecked == true;
 
@@ -58,7 +60,7 @@ public partial class StockAdjustWindow : Window
     {
         if (QuantityLabel is null) return;
 
-        QuantityLabel.Text = IsCount ? "COUNTED TOTAL" : "QUANTITY";
+        QuantityLabel.Text = Loc.T(IsCount ? "COUNTED TOTAL" : "QUANTITY");
         ReasonBox.IsEnabled = !IsCount;
         if (IsCount) ReasonBox.SelectedIndex = Array.FindIndex(Reasons, r => r.Reason == StockReason.ManualCorrection);
         UpdatePreview();
@@ -73,7 +75,7 @@ public partial class StockAdjustWindow : Window
 
         if (!TryQuantity(out var typed))
         {
-            PreviewText.Text = "Enter a quantity.";
+            PreviewText.Text = Loc.T("Enter a quantity.");
             ValueText.Text = string.Empty;
             return;
         }
@@ -113,7 +115,7 @@ public partial class StockAdjustWindow : Window
     {
         if (!TryQuantity(out var typed))
         {
-            ErrorText.Text = "Enter a quantity, like 12 or 2.5.";
+            ErrorText.Text = Loc.T("Enter a quantity, like 12 or 2.5.");
             QuantityBox.Focus();
             return;
         }
@@ -122,14 +124,14 @@ public partial class StockAdjustWindow : Window
         {
             if (IsCount)
             {
-                if (typed < 0m) { ErrorText.Text = "A counted total cannot be negative."; return; }
-                InventoryRepository.SetCount(_item.Id, _item.Name, typed, NoteBox.Text.Trim());
+                if (typed < 0m) { ErrorText.Text = Loc.T("A counted total cannot be negative."); return; }
+                Link.Shop.Stock.SetCount(_item.Id, _item.Name, typed, NoteBox.Text.Trim());
             }
             else
             {
                 var reason = Reasons[Math.Max(0, ReasonBox.SelectedIndex)].Reason;
                 var delta = Signed(typed, reason);
-                if (delta == 0m) { ErrorText.Text = "Enter a quantity greater than zero."; return; }
+                if (delta == 0m) { ErrorText.Text = Loc.T("Enter a quantity greater than zero."); return; }
 
                 if (_item.Stock + delta < 0m)
                 {
@@ -138,12 +140,8 @@ public partial class StockAdjustWindow : Window
                     return;
                 }
 
-                InventoryRepository.Move(_item.Id, delta, reason, reference: "Manual",
-                                         note: NoteBox.Text.Trim());
-                ActivityRepository.Record("changed stock", "Product", _item.Id,
-                    oldValue: _item.Stock.ToString("0.###"),
-                    newValue: (_item.Stock + delta).ToString("0.###"),
-                    detail: $"changed {_item.Name} stock");
+                Link.Shop.Stock.Move(_item.Id, _item.Name, delta, reason, reference: "Manual",
+                                     note: NoteBox.Text.Trim(), unitCost: null);
             }
 
             DialogResult = true;

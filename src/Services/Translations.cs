@@ -22,12 +22,21 @@ public static class Translations
             ["*** DUPLICATA / REPRINT ***"] =
                 ("*** DUPLICATA / REPRINT ***",
                  "*** نسخة / إعادة طباعة ***"),
+            ["1 product"] =
+                ("1 produit",
+                 "منتج واحد"),
             ["= gross profit"] =
                 ("= bénéfice brut",
                  "= الربح الإجمالي"),
             ["= net profit"] =
                 ("= bénéfice net",
                  "= الربح الصافي"),
+            ["A counted total cannot be negative."] =
+                ("Un total compté ne peut pas être négatif.",
+                 "لا يمكن أن يكون المجموع المعدود سالباً."),
+            ["A discount for a regular customer"] =
+                ("Une remise pour un client fidèle",
+                 "خصم لعميل مميز"),
             ["A product appears here once it drops to the smallest amount you set for it."] =
                 ("Un produit apparaît ici dès qu'il descend au minimum que vous lui avez fixé.",
                  "يظهر المنتج هنا بمجرد أن ينزل إلى الحد الأدنى الذي حددته له."),
@@ -52,6 +61,9 @@ public static class Translations
             ["Add"] =
                 ("Ajouter",
                  "إضافة"),
+            ["Add at least one product line."] =
+                ("Ajoutez au moins une ligne de produit.",
+                 "أضف سطر منتج واحداً على الأقل."),
             ["Add category"] =
                 ("Ajouter une catégorie",
                  "إضافة فئة"),
@@ -79,6 +91,12 @@ public static class Translations
             ["Add the wholesalers the shop buys from. Once a delivery is recorded against one, what is owed to them shows up here."] =
                 ("Ajoutez les grossistes chez qui la boutique achète. Dès qu'une livraison est enregistrée, ce qui leur est dû apparaît ici.",
                  "أضف تجار الجملة الذين يشتري منهم المتجر. وبمجرد تسجيل توصيل لأحدهم، يظهر ما هو مستحق له هنا."),
+            ["Add this one"] =
+                ("Ajouter celui-ci",
+                 "أضف هذا"),
+            ["Add to stock"] =
+                ("Ajouter au stock",
+                 "أضف إلى المخزون"),
             ["Add what arrived, or leave it empty."] =
                 ("Ajoutez ce qui est arrivé, ou laissez vide.",
                  "أضف ما وصل، أو اتركه فارغاً."),
@@ -91,12 +109,27 @@ public static class Translations
             ["Adjust or count this stock"] =
                 ("Ajuster ou compter ce stock",
                  "تعديل أو جرد هذا المخزون"),
+            ["Admin"] =
+                ("Admin",
+                 "المدير"),
+            ["All"] =
+                ("Tout",
+                 "الكل"),
             ["All categories"] =
                 ("Toutes les catégories",
                  "كل الفئات"),
+            ["Already in the shop, {0} in stock. Enter how many arrived to add them."] =
+                ("Déjà dans le magasin, {0} en stock. Saisissez la quantité arrivée pour les ajouter.",
+                 "موجود في المتجر، {0} في المخزون. أدخل الكمية التي وصلت لإضافتها."),
             ["Amount  DH"] =
                 ("Montant  DH",
                  "المبلغ  درهم"),
+            ["An in-store code has been made for it. Fill in the rest and save."] =
+                ("Un code interne a été créé. Remplissez le reste et enregistrez.",
+                 "أُنشئ له رمز داخلي. أكمل الباقي واحفظ."),
+            ["An address looks like 192.168.1.20. The app fills in the rest."] =
+                ("Une adresse ressemble à 192.168.1.20. L'application complète le reste.",
+                 "العنوان يبدو مثل 192.168.1.20. يكمّل التطبيق الباقي."),
             ["Another product already uses that barcode."] =
                 ("Un autre produit utilise déjà ce code-barres.",
                  "منتج آخر يستخدم هذا الباركود بالفعل."),
@@ -130,6 +163,9 @@ public static class Translations
             ["BOUGHT FOR"] =
                 ("ACHETÉ À",
                  "اشتُري بـ"),
+            ["BOUGHT FOR / KG"] =
+                ("ACHETÉ À / KG",
+                 "ثمن الشراء / كغ"),
             ["BUSINESS NAME"] =
                 ("RAISON SOCIALE",
                  "اسم النشاط"),
@@ -154,6 +190,9 @@ public static class Translations
             ["Bank transfer"] =
                 ("Virement",
                  "تحويل بنكي"),
+            ["Bills and salaries"] =
+                ("Factures et salaires",
+                 "الفواتير والرواتب"),
             ["By weight (kg)"] =
                 ("Au poids (kg)",
                  "بالوزن (كغ)"),
@@ -185,8 +224,11 @@ public static class Translations
                 ("COÛT DE CE QUI EST VENDU",
                  "تكلفة ما بيع"),
             ["COST TO BUY"] =
-                ("COÛT D'ACHAT",
+                ("COÛT",
                  "تكلفة الشراء"),
+            ["COUNTED TOTAL"] =
+                ("TOTAL COMPTÉ",
+                 "المجموع المعدود"),
             ["CURRENCY"] =
                 ("DEVISE",
                  "العملة"),
@@ -196,6 +238,15 @@ public static class Translations
             ["Cancel sale"] =
                 ("Annuler la vente",
                  "إلغاء البيع"),
+            ["Cannot reach the shop's server, so there is no price to show. {0}"] =
+                ("Impossible de joindre le serveur du magasin, aucun prix à afficher. {0}",
+                 "تعذر الوصول إلى خادم المتجر، لا يوجد سعر لعرضه. {0}"),
+            ["Cannot reach the shop's server, so this barcode cannot be looked up. {0}"] =
+                ("Impossible de joindre le serveur du magasin, ce code-barres ne peut pas être vérifié. {0}",
+                 "تعذر الوصول إلى خادم المتجر، لذا لا يمكن البحث عن هذا الباركود. {0}"),
+            ["Cannot reach the shop's server. {0}"] =
+                ("Impossible de joindre le serveur du magasin. {0}",
+                 "تعذر الوصول إلى خادم المتجر. {0}"),
             ["Cannot see profit, salaries, supplier debt or settings."] =
                 ("Ne voit ni le bénéfice, ni les salaires, ni la dette fournisseurs, ni les réglages.",
                  "لا يرى الأرباح ولا الرواتب ولا ديون الموردين ولا الإعدادات."),
@@ -220,12 +271,27 @@ public static class Translations
             ["Categories are how a cashier finds something with no barcode. Add one for each kind of shelf."] =
                 ("Les catégories permettent au caissier de trouver ce qui n'a pas de code-barres. Ajoutez-en une par type de rayon.",
                  "الفئات هي وسيلة الكاشير للعثور على ما لا يحمل باركود. أضف فئة لكل نوع من الرفوف."),
+            ["Category"] =
+                ("Catégorie",
+                 "فئة"),
+            ["Change"] =
+                ("Modifier",
+                 "تغيير"),
+            ["Change admin password"] =
+                ("Modifier le mot de passe admin",
+                 "تغيير كلمة مرور المدير"),
             ["Change it, or cancel it"] =
                 ("Le modifier, ou l'annuler",
                  "تعديله أو إلغاؤه"),
             ["Change the period above, or ring something up at the till — the best sellers appear here."] =
                 ("Changez la période ci-dessus, ou encaissez quelque chose en caisse — les meilleures ventes apparaissent ici.",
                  "غيّر الفترة أعلاه، أو سجّل عملية بيع في الصندوق — وستظهر الأكثر مبيعاً هنا."),
+            ["Change till PIN"] =
+                ("Modifier le code de caisse",
+                 "تغيير رمز الصندوق"),
+            ["Changing the amount changes the profit figures for that period."] =
+                ("Modifier le montant change les chiffres de bénéfice de cette période.",
+                 "تغيير المبلغ يغيّر أرقام الربح لتلك الفترة."),
             ["Cheque"] =
                 ("Chèque",
                  "شيك"),
@@ -238,6 +304,12 @@ public static class Translations
             ["Choose or type a category."] =
                 ("Choisissez ou saisissez une catégorie.",
                  "اختر فئة أو اكتبها."),
+            ["Choose the supplier this delivery came from."] =
+                ("Choisissez le fournisseur de cette livraison.",
+                 "اختر المورد الذي جاءت منه هذه التوصيلة."),
+            ["Clear"] =
+                ("Effacer",
+                 "مسح"),
             ["Clear filters"] =
                 ("Effacer les filtres",
                  "مسح عوامل التصفية"),
@@ -256,9 +328,33 @@ public static class Translations
             ["Completed sales appear here. Finish a sale with Pay and its ticket lands in this list."] =
                 ("Les ventes terminées apparaissent ici. Terminez une vente avec Payer et son ticket arrive dans cette liste.",
                  "تظهر المبيعات المكتملة هنا. أنهِ عملية بيع بالضغط على الدفع وستصل تذكرتها إلى هذه القائمة."),
+            ["Completed sales show here. Finish a sale with Pay and its receipt appears here."] =
+                ("Les ventes terminées s'affichent ici. Terminez une vente avec Payer et son ticket apparaît ici.",
+                 "تظهر هنا المبيعات المكتملة. أتمم عملية بيع بالضغط على دفع ليظهر الإيصال هنا."),
+            ["Confirm refund"] =
+                ("Confirmer le retour",
+                 "تأكيد الإرجاع"),
+            ["Connect"] =
+                ("Connecter",
+                 "اتصال"),
+            ["Connect this till to the shop"] =
+                ("Connecter cette caisse au magasin",
+                 "ربط هذا الصندوق بالمتجر"),
             ["Connected"] =
                 ("Connecté",
                  "متصل"),
+            ["Continue"] =
+                ("Continuer",
+                 "متابعة"),
+            ["Copied from last month. Check the amount before saving: bills change."] =
+                ("Copié du mois dernier. Vérifiez le montant avant d'enregistrer : les factures changent.",
+                 "منسوخ من الشهر الماضي. تحقق من المبلغ قبل الحفظ: الفواتير تتغير."),
+            ["Cost of sales"] =
+                ("Coût des ventes",
+                 "تكلفة المبيعات"),
+            ["Could not print: {0}"] =
+                ("Impression impossible : {0}",
+                 "تعذّرت الطباعة: {0}"),
             ["Could not save the sale: {0}"] =
                 ("Impossible d'enregistrer la vente : {0}",
                  "تعذّر حفظ عملية البيع: {0}"),
@@ -271,6 +367,9 @@ public static class Translations
             ["Custom"] =
                 ("Personnalisé",
                  "مخصص"),
+            ["Customer changed their mind"] =
+                ("Le client a changé d'avis",
+                 "غيّر الزبون رأيه"),
             ["DAILY"] =
                 ("QUOTIDIEN",
                  "يومي"),
@@ -289,21 +388,48 @@ public static class Translations
             ["DUE"] =
                 ("DÛ",
                  "المستحق"),
+            ["Daily"] =
+                ("Quotidien",
+                 "يومي"),
+            ["Damaged goods"] =
+                ("Marchandise abîmée",
+                 "بضاعة تالفة"),
             ["Dashboard"] =
                 ("Tableau de bord",
                  "لوحة القيادة"),
             ["Deactivate"] =
                 ("Désactiver",
                  "تعطيل"),
+            ["Delete"] =
+                ("Supprimer",
+                 "حذف"),
+            ["Delete this ticket"] =
+                ("Supprimer ce ticket",
+                 "حذف هذه الفاتورة"),
+            ["Delete {0}?"] =
+                ("Supprimer {0} ?",
+                 "حذف {0}؟"),
+            ["Deliveries"] =
+                ("Livraisons",
+                 "التسليمات"),
             ["Discard this ticket"] =
                 ("Supprimer ce ticket",
                  "حذف هذه التذكرة"),
+            ["Discount"] =
+                ("Remise",
+                 "الخصم"),
+            ["Discount amount in DH"] =
+                ("Montant de la remise en DH",
+                 "قيمة الخصم بالدرهم"),
             ["Discount for a regular customer"] =
                 ("Remise pour un client fidèle",
                  "تخفيض لزبون دائم"),
             ["Discount percentage"] =
                 ("Pourcentage de remise",
                  "نسبة التخفيض"),
+            ["Does not repeat"] =
+                ("Ne se répète pas",
+                 "لا يتكرر"),
             ["Done"] =
                 ("Terminé",
                  "تم"),
@@ -322,24 +448,69 @@ public static class Translations
             ["EXPIRES ON"] =
                 ("EXPIRE LE",
                  "ينتهي في"),
+            ["Each / piece"] =
+                ("À l'unité / pièce",
+                 "بالوحدة / قطعة"),
+            ["Edit category"] =
+                ("Modifier la catégorie",
+                 "تعديل الفئة"),
+            ["Edit expense"] =
+                ("Modifier la dépense",
+                 "تعديل المصروف"),
             ["Edit their details"] =
                 ("Modifier leurs informations",
                  "تعديل بياناتهم"),
             ["Edit this product — price, photo, barcode"] =
                 ("Modifier ce produit — prix, photo, code-barres",
                  "تعديل هذا المنتج — السعر والصورة والباركود"),
+            ["Editing a supplier does not change any invoice already recorded."] =
+                ("Modifier un fournisseur ne change aucune facture déjà enregistrée.",
+                 "تعديل المورد لا يغيّر أي فاتورة مسجّلة من قبل."),
             ["End date"] =
                 ("Date de fin",
                  "تاريخ النهاية"),
             ["Enter a barcode, or press Generate for an in-store code."] =
                 ("Saisissez un code-barres, ou appuyez sur Générer pour un code interne.",
                  "أدخل باركود، أو اضغط توليد للحصول على رمز داخلي."),
+            ["Enter a quantity greater than zero."] =
+                ("Saisissez une quantité supérieure à zéro.",
+                 "أدخل كمية أكبر من صفر."),
+            ["Enter a quantity, like 12 or 2.5."] =
+                ("Saisissez une quantité, comme 12 ou 2,5.",
+                 "أدخل كمية، مثل 12 أو 2.5."),
+            ["Enter a quantity."] =
+                ("Saisissez une quantité.",
+                 "أدخل الكمية."),
             ["Enter a receipt number to see it here"] =
                 ("Saisissez un numéro de ticket pour le voir ici",
                  "أدخل رقم إيصال لعرضه هنا"),
+            ["Enter an amount greater than zero."] =
+                ("Saisissez un montant supérieur à zéro.",
+                 "أدخل مبلغاً أكبر من صفر."),
+            ["Enter an amount other than zero."] =
+                ("Saisissez un montant autre que zéro.",
+                 "أدخل مبلغاً غير الصفر."),
+            ["Enter an amount, like 250 or 250.50."] =
+                ("Saisissez un montant, comme 250 ou 250,50.",
+                 "أدخل مبلغاً، مثل 250 أو 250.50."),
+            ["Enter how many arrived."] =
+                ("Indiquez combien sont arrivés.",
+                 "أدخل الكمية التي وصلت."),
+            ["Enter how many half kilos arrived."] =
+                ("Indiquez combien de demi-kilos sont arrivés.",
+                 "أدخل عدد أنصاف الكيلو التي وصلت."),
+            ["Enter the admin password to continue."] =
+                ("Saisissez le mot de passe admin pour continuer.",
+                 "أدخل كلمة مرور المدير للمتابعة."),
             ["Enter the receipt number printed on a completed sale. Nothing is charged again."] =
                 ("Saisissez le numéro imprimé sur un ticket déjà encaissé. Rien n'est facturé à nouveau.",
                  "أدخل رقم الإيصال المطبوع على بيع مكتمل. لن يُحصّل أي مبلغ من جديد."),
+            ["Enter the weight that arrived, in grams."] =
+                ("Indiquez le poids arrivé, en grammes.",
+                 "أدخل الوزن الذي وصل بالغرام."),
+            ["Enter the weight that arrived, in kilograms."] =
+                ("Indiquez le poids arrivé, en kilogrammes.",
+                 "أدخل الوزن الذي وصل بالكيلوغرام."),
             ["Enter what it sells for."] =
                 ("Indiquez son prix de vente.",
                  "أدخل سعر بيعه."),
@@ -379,9 +550,18 @@ public static class Translations
             ["Everything, including profit, salaries, supplier debt and business settings."] =
                 ("Tout, y compris le bénéfice, les salaires, la dette fournisseurs et les réglages.",
                  "كل شيء، بما في ذلك الأرباح والرواتب وديون الموردين وإعدادات النشاط."),
+            ["Every product has been removed from the shop. Tick Show removed to see them and put one back."] =
+                ("Tous les produits ont été retirés du magasin. Cochez Afficher les retirés pour les voir et en remettre un.",
+                 "أُزيلت كل المنتجات من المتجر. فعّل عرض المُزال لرؤيتها وإعادة واحد منها."),
+            ["Expense"] =
+                ("Dépense",
+                 "مصروف"),
             ["Expenses"] =
                 ("Dépenses",
                  "المصاريف"),
+            ["Expired"] =
+                ("Périmé",
+                 "منتهي الصلاحية"),
             ["Export CSV"] =
                 ("Exporter en CSV",
                  "تصدير CSV"),
@@ -391,6 +571,72 @@ public static class Translations
             ["Find"] =
                 ("Chercher",
                  "بحث"),
+            ["Find the shop"] =
+                ("Trouver le magasin",
+                 "ابحث عن المتجر"),
+            ["Found {0} at {1}. Press Save."] =
+                ("{0} trouvé à {1}. Appuyez sur Enregistrer.",
+                 "تم العثور على {0} في {1}. اضغط حفظ."),
+            ["Found {0} at {1}. Press Connect."] =
+                ("{0} trouvé à {1}. Appuyez sur Connecter.",
+                 "تم العثور على {0} في {1}. اضغط اتصال."),
+            ["Forgot password?"] =
+                ("Mot de passe oublié ?",
+                 "نسيت كلمة المرور؟"),
+            ["Reset admin password?"] =
+                ("Réinitialiser le mot de passe ?",
+                 "إعادة تعيين كلمة مرور المسؤول؟"),
+            ["This will reset the admin password back to the default {0}. You can then unlock and set a new one."] =
+                ("Cela réinitialisera le mot de passe admin à {0}. Vous pourrez ensuite déverrouiller et en définir un nouveau.",
+                 "سيؤدي هذا إلى إعادة تعيين كلمة مرور المسؤول إلى القيمة الافتراضية {0}. يمكنك بعد ذلك إلغاء القفل وتعيين كلمة مرور جديدة."),
+            ["Password reset to {0}. Press Unlock to continue."] =
+                ("Mot de passe réinitialisé à {0}. Appuyez sur Déverrouiller pour continuer.",
+                 "تمت إعادة تعيين كلمة المرور إلى {0}. اضغط على فتح للمتابعة."),
+            ["Maintenance"] =
+                ("Maintenance",
+                 "صيانة"),
+            ["Cleaning"] =
+                ("Nettoyage",
+                 "تنظيف"),
+            ["Rent"] =
+                ("Loyer",
+                 "إيجار / كراء"),
+            ["Electricity"] =
+                ("Électricité",
+                 "كهرباء"),
+            ["Water"] =
+                ("Eau",
+                 "ماء"),
+            ["Internet"] =
+                ("Internet",
+                 "إنترنت"),
+            ["Worker Salaries"] =
+                ("Salaires des employés",
+                 "رواتب العمال"),
+            ["Transportation"] =
+                ("Transport",
+                 "نقل / مواصلات"),
+            ["Equipment"] =
+                ("Équipement",
+                 "معدات"),
+            ["Repairs"] =
+                ("Réparations",
+                 "إصلاحات"),
+            ["Taxes"] =
+                ("Taxes",
+                 "ضرائب"),
+            ["Packaging"] =
+                ("Emballage",
+                 "تغليف"),
+            ["Market Supplies"] =
+                ("Fournitures du magasin",
+                 "لوازم المتجر"),
+            ["This product is already in inventory: {0}"] =
+                ("Ce produit est déjà en stock : {0}",
+                 "هذا المنتج موجود بالفعل في المخزون: {0}"),
+            ["Product already in inventory: {0}"] =
+                ("Produit déjà en stock : {0}",
+                 "المنتج موجود بالفعل في المخزون: {0}"),
             ["GOODS"] =
                 ("MARCHANDISE",
                  "البضاعة"),
@@ -403,21 +649,42 @@ public static class Translations
             ["Give it an in-store code instead"] =
                 ("Lui donner un code interne à la place",
                  "امنحه رمزاً داخلياً بدلاً من ذلك"),
+            ["Give the category a name."] =
+                ("Donnez un nom à la catégorie.",
+                 "أعط الفئة اسماً."),
             ["Give the product a name."] =
                 ("Donnez un nom au produit.",
                  "امنح المنتج اسماً."),
             ["Give the shop a name — it goes on every receipt."] =
                 ("Donnez un nom à la boutique — il figure sur chaque ticket.",
                  "امنح المتجر اسماً — فهو يظهر على كل إيصال."),
+            ["Give the supplier a name."] =
+                ("Donnez un nom au fournisseur.",
+                 "أعط المورد اسماً."),
+            ["Give the worker a name."] =
+                ("Donnez un nom à l'employé.",
+                 "أعط العامل اسماً."),
             ["Give them a role now; a till PIN can be set afterwards."] =
                 ("Donnez-leur un rôle maintenant ; le code de caisse se règle ensuite.",
                  "امنحهم دوراً الآن؛ ويمكن تعيين رمز الصندوق لاحقاً."),
             ["Go to where this is fixed"] =
                 ("Aller là où cela se règle",
                  "الذهاب إلى حيث يُصلح هذا"),
+            ["Gram (g)"] =
+                ("Gramme (g)",
+                 "غرام (غ)"),
+            ["HALF KILOS"] =
+                ("DEMI-KILOS",
+                 "عدد أنصاف الكيلو"),
+            ["Half kilo (500 g)"] =
+                ("Demi-kilo (500 g)",
+                 "نصف كيلو (500 غ)"),
             ["Hidden"] =
                 ("Masqué",
                  "مخفي"),
+            ["Hold the ticket"] =
+                ("Mettre le ticket en attente",
+                 "تعليق الفاتورة"),
             ["Hold ticket"] =
                 ("Mettre en attente",
                  "تعليق التذكرة"),
@@ -466,27 +733,54 @@ public static class Translations
             ["Invoice {0} — no items listed"] =
                 ("Facture {0} — aucun article listé",
                  "الفاتورة {0} — لا توجد منتجات مدرجة"),
+            ["Invoices"] =
+                ("Factures",
+                 "الفواتير"),
+            ["It goes for good. Products still on the shelves in it have to be moved first."] =
+                ("Elle part définitivement. Les produits encore en rayon doivent d'abord être déplacés.",
+                 "سيتم حذفها نهائياً. يجب نقل المنتجات التي ما زالت في الرفوف أولاً."),
             ["It goes on the till as soon as you save."] =
                 ("Il arrive en caisse dès l'enregistrement.",
                  "يصل إلى الصندوق بمجرد الحفظ."),
+            ["It has one"] =
+                ("Il en a un",
+                 "لديه واحد"),
             ["KEPT AS PROFIT"] =
                 ("GARDÉ EN BÉNÉFICE",
                  "المحتفظ به كربح"),
             ["KIND"] =
                 ("TYPE",
                  "النوع"),
+            ["Kilogram"] =
+                ("Kilogramme",
+                 "كيلوغرام"),
+            ["Kilogram (kg)"] =
+                ("Kilogramme (kg)",
+                 "كيلوغرام (كغ)"),
             ["LANGUAGE"] =
                 ("LANGUE",
                  "اللغة"),
             ["LEFT"] =
                 ("RESTE",
                  "المتبقي"),
+            ["LINES"] =
+                ("LIGNES",
+                 "المقاطع"),
             ["Leave empty if this is the only computer in the shop. Fill it in on a second till, and it will keep selling even when the back office is off — sales catch up when it comes back."] =
                 ("Laissez vide s'il s'agit du seul ordinateur de la boutique. Renseignez-le sur une deuxième caisse : elle continuera à vendre même si l'arrière-boutique est éteinte — les ventes se rattrapent à son retour.",
                  "اتركه فارغاً إن كان هذا هو الحاسوب الوحيد في المتجر. املأه في صندوق ثانٍ، وسيواصل البيع حتى وإن كان جهاز الإدارة مطفأً — وتلحق المبيعات عند عودته."),
+            ["Leave empty on the machine that holds the shop's database. On a second till, press Find the shop — or type the address of the first machine yourself."] =
+                ("Laissez vide sur la machine qui contient la base de données. Sur une deuxième caisse, appuyez sur Trouver le magasin — ou saisissez vous-même l'adresse de la première machine.",
+                 "اتركه فارغاً على الجهاز الذي يحتوي قاعدة البيانات. على صندوق ثانٍ، اضغط ابحث عن المتجر — أو اكتب عنوان الجهاز الأول بنفسك."),
+            ["Leave empty on the machine that holds the shop's database. On a second till, put the address of the first one — http://192.168.1.10:5000 — and this till will take its products from there and send its sales back."] =
+                ("Laissez vide sur la machine qui contient la base de données du magasin. Sur une deuxième caisse, indiquez l'adresse de la première — http://192.168.1.10:5000 — et cette caisse y prendra ses produits et y renverra ses ventes.",
+                 "اتركه فارغاً على الجهاز الذي يحتوي قاعدة بيانات المتجر. على صندوق ثانٍ، ضع عنوان الجهاز الأول — http://192.168.1.10:5000 — وسيأخذ هذا الصندوق منتجاته من هناك ويرسل مبيعاته إليه."),
             ["Leave this off when the goods came back damaged or opened — the stock is gone either way, and ticking it would put items back that cannot be sold."] =
                 ("Laissez décoché si la marchandise est revenue abîmée ou ouverte — le stock est perdu de toute façon, et cocher remettrait en rayon des articles invendables.",
                  "اترك هذا دون تحديد إذا عادت البضاعة تالفة أو مفتوحة — المخزون ضائع في الحالتين، وتحديده سيعيد إلى الرف منتجات لا يمكن بيعها."),
+            ["Looking for the shop on this network…"] =
+                ("Recherche du magasin sur ce réseau…",
+                 "جارٍ البحث عن المتجر في هذه الشبكة…"),
             ["Low"] =
                 ("Bas",
                  "منخفض"),
@@ -499,6 +793,9 @@ public static class Translations
             ["MIN"] =
                 ("MIN",
                  "الأدنى"),
+            ["MINIMUM"] =
+                ("MINIMUM",
+                 "الحد الأدنى"),
             ["MINIMUM STOCK"] =
                 ("STOCK MINIMUM",
                  "الحد الأدنى للمخزون"),
@@ -526,12 +823,21 @@ public static class Translations
             ["Minimize"] =
                 ("Réduire",
                  "تصغير"),
+            ["Minimum"] =
+                ("Minimum",
+                 "الحد الأدنى"),
             ["Money that left the shop"] =
                 ("Argent sorti de la boutique",
                  "المال الذي خرج من المتجر"),
+            ["Monthly"] =
+                ("Mensuel",
+                 "شهري"),
             ["NAME"] =
                 ("NOM",
                  "الاسم"),
+            ["NAME OF THIS TILL"] =
+                ("NOM DE CETTE CAISSE",
+                 "اسم هذا الصندوق"),
             ["NEEDS ATTENTION"] =
                 ("À TRAITER",
                  "يحتاج انتباهك"),
@@ -541,6 +847,9 @@ public static class Translations
             ["NET PROFIT"] =
                 ("BÉNÉFICE NET",
                  "الربح الصافي"),
+            ["NEW PASSWORD"] =
+                ("NOUVEAU MOT DE PASSE",
+                 "كلمة المرور الجديدة"),
             ["NOT IN A CATEGORY"] =
                 ("SANS CATÉGORIE",
                  "بدون فئة"),
@@ -562,6 +871,12 @@ public static class Translations
             ["No barcode"] =
                 ("Sans code-barres",
                  "بدون باركود"),
+            ["No barcode. Fill in the rest and save."] =
+                ("Pas de code-barres. Remplissez le reste et enregistrez.",
+                 "بدون باركود. أكمل الباقي واحفظ."),
+            ["No barcode. The shop gives it its own code when you save."] =
+                ("Pas de code-barres. Le magasin lui donne son propre code à l'enregistrement.",
+                 "بدون باركود. يعطيه المتجر رمزاً خاصاً به عند الحفظ."),
             ["No bills recorded"] =
                 ("Aucune facture enregistrée",
                  "لا فواتير مسجلة"),
@@ -580,6 +895,9 @@ public static class Translations
             ["No overdue bills, no empty shelves, nothing about to go off."] =
                 ("Aucune facture en retard, aucun rayon vide, rien qui approche de sa date.",
                  "لا فواتير متأخرة، ولا رفوف فارغة، ولا شيء يوشك على انتهاء صلاحيته."),
+            ["No products"] =
+                ("Aucun produit",
+                 "لا توجد منتجات"),
             ["No products found"] =
                 ("Aucun produit trouvé",
                  "لم يُعثر على منتجات"),
@@ -598,21 +916,33 @@ public static class Translations
             ["No sales yet"] =
                 ("Aucune vente",
                  "لا مبيعات بعد"),
+            ["No shop server answered. Check it is switched on and that both machines are on the same network."] =
+                ("Aucun serveur n'a répondu. Vérifiez qu'il est allumé et que les deux machines sont sur le même réseau.",
+                 "لم يستجب أي خادم. تأكد من تشغيله ومن أن الجهازين على نفس الشبكة."),
             ["No staff yet"] =
                 ("Aucun employé",
                  "لا يوجد موظفون بعد"),
+            ["No supplier"] =
+                ("Aucun fournisseur",
+                 "بلا مورد"),
             ["No suppliers yet"] =
                 ("Aucun fournisseur",
                  "لا يوجد موردون بعد"),
             ["No tickets yet"] =
                 ("Aucun ticket",
                  "لا توجد تذاكر بعد"),
+            ["Not connected to the shop"] =
+                ("Non connecté au magasin",
+                 "غير متصل بالمتجر"),
             ["No worker has a password yet, so only the owner can open the back office."] =
                 ("Aucun employé n'a encore de mot de passe : seul le propriétaire peut ouvrir l'arrière-boutique.",
                  "لا يملك أي موظف كلمة مرور بعد، لذا لا يمكن فتح الإدارة إلا للمالك."),
             ["None attached"] =
                 ("Aucun justificatif",
                  "لا يوجد مرفق"),
+            ["Not in the shop yet. Fill in the rest and save it."] =
+                ("Pas encore dans le magasin. Remplissez le reste et enregistrez.",
+                 "غير موجود في المتجر بعد. أكمل الباقي واحفظه."),
             ["Nothing added yet"] =
                 ("Rien d'ajouté pour l'instant",
                  "لم يُضف شيء بعد"),
@@ -622,12 +952,18 @@ public static class Translations
             ["Nothing happened"] =
                 ("Rien ne s'est passé",
                  "لم يحدث شيء"),
+            ["Nothing here for you"] =
+                ("Rien ici pour vous",
+                 "لا شيء هنا لك"),
             ["Nothing here is called “{0}”"] =
                 ("Rien ici ne s'appelle « {0} »",
                  "لا شيء هنا اسمه «{0}»"),
             ["Nothing here matches what you typed, or the category filter is hiding it."] =
                 ("Rien ici ne correspond à votre saisie, ou le filtre de catégorie le masque.",
                  "لا شيء هنا يطابق ما كتبته، أو أن مرشّح الفئة يخفيه."),
+            ["Nothing in it yet"] =
+                ("Rien dedans pour l'instant",
+                 "لا شيء فيها بعد"),
             ["Nothing in the shop yet"] =
                 ("La boutique est vide",
                  "لا شيء في المتجر بعد"),
@@ -670,6 +1006,9 @@ public static class Translations
             ["Nothing to sell yet"] =
                 ("Rien à vendre pour l'instant",
                  "لا شيء للبيع بعد"),
+            ["Nothing on the shelf"] =
+                ("Rien en rayon",
+                 "لا شيء على الرف"),
             ["OFF THE SHELF"] =
                 ("SORTIS DU RAYON",
                  "خرج من الرف"),
@@ -736,6 +1075,9 @@ public static class Translations
             ["PAYMENT DUE"] =
                 ("PAIEMENT DÛ",
                  "الدفع المستحق"),
+            ["PAYMENT METHOD"] =
+                ("MODE DE PAIEMENT",
+                 "طريقة الدفع"),
             ["PAYMENTS"] =
                 ("PAIEMENTS",
                  "المدفوعات"),
@@ -778,6 +1120,12 @@ public static class Translations
             ["PURCHASE PRICE (COST)"] =
                 ("PRIX D'ACHAT (COÛT)",
                  "سعر الشراء (التكلفة)"),
+            ["Paid"] =
+                ("Payé",
+                 "المدفوع"),
+            ["Paid in full — nothing will be owed."] =
+                ("Payé en totalité — rien ne sera dû.",
+                 "مدفوع بالكامل — لن يبقى أي دين."),
             ["Paid up. {0} bought all told."] =
                 ("Soldé. {0} achetés en tout.",
                  "مسدَّد. {0} مشتراة إجمالاً."),
@@ -790,6 +1138,15 @@ public static class Translations
             ["Payment confirmed"] =
                 ("Paiement confirmé",
                  "تم تأكيد الدفع"),
+            ["Payment method"] =
+                ("Mode de paiement",
+                 "طريقة الدفع"),
+            ["Pending"] =
+                ("En attente",
+                 "قيد الانتظار"),
+            ["People"] =
+                ("Personnes",
+                 "الأشخاص"),
             ["Per unit"] =
                 ("À l'unité",
                  "بالوحدة"),
@@ -811,6 +1168,9 @@ public static class Translations
             ["Picture"] =
                 ("Image",
                  "صورة"),
+            ["Point the scanner at the barcode. You can also type it below."] =
+                ("Dirigez le lecteur vers le code-barres. Vous pouvez aussi le saisir ci-dessous.",
+                 "وجّه الماسح نحو الباركود. يمكنك أيضاً كتابته أدناه."),
             ["Point the scanner at the barcode. You can also type it in below."] =
                 ("Visez le code-barres avec le scanner. Vous pouvez aussi le saisir ci-dessous.",
                  "وجّه الماسح نحو الباركود. يمكنك أيضاً كتابته بالأسفل."),
@@ -820,18 +1180,33 @@ public static class Translations
             ["Press to send now"] =
                 ("Appuyez pour envoyer maintenant",
                  "اضغط للإرسال الآن"),
+            ["Press to connect this till to the shop's server."] =
+                ("Appuyez pour connecter cette caisse au serveur du magasin.",
+                 "اضغط لربط هذا الصندوق بخادم المتجر."),
             ["Price check"] =
                 ("Vérifier le prix",
                  "التحقق من السعر"),
+            ["Price was wrong"] =
+                ("Le prix était faux",
+                 "كان السعر خاطئاً"),
             ["Print"] =
                 ("Imprimer",
                  "طباعة"),
+            ["Print a copy of an earlier receipt"] =
+                ("Imprimer une copie d'un ticket précédent",
+                 "اطبع نسخة من إيصال سابق"),
             ["Print another copy of a past receipt"] =
                 ("Imprimer une copie d'un ancien ticket",
                  "طباعة نسخة من إيصال سابق"),
             ["Print the receipt automatically after each sale"] =
                 ("Imprimer le ticket automatiquement après chaque vente",
                  "طباعة الإيصال تلقائياً بعد كل عملية بيع"),
+            ["Print the receipt?"] =
+                ("Imprimer le ticket ?",
+                 "طباعة الإيصال؟"),
+            ["Product"] =
+                ("Produit",
+                 "منتج"),
             ["Product name or barcode"] =
                 ("Nom du produit ou code-barres",
                  "اسم المنتج أو الباركود"),
@@ -841,9 +1216,15 @@ public static class Translations
             ["Products are added in the back office, under Add product. Once they are in, they show up here and scan at the counter."] =
                 ("Les produits s'ajoutent dans l'arrière-boutique, sous Ajouter un produit. Une fois saisis, ils apparaissent ici et se scannent au comptoir.",
                  "تُضاف المنتجات من الإدارة، تحت إضافة منتج. وبمجرد إدخالها تظهر هنا وتُمسح ضوئياً عند المنضدة."),
+            ["Products are changed on the shop's own computer."] =
+                ("Les produits se modifient sur l'ordinateur du magasin.",
+                 "تُعدَّل المنتجات على حاسوب المتجر نفسه."),
             ["Products in this category"] =
                 ("Produits de cette catégorie",
                  "منتجات هذه الفئة"),
+            ["Purchase"] =
+                ("Achat",
+                 "شراء"),
             ["Purchase prices missing"] =
                 ("Prix d'achat manquants",
                  "أسعار الشراء ناقصة"),
@@ -856,12 +1237,18 @@ public static class Translations
             ["Put the items back on the shelf"] =
                 ("Remettre les articles en rayon",
                  "إعادة المنتجات إلى الرف"),
+            ["Put this category back"] =
+                ("Remettre cette catégorie",
+                 "إعادة هذه الفئة"),
             ["Put this month's in"] =
                 ("Saisir celle de ce mois",
                  "أدخل مصروف هذا الشهر"),
             ["Put what the shop sells in under Add product, and every sale will be counted here."] =
                 ("Saisissez ce que la boutique vend sous Ajouter un produit, et chaque vente sera comptée ici.",
                  "أدخل ما يبيعه المتجر تحت إضافة منتج، وستُحتسب كل عملية بيع هنا."),
+            ["Put this product back in the shop"] =
+                ("Remettre ce produit dans le magasin",
+                 "أعد هذا المنتج إلى المتجر"),
             ["QTY"] =
                 ("QTÉ",
                  "الكمية"),
@@ -893,11 +1280,14 @@ public static class Translations
                 ("RÉCURRENT",
                  "متكرر"),
             ["REVENUE"] =
-                ("CHIFFRE D'AFFAIRES",
+                ("RECETTES",
                  "المداخيل"),
             ["ROLE"] =
                 ("RÔLE",
                  "الدور"),
+            ["Reactivate"] =
+                ("Réactiver",
+                 "إعادة التفعيل"),
             ["Read top to bottom. Each line takes something off the one above it, and the last line is what the shop actually kept."] =
                 ("À lire de haut en bas. Chaque ligne retire quelque chose à celle du dessus, et la dernière ligne est ce que la boutique a réellement gardé.",
                  "اقرأ من الأعلى إلى الأسفل. كل سطر يطرح شيئاً من السطر الذي فوقه، والسطر الأخير هو ما احتفظ به المتجر فعلاً."),
@@ -907,6 +1297,9 @@ public static class Translations
             ["Receipt number, product or cashier"] =
                 ("Numéro de ticket, produit ou caissier",
                  "رقم الإيصال أو المنتج أو الكاشير"),
+            ["Receipts will print automatically to this printer."] =
+                ("Les tickets s'impriment automatiquement sur cette imprimante.",
+                 "ستُطبع الإيصالات تلقائياً على هذه الطابعة."),
             ["Record a delivery"] =
                 ("Enregistrer une livraison",
                  "تسجيل توصيل"),
@@ -916,6 +1309,9 @@ public static class Translations
             ["Refund"] =
                 ("Rembourser",
                  "استرجاع"),
+            ["Refunding {0}"] =
+                ("Retour de {0}",
+                 "إرجاع {0}"),
             ["Reload"] =
                 ("Recharger",
                  "تحديث"),
@@ -937,9 +1333,18 @@ public static class Translations
             ["Remove picture"] =
                 ("Retirer l'image",
                  "إزالة الصورة"),
+            ["Remove this category"] =
+                ("Retirer cette catégorie",
+                 "إزالة هذه الفئة"),
             ["Remove this line"] =
                 ("Supprimer cette ligne",
                  "حذف هذا السطر"),
+            ["Remove this product from the shop"] =
+                ("Retirer ce produit du magasin",
+                 "إزالة هذا المنتج من المتجر"),
+            ["Removed"] =
+                ("Retiré",
+                 "مُزال"),
             ["Rename it, change its picture, or hide it"] =
                 ("Le renommer, changer son image, ou le masquer",
                  "إعادة تسميتها أو تغيير صورتها أو إخفاؤها"),
@@ -967,6 +1372,12 @@ public static class Translations
             ["Restart now"] =
                 ("Redémarrer maintenant",
                  "أعد التشغيل الآن"),
+            ["Revenue"] =
+                ("Chiffre d'affaires",
+                 "الإيرادات"),
+            ["Rung up twice"] =
+                ("Encaissé deux fois",
+                 "حُسب مرتين"),
             ["Running out"] =
                 ("Bientôt épuisé",
                  "على وشك النفاد"),
@@ -985,6 +1396,9 @@ public static class Translations
             ["SELLING FOR"] =
                 ("VENDU À",
                  "يُباع بـ"),
+            ["SELLING FOR / KG"] =
+                ("VENDU À / KG",
+                 "ثمن البيع / كغ"),
             ["SELLING PRICE"] =
                 ("PRIX DE VENTE",
                  "سعر البيع"),
@@ -1000,6 +1414,9 @@ public static class Translations
             ["SHOP NAME"] =
                 ("NOM DE LA BOUTIQUE",
                  "اسم المتجر"),
+            ["SHOP SERVER"] =
+                ("SERVEUR DU MAGASIN",
+                 "خادم المتجر"),
             ["SKU / INTERNAL CODE"] =
                 ("SKU / CODE INTERNE",
                  "رمز داخلي"),
@@ -1027,6 +1444,9 @@ public static class Translations
             ["STOCK"] =
                 ("STOCK",
                  "المخزون"),
+            ["STOCK (CHANGE IT ON INVENTORY)"] =
+                ("STOCK (MODIFIEZ-LE DANS L'INVENTAIRE)",
+                 "المخزون (يُعدّل من صفحة المخزون)"),
             ["STOCK IN THEM"] =
                 ("STOCK CHEZ EUX",
                  "المخزون منهم"),
@@ -1060,21 +1480,39 @@ public static class Translations
             ["Saved. Restart the app to see it in the new language."] =
                 ("Enregistré. Redémarrez l'application pour la voir dans la nouvelle langue.",
                  "تم الحفظ. أعد تشغيل التطبيق لرؤيته باللغة الجديدة."),
+            ["Say what the money was spent on."] =
+                ("Indiquez à quoi l'argent a servi.",
+                 "بيّن فيمَ أُنفق المال."),
+            ["Say why it is coming back — this goes on the record."] =
+                ("Indiquez pourquoi c'est retourné — cela reste enregistré.",
+                 "بيّن سبب الإرجاع — يُسجَّل هذا في السجل."),
+            ["Scan a product to see its price without selling it"] =
+                ("Scannez un produit pour voir son prix sans le vendre",
+                 "امسح منتجاً لعرض سعره دون بيع"),
             ["Scan an item to see its price without selling it"] =
                 ("Scannez un article pour voir son prix sans le vendre",
                  "امسح منتجاً لرؤية سعره دون بيعه"),
             ["Scan it"] =
                 ("Scannez-le",
                  "امسحه ضوئياً"),
+            ["Scan the barcode, or leave it empty for goods with nothing printed on them."] =
+                ("Scannez le code-barres, ou laissez vide pour la marchandise sans code imprimé.",
+                 "امسح الباركود، أو اتركه فارغاً للبضاعة التي لا يوجد عليها رمز مطبوع."),
             ["Scan the next item, or press Esc to go back to selling"] =
                 ("Scannez l'article suivant, ou appuyez sur Échap pour revenir à la vente",
                  "امسح المنتج التالي، أو اضغط Esc للعودة إلى البيع"),
+            ["Scan the next product, or press Esc to go back to the sale"] =
+                ("Scannez le produit suivant, ou appuyez sur Échap pour revenir à la vente",
+                 "امسح المنتج التالي، أو اضغط Esc للعودة للبيع"),
             ["Scan the product"] =
                 ("Scannez le produit",
                  "امسح المنتج"),
             ["Search"] =
                 ("Rechercher",
                  "بحث"),
+            ["Searching this network for the shop's server. This takes a moment."] =
+                ("Recherche du serveur du magasin sur ce réseau. Cela prend un instant.",
+                 "جارٍ البحث عن خادم المتجر في هذه الشبكة. يستغرق ذلك لحظة."),
             ["See what was bought and what was paid"] =
                 ("Voir ce qui a été acheté et payé",
                  "عرض ما اشتُري وما دُفع"),
@@ -1087,15 +1525,30 @@ public static class Translations
             ["Set a smallest amount on a product and it will warn you here before it runs out."] =
                 ("Fixez un minimum à un produit et il vous préviendra ici avant d'être épuisé.",
                  "حدد حداً أدنى لمنتج وسينبهك هنا قبل أن ينفد."),
+            ["Set a till PIN"] =
+                ("Définir un code de caisse",
+                 "تعيين رمز للصندوق"),
+            ["Set admin password"] =
+                ("Définir le mot de passe admin",
+                 "تعيين كلمة مرور المدير"),
             ["Set counted total"] =
                 ("Saisir le total compté",
                  "إدخال المجموع المحسوب"),
+            ["Set password"] =
+                ("Définir le mot de passe",
+                 "تعيين كلمة المرور"),
             ["Set their password"] =
                 ("Définir leur mot de passe",
                  "تعيين كلمة مرورهم"),
             ["Settings"] =
                 ("Réglages",
                  "الإعدادات"),
+            ["Shift"] =
+                ("Poste",
+                 "وردية"),
+            ["Shop"] =
+                ("Boutique",
+                 "المتجر"),
             ["Shop settings"] =
                 ("Réglages de la boutique",
                  "إعدادات المتجر"),
@@ -1105,6 +1558,9 @@ public static class Translations
             ["Show past staff"] =
                 ("Afficher les anciens employés",
                  "عرض الموظفين السابقين"),
+            ["Show removed"] =
+                ("Afficher les retirés",
+                 "عرض المُزال"),
             ["Shown after every amount in the app and on receipts"] =
                 ("Affiché après chaque montant dans l'application et sur les tickets",
                  "يظهر بعد كل مبلغ في التطبيق وعلى الإيصالات"),
@@ -1126,9 +1582,15 @@ public static class Translations
             ["Sign {0} out"] =
                 ("Déconnecter {0}",
                  "تسجيل خروج {0}"),
+            ["Sold"] =
+                ("Vendu",
+                 "المُباع"),
             ["Sold at the till"] =
                 ("Vendu en caisse",
                  "يُباع في الصندوق"),
+            ["Someone"] =
+                ("Quelqu'un",
+                 "شخص ما"),
             ["Sous-total"] =
                 ("Sous-total",
                  "المجموع الفرعي"),
@@ -1138,6 +1600,12 @@ public static class Translations
             ["Start date"] =
                 ("Date de début",
                  "تاريخ البداية"),
+            ["Stock is changed on the Inventory page, so every movement has a reason recorded."] =
+                ("Le stock se modifie dans la page Inventaire, pour que chaque mouvement ait une raison enregistrée.",
+                 "يُعدَّل المخزون من صفحة المخزون، حتى يكون لكل حركة سبب مسجّل."),
+            ["Stock movements"] =
+                ("Mouvements de stock",
+                 "المخزون"),
             ["Stock that came in"] =
                 ("Stock entré",
                  "المخزون الوارد"),
@@ -1147,6 +1615,9 @@ public static class Translations
             ["Subtotal"] =
                 ("Sous-total",
                  "المجموع الفرعي"),
+            ["Supplier"] =
+                ("Fournisseur",
+                 "مورد"),
             ["Supplier name or phone"] =
                 ("Nom ou téléphone du fournisseur",
                  "اسم المورد أو هاتفه"),
@@ -1183,12 +1654,36 @@ public static class Translations
             ["Test"] =
                 ("Tester",
                  "اختبار"),
+            ["Test item"] =
+                ("Article de test",
+                 "صنف تجريبي"),
             ["Test print"] =
                 ("Test d'impression",
                  "طباعة تجريبية"),
+            ["Test receipt sent to {0}."] =
+                ("Ticket de test envoyé à {0}.",
+                 "أُرسل إيصال تجريبي إلى {0}."),
             ["That barcode already belongs to another product."] =
                 ("Ce code-barres appartient déjà à un autre produit.",
                  "هذا الباركود يخص منتجاً آخر بالفعل."),
+            ["That receipt could not be read back."] =
+                ("Ce ticket n'a pas pu être relu.",
+                 "تعذّرت قراءة هذا الإيصال."),
+            ["That does not look like an address. Try 192.168.1.20 — or press Find the shop."] =
+                ("Cela ne ressemble pas à une adresse. Essayez 192.168.1.20 — ou appuyez sur Trouver le magasin.",
+                 "هذا لا يبدو عنواناً. جرّب 192.168.1.20 — أو اضغط ابحث عن المتجر."),
+            ["The amount cannot be negative."] =
+                ("Le montant ne peut pas être négatif.",
+                 "لا يمكن أن يكون المبلغ سالباً."),
+            ["The amount paid cannot be negative."] =
+                ("Le montant payé ne peut pas être négatif.",
+                 "لا يمكن أن يكون المبلغ المدفوع سالباً."),
+            ["The back office is on the shop's own computer."] =
+                ("L'administration est sur l'ordinateur du magasin.",
+                 "لوحة الإدارة على حاسوب المتجر نفسه."),
+            ["The language the app speaks"] =
+                ("La langue de l'application",
+                 "لغة التطبيق"),
             ["The last line of every receipt"] =
                 ("La dernière ligne de chaque ticket",
                  "السطر الأخير في كل إيصال"),
@@ -1198,6 +1693,9 @@ public static class Translations
             ["The new shelf price. Leave it as it is to keep the old one."] =
                 ("Le nouveau prix de vente. Laissez tel quel pour garder l'ancien.",
                  "سعر الرف الجديد. اتركه كما هو للاحتفاظ بالقديم."),
+            ["The password is {0} until you change it — the lock beside your name in the back office."] =
+                ("Le mot de passe est {0} jusqu'à ce que vous le changiez — le cadenas à côté de votre nom dans l'administration.",
+                 "كلمة السر هي {0} إلى أن تغيّرها — القفل بجانب اسمك في لوحة الإدارة."),
             ["The photo is optional here — this product is scanned, so it only shows on lists and receipts."] =
                 ("La photo est facultative ici — ce produit se scanne, elle n'apparaît donc que sur les listes et les tickets.",
                  "الصورة اختيارية هنا — هذا المنتج يُمسح ضوئياً، فتظهر على القوائم والإيصالات فقط."),
@@ -1207,6 +1705,12 @@ public static class Translations
             ["The receipt goes straight to the printer with no dialog. Turn this off to print only on demand from the Tickets page."] =
                 ("Le ticket part directement à l'imprimante, sans fenêtre. Désactivez pour n'imprimer qu'à la demande depuis la page Tickets.",
                  "يذهب الإيصال مباشرة إلى الطابعة دون نافذة. أوقف هذا لتطبع عند الطلب فقط من صفحة التذاكر."),
+            ["The salary cannot be negative."] =
+                ("Le salaire ne peut pas être négatif.",
+                 "لا يمكن أن يكون الراتب سالباً."),
+            ["The salary must be a number, like 3000."] =
+                ("Le salaire doit être un nombre, comme 3000.",
+                 "يجب أن يكون الراتب رقماً، مثل 3000."),
             ["The selling price is below the cost — every sale of this product loses money."] =
                 ("Le prix de vente est inférieur au coût — chaque vente de ce produit fait perdre de l'argent.",
                  "سعر البيع أقل من التكلفة — كل بيع لهذا المنتج يخسر مالاً."),
@@ -1216,6 +1720,9 @@ public static class Translations
             ["The shop does not sell this yet. Add it in the back office and it will scan next time."] =
                 ("La boutique ne vend pas encore cet article. Ajoutez-le dans l'arrière-boutique et il se scannera la prochaine fois.",
                  "المتجر لا يبيع هذا بعد. أضفه من الإدارة وسيُمسح في المرة القادمة."),
+            ["The shop's server did not take it: {0}"] =
+                ("Le serveur du magasin ne l'a pas accepté : {0}",
+                 "لم يقبله خادم المتجر: {0}"),
             ["The shop, and how it prints"] =
                 ("La boutique, et comment elle imprime",
                  "المتجر، وطريقة الطباعة"),
@@ -1234,6 +1741,9 @@ public static class Translations
             ["The two passwords do not match."] =
                 ("Les deux mots de passe ne correspondent pas.",
                  "كلمتا المرور غير متطابقتين."),
+            ["The whole app, in your language. It changes when the app is restarted."] =
+                ("Toute l'application dans votre langue. Le changement prend effet au redémarrage.",
+                 "التطبيق بالكامل بلغتك. يتغير عند إعادة تشغيل التطبيق."),
             ["The whole app, in your language. It changes when the app restarts."] =
                 ("Toute l'application, dans votre langue. Le changement prend effet au redémarrage.",
                  "التطبيق كله بلغتك. يتغير عند إعادة تشغيل التطبيق."),
@@ -1243,6 +1753,18 @@ public static class Translations
             ["Their details, role and wage"] =
                 ("Leurs informations, rôle et salaire",
                  "بياناتهم ودورهم وأجرهم"),
+            ["There is already a category called {0}."] =
+                ("Il existe déjà une catégorie appelée {0}.",
+                 "توجد بالفعل فئة باسم {0}."),
+            ["This computer is the only one. Work alone, with its own database."] =
+                ("Cet ordinateur est le seul. Travailler seul, avec sa propre base de données.",
+                 "هذا الحاسوب هو الوحيد. اعمل وحده، مع قاعدة بيانات خاصة به."),
+            ["This is a cashier's till. Stock, suppliers, expenses, staff and reports are kept on the machine that holds the shop's database — open Market POS there."] =
+                ("Ceci est une caisse. Le stock, les fournisseurs, les dépenses, le personnel et les rapports sont sur la machine qui contient la base de données — ouvrez Market POS là-bas.",
+                 "هذا صندوق كاشير. المخزون والموردون والمصاريف والموظفون والتقارير موجودة على الجهاز الذي يحتوي قاعدة بيانات المتجر — افتح Market POS هناك."),
+            ["This machine is a cashier's till. Every sale taken here is sent to the shop's database, which lives on another computer. Tell it where that computer is — or let this app find it."] =
+                ("Cette machine est une caisse. Chaque vente faite ici est envoyée à la base de données du magasin, qui vit sur un autre ordinateur. Indiquez où se trouve cet ordinateur — ou laissez l'application le trouver.",
+                 "هذا الجهاز صندوقُ كاشير. كل عملية بيع تتم هنا تُرسَل إلى قاعدة بيانات المتجر الموجودة على حاسوب آخر. أخبره أين يوجد ذلك الحاسوب — أو دع التطبيق يجدها له."),
             ["This month"] =
                 ("Ce mois-ci",
                  "هذا الشهر"),
@@ -1255,9 +1777,15 @@ public static class Translations
             ["This year"] =
                 ("Cette année",
                  "هذه السنة"),
+            ["Tick at least one line to return."] =
+                ("Cochez au moins une ligne à retourner.",
+                 "أشّر على سطر واحد على الأقل للإرجاع."),
             ["Tick what is coming back, then say why."] =
                 ("Cochez ce qui revient, puis indiquez pourquoi.",
                  "حدد ما يُرجع، ثم بيّن السبب."),
+            ["Ticket #{0}"] =
+                ("Ticket n° {0}",
+                 "تذكرة رقم {0}"),
             ["Ticket N. {0}"] =
                 ("Ticket N. {0}",
                  "إيصال رقم {0}"),
@@ -1282,6 +1810,9 @@ public static class Translations
             ["Try a different name, barcode or category."] =
                 ("Essayez un autre nom, code-barres ou catégorie.",
                  "جرّب اسماً أو باركود أو فئة أخرى."),
+            ["Try a different name, barcode or category, or tick Show removed."] =
+                ("Essayez un autre nom, code-barres ou catégorie, ou cochez Afficher les retirés.",
+                 "جرّب اسماً أو باركود أو فئة أخرى، أو فعّل عرض المُزال."),
             ["Try a different name, or clear the filter."] =
                 ("Essayez un autre nom, ou enlevez le filtre.",
                  "جرّب اسماً آخر، أو امسح المرشّح."),
@@ -1291,6 +1822,9 @@ public static class Translations
             ["Type a receipt number in the search bar above, or pick a ticket to view and reprint it."] =
                 ("Saisissez un numéro de ticket dans la barre de recherche, ou choisissez un ticket pour le voir et le réimprimer.",
                  "اكتب رقم إيصال في شريط البحث أعلاه، أو اختر تذكرة لعرضها وإعادة طباعتها."),
+            ["Type the shop's address, or press Find the shop."] =
+                ("Saisissez l'adresse du magasin, ou appuyez sur Trouver le magasin.",
+                 "اكتب عنوان المتجر، أو اضغط ابحث عن المتجر."),
             ["UNITS"] =
                 ("UNITÉS",
                  "الوحدات"),
@@ -1321,6 +1855,12 @@ public static class Translations
             ["WAGES DUE"] =
                 ("SALAIRES DUS",
                  "الأجور المستحقة"),
+            ["WEIGHT (G)"] =
+                ("POIDS (G)",
+                 "الوزن (غ)"),
+            ["WEIGHT (KG)"] =
+                ("POIDS (KG)",
+                 "الوزن (كغ)"),
             ["WHAT FOR"] =
                 ("POUR QUOI",
                  "لماذا"),
@@ -1342,15 +1882,24 @@ public static class Translations
             ["WORKER"] =
                 ("EMPLOYÉ",
                  "الموظف"),
+            ["Weekly"] =
+                ("Hebdomadaire",
+                 "أسبوعي"),
             ["What did they bring?"] =
                 ("Qu'ont-ils livré ?",
                  "ماذا أحضروا؟"),
             ["What it was for"] =
                 ("À quoi ça servait",
                  "لأي غرض كان"),
+            ["What sells"] =
+                ("Ce qui se vend",
+                 "ما يُباع"),
             ["What the back office shows depends on who you are, and everything saved in it is recorded against you."] =
                 ("Ce que montre l'arrière-boutique dépend de qui vous êtes, et tout ce qui y est enregistré l'est à votre nom.",
                  "ما تعرضه الإدارة يتوقف على هويتك، وكل ما يُحفظ فيها يُسجَّل باسمك."),
+            ["What the back office shows depends on who you are, and everything saved there is recorded under your name."] =
+                ("Ce que l'arrière-boutique affiche dépend de qui vous êtes, et tout ce qui y est enregistré l'est à votre nom.",
+                 "ما يظهره المكتب الخلفي يعتمد على هويتك، وكل ما يُحفظ فيه يُسجَّل باسمك."),
             ["What the shop holds, and what it cost"] =
                 ("Ce que la boutique détient, et ce qu'il a coûté",
                  "ما يملكه المتجر، وكم كلّف"),
@@ -1384,6 +1933,12 @@ public static class Translations
             ["Windows reports no default printer on this machine."] =
                 ("Windows ne signale aucune imprimante par défaut sur cette machine.",
                  "لا تُبلغ ويندوز عن أي طابعة افتراضية على هذا الجهاز."),
+            ["With no address this machine works on its own — which is right for a shop with one computer."] =
+                ("Sans adresse, cette machine fonctionne seule — ce qui convient à un magasin avec un seul ordinateur.",
+                 "بدون عنوان يعمل هذا الجهاز وحده — وهو الصحيح لمتجر فيه حاسوب واحد."),
+            ["Worker"] =
+                ("Employé",
+                 "عامل"),
             ["Workers"] =
                 ("Employés",
                  "العاملون"),
@@ -1393,21 +1948,42 @@ public static class Translations
             ["Worth adding: with no barcode, this is what the cashier presses at the till."] =
                 ("À ajouter : sans code-barres, c'est ce que le caissier presse en caisse.",
                  "يستحسن إضافتها: بلا باركود، هذا ما يضغطه الكاشير في الصندوق."),
+            ["Wrong item"] =
+                ("Mauvais article",
+                 "صنف خاطئ"),
             ["Wrong password."] =
                 ("Mot de passe incorrect.",
                  "كلمة المرور خاطئة."),
+            ["Yearly"] =
+                ("Annuel",
+                 "سنوي"),
             ["Yes"] =
                 ("Oui",
                  "نعم"),
             ["Yesterday"] =
                 ("Hier",
                  "أمس"),
+            ["You will be asked for its name and price. It goes on the till as soon as you save, and this sale can carry on."] =
+                ("On vous demandera son nom et son prix. Il apparaît en caisse dès l'enregistrement, et cette vente peut continuer.",
+                 "سيُطلب منك اسمه وثمنه. سيظهر في الصندوق بمجرد الحفظ، ويمكن متابعة هذه العملية."),
             ["across {0} bill · {1}"] =
                 ("sur {0} facture · {1}",
                  "على فاتورة واحدة · {1}"),
             ["across {0} bills · {1}"] =
                 ("sur {0} factures · {1}",
                  "على {0} فواتير · {1}"),
+            ["added category {0}"] =
+                ("a ajouté la catégorie {0}",
+                 "أضاف الفئة {0}"),
+            ["added product {0}"] =
+                ("a ajouté le produit {0}",
+                 "أضاف المنتج {0}"),
+            ["added supplier {0}"] =
+                ("a ajouté le fournisseur {0}",
+                 "أضاف المورد {0}"),
+            ["added worker {0}"] =
+                ("a ajouté l'employé {0}",
+                 "أضاف العامل {0}"),
             ["after the bills"] =
                 ("après les factures",
                  "بعد الفواتير"),
@@ -1435,15 +2011,69 @@ public static class Translations
             ["by units sold"] =
                 ("par unités vendues",
                  "حسب الوحدات المباعة"),
+            ["cancelled purchase #{0}"] =
+                ("a annulé l'achat n° {0}",
+                 "ألغى الشراء رقم {0}"),
+            ["cancelled sale #{0} ({1})"] =
+                ("a annulé la vente n° {0} ({1})",
+                 "ألغى عملية البيع رقم {0} ({1})"),
+            ["changed {0} purchase price"] =
+                ("a modifié le prix d'achat de {0}",
+                 "غيّر سعر شراء {0}"),
+            ["changed {0} selling price"] =
+                ("a modifié le prix de vente de {0}",
+                 "غيّر سعر بيع {0}"),
+            ["changed {0} stock"] =
+                ("a modifié le stock de {0}",
+                 "غيّر مخزون {0}"),
+            ["changed {0}'s salary"] =
+                ("a modifié le salaire de {0}",
+                 "غيّر راتب {0}"),
             ["completed in this period"] =
                 ("terminées sur cette période",
                  "مكتملة في هذه الفترة"),
+            ["completed sale #{0} for {1}"] =
+                ("a terminé la vente n° {0} pour {1}",
+                 "أتمّ عملية البيع رقم {0} بمبلغ {1}"),
             ["copy - not a new sale"] =
                 ("copie - pas une nouvelle vente",
                  "نسخة - ليست عملية بيع جديدة"),
             ["cost you {0} · you keep {1} ({2}%)"] =
                 ("vous a coûté {0} · vous gardez {1} ({2} %)",
                  "كلّفك {0} · تحتفظ بـ {1} ({2}%)"),
+            ["d MMM yyyy"] =
+                ("d MMM yyyy",
+                 "d MMM yyyy"),
+            ["deactivated category {0}"] =
+                ("a désactivé la catégorie {0}",
+                 "عطّل الفئة {0}"),
+            ["deactivated supplier {0}"] =
+                ("a désactivé le fournisseur {0}",
+                 "عطّل المورد {0}"),
+            ["deactivated {0}"] =
+                ("a désactivé {0}",
+                 "عطّل {0}"),
+            ["edited product {0}"] =
+                ("a modifié le produit {0}",
+                 "عدّل المنتج {0}"),
+            ["edited supplier {0}"] =
+                ("a modifié le fournisseur {0}",
+                 "عدّل المورد {0}"),
+            ["edited the expense {0}"] =
+                ("a modifié la dépense {0}",
+                 "عدّل المصروف {0}"),
+            ["edited worker {0}"] =
+                ("a modifié l'employé {0}",
+                 "عدّل العامل {0}"),
+            ["ended a shift exactly on"] =
+                ("a terminé un poste juste au compte",
+                 "أنهى وردية مطابقة تماماً"),
+            ["ended a shift over"] =
+                ("a terminé un poste avec un excédent",
+                 "أنهى وردية بزيادة"),
+            ["ended a shift short"] =
+                ("a terminé un poste avec un manque",
+                 "أنهى وردية بنقص"),
             ["everyone is paid up"] =
                 ("tout le monde est payé",
                  "الجميع مدفوع لهم"),
@@ -1546,24 +2176,69 @@ public static class Translations
             ["only findable by barcode or name"] =
                 ("trouvables seulement par code-barres ou par nom",
                  "لا يمكن إيجادها إلا بالباركود أو الاسم"),
+            ["paid {0} {1}"] =
+                ("a payé {1} à {0}",
+                 "دفع {1} إلى {0}"),
             ["purchase prices missing"] =
                 ("prix d'achat manquants",
                  "أسعار الشراء ناقصة"),
+            ["put {0} in the drawer ({1})"] =
+                ("a mis {0} en caisse ({1})",
+                 "أضاف {0} إلى الصندوق ({1})"),
+            ["reactivated category {0}"] =
+                ("a réactivé la catégorie {0}",
+                 "أعاد تفعيل الفئة {0}"),
+            ["reactivated supplier {0}"] =
+                ("a réactivé le fournisseur {0}",
+                 "أعاد تفعيل المورد {0}"),
+            ["reactivated {0}"] =
+                ("a réactivé {0}",
+                 "أعاد تفعيل {0}"),
+            ["received {0} of {1}"] =
+                ("a reçu {0} de {1}",
+                 "استلم {0} من {1}"),
+            ["recorded a {0} expense for {1}"] =
+                ("a enregistré une dépense de {0} pour {1}",
+                 "سجّل مصروفاً بقيمة {0} لـ {1}"),
+            ["recorded a {0} payment to {1}"] =
+                ("a enregistré un paiement de {0} à {1}",
+                 "سجّل دفعة بقيمة {0} إلى {1}"),
+            ["recorded a {0} purchase from {1}"] =
+                ("a enregistré un achat de {0} chez {1}",
+                 "سجّل شراءً بقيمة {0} من {1}"),
+            ["recorded {0} of {1} as {2}"] =
+                ("a enregistré {0} de {1} comme {2}",
+                 "سجّل {0} من {1} كـ {2}"),
+            ["refunded {0} on sale #{1} ({2})"] =
+                ("a remboursé {0} sur la vente n° {1} ({2})",
+                 "أرجع {0} من عملية البيع رقم {1} ({2})"),
+            ["renamed a category"] =
+                ("a renommé une catégorie",
+                 "غيّر اسم فئة"),
             ["rent, light, water, internet and the rest"] =
                 ("loyer, électricité, eau, internet et le reste",
                  "الكراء والكهرباء والماء والإنترنت وما تبقى"),
             ["rent, power, water, wifi"] =
                 ("loyer, électricité, eau, wifi",
                  "الكراء والكهرباء والماء والواي فاي"),
+            ["repriced {0} on a delivery"] =
+                ("a modifié le prix de {0} sur une livraison",
+                 "غيّر سعر {0} في توصيلة"),
             ["reprints as a duplicate"] =
                 ("réimprimé comme duplicata",
                  "يُعاد طبعه كنسخة"),
             ["running low"] =
                 ("bientôt épuisé",
                  "على وشك النفاد"),
+            ["set a till PIN"] =
+                ("a défini un code de caisse",
+                 "عيّن رمزاً للصندوق"),
             ["settled"] =
                 ("soldé",
                  "مسدَّد"),
+            ["started a shift with {0} in the drawer"] =
+                ("a commencé un poste avec {0} en caisse",
+                 "بدأ وردية بـ {0} في الصندوق"),
             ["stock received, all time"] =
                 ("stock reçu, depuis toujours",
                  "المخزون المستلم، منذ البداية"),
@@ -1603,6 +2278,12 @@ public static class Translations
             ["today"] =
                 ("aujourd'hui",
                  "اليوم"),
+            ["took {0} out of the drawer ({1})"] =
+                ("a retiré {0} de la caisse ({1})",
+                 "أخرج {0} من الصندوق ({1})"),
+            ["voided the expense {0}"] =
+                ("a annulé la dépense {0}",
+                 "ألغى المصروف {0}"),
             ["what actually went to staff in this period"] =
                 ("ce qui est réellement allé au personnel sur cette période",
                  "ما ذهب فعلاً إلى الموظفين في هذه الفترة"),
@@ -1633,6 +2314,9 @@ public static class Translations
             ["{0} can open the back office · each sees only the pages their role allows"] =
                 ("{0} peuvent ouvrir l'arrière-boutique · chacun ne voit que les pages permises par son rôle",
                  "{0} يمكنهم فتح الإدارة · كل واحد يرى الصفحات التي يسمح بها دوره"),
+            ["{0} cannot be deleted: what is in it appears in the sales history. Move the products to another category first."] =
+                ("{0} ne peut pas être supprimée : ce qu'elle contient figure dans l'historique des ventes. Déplacez d'abord les produits vers une autre catégorie.",
+                 "لا يمكن حذف {0}: ما بداخلها يظهر في سجل المبيعات. انقل المنتجات إلى فئة أخرى أولاً."),
             ["{0} changes · {1} stock movements · {2}"] =
                 ("{0} modifications · {1} mouvements de stock · {2}",
                  "{0} تغييرات · {1} حركات مخزون · {2}"),
@@ -1648,6 +2332,9 @@ public static class Translations
             ["{0} hidden from the till"] =
                 ("{0} masquées en caisse",
                  "{0} مخفية عن الصندوق"),
+            ["{0} is not in the shop yet. Add it?"] =
+                ("{0} n'est pas encore dans le magasin. L'ajouter ?",
+                 "{0} غير موجود في المتجر بعد. هل تضيفه؟"),
             ["{0} is not in the shop. Add it in the back office."] =
                 ("{0} n'est pas dans la boutique. Ajoutez-le dans l'arrière-boutique.",
                  "{0} غير موجود في المتجر. أضفه من الإدارة."),
@@ -1741,6 +2428,12 @@ public static class Translations
             ["{0} products, newest first"] =
                 ("{0} produits, les plus récents en premier",
                  "{0} منتجات، الأحدث أولاً"),
+            ["{0} removed from the shop"] =
+                ("{0} retiré du magasin",
+                 "تمت إزالة {0} من المتجر"),
+            ["{0} removed, not counted"] =
+                ("{0} retiré(s), non comptés",
+                 "{0} مُزال، غير محسوب"),
             ["{0} sale affected"] =
                 ("{0} vente concernée",
                  "{0} عملية متأثرة"),
@@ -1759,6 +2452,45 @@ public static class Translations
             ["{0} sales, after {1} refunded"] =
                 ("{0} ventes, après {1} remboursés",
                  "{0} عمليات بيع، بعد استرجاع {1}"),
+            ["{0} could not be deleted: something in the shop's records still points at it. ({1})"] =
+                ("{0} n'a pas pu être supprimée : quelque chose dans les registres du magasin y renvoie encore. ({1})",
+                 "تعذر حذف {0}: لا يزال شيء في سجلات المتجر يشير إليها. ({1})"),
+            ["{0} has deliveries or payments on record, so they are hidden rather than deleted. The history stays as it was."] =
+                ("{0} a des livraisons ou des paiements enregistrés : ce fournisseur est masqué plutôt que supprimé. L'historique reste intact.",
+                 "لدى {0} توصيلات أو دفعات مسجلة، لذلك تم إخفاؤه بدلاً من حذفه. يبقى السجل كما كان."),
+            ["{0} was removed."] =
+                ("{0} a été supprimé.",
+                 "تمت إزالة {0}."),
+            ["Delete {0}?"] =
+                ("Supprimer {0} ?",
+                 "حذف {0}؟"),
+            ["Their deliveries and payments are deleted with them. This cannot be undone."] =
+                ("Leurs livraisons et leurs paiements sont supprimés avec eux. Impossible d'annuler.",
+                 "ستُحذف توصيلاته ودفعاته معه. لا يمكن التراجع عن ذلك."),
+            ["{0} could not be deleted. ({1})"] =
+                ("{0} n'a pas pu être supprimé. ({1})",
+                 "تعذر حذف {0}. ({1})"),
+            ["No category"] =
+                ("Sans catégorie",
+                 "بدون فئة"),
+            ["It goes for good. Its products stay in stock and on the till, without a category."] =
+                ("Elle part définitivement. Ses produits restent en stock et en caisse, sans catégorie.",
+                 "سيتم حذفها نهائياً. تبقى منتجاتها في المخزون وفي الصندوق، بدون فئة."),
+            ["{0} of it is credit with suppliers"] =
+                ("dont {0} d'avoir chez les fournisseurs",
+                 "منها {0} رصيد لدى الموردين"),
+            ["They owe the shop {0}: a delivery paid for was cancelled."] =
+                ("Ils doivent {0} au magasin : une livraison payée a été annulée.",
+                 "عليهم للمتجر {0}: أُلغي توصيل مدفوع."),
+            ["Delivery from {0} (supplier deleted)"] =
+                ("Livraison de {0} (fournisseur supprimé)",
+                 "توصيل من {0} (مورد محذوف)"),
+            ["{0} still has {1} product in it. Move it to another category first."] =
+                ("{0} contient encore {1} produit. Déplacez-le vers une autre catégorie d'abord.",
+                 "{0} ما زالت تحتوي على {1} منتج. انقله إلى فئة أخرى أولاً."),
+            ["{0} still has {1} products in it. Move them to another category first."] =
+                ("{0} contient encore {1} produits. Déplacez-les vers une autre catégorie d'abord.",
+                 "{0} ما زالت تحتوي على {1} منتجات. انقلها إلى فئة أخرى أولاً."),
             ["{0} still owed of {1} bought."] =
                 ("{0} encore dus sur {1} achetés.",
                  "ما زال {0} مستحقاً من أصل {1} مشتراة."),
@@ -1789,6 +2521,15 @@ public static class Translations
             ["{0} with no cost recorded"] =
                 ("{0} sans coût enregistré",
                  "{0} بلا تكلفة مسجلة"),
+            ["{0} {1}, from {2} to {3}."] =
+                ("{0} {1}, de {2} à {3}.",
+                 "{0} {1}، من {2} إلى {3}."),
+            ["{0} {1}, was {2}."] =
+                ("{0} {1}, était {2}.",
+                 "{0} {1}، كان {2}."),
+            ["{0} {1}."] =
+                ("{0} {1}.",
+                 "{0} {1}."),
             ["{0} · {1}% of the total"] =
                 ("{0} · {1} % du total",
                  "{0} · {1}% من المجموع"),

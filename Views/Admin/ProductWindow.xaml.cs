@@ -1,3 +1,4 @@
+using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -42,12 +43,17 @@ public partial class ProductWindow : Window
         Services.Responsive.Fit(this);
         _existing = existing;
 
-        UnitBox.ItemsSource = new[] { "Each / piece", "Kilogram" };
+        UnitBox.ItemsSource = new[] { Loc.T("Each / piece"), Loc.T("Kilogram") };
         TaxBox.ItemsSource = TaxRates.Select(t => t.Label).ToList();
-        CategoryBox.ItemsSource = CategoryRepository.List().Select(c => c.Name).ToList();
+        // Asked of the shop on a till. This machine has no categories of its own, and a
+        // dropdown filled from an empty local table would file every product under nothing.
+        CategoryBox.ItemsSource = Link.Shop.Categories.List().Select(c => c.Name).ToList();
 
-        _suppliers = new List<Supplier> { new() { Id = 0, Name = "No supplier" } };
-        _suppliers.AddRange(SupplierRepository.List());
+        _suppliers = new List<Supplier> { new() { Id = 0, Name = Loc.T("No supplier") } };
+        _suppliers.AddRange(Catalog.BelongsToAServer
+            ? (ShopLink.Now(() => ShopLink.Suppliers()) ?? new List<Link.SupplierName>())
+                .Select(s => new Supplier { Id = s.Id, Name = s.Name })
+            : Link.Shop.Suppliers.List());
         SupplierBox.ItemsSource = _suppliers;
 
         if (existing is null) FillForNew(); else FillFrom(existing);
@@ -64,10 +70,24 @@ public partial class ProductWindow : Window
     }
 
     public static bool AddNew(Window owner) =>
-        new ProductWindow(null) { Owner = owner }.ShowDialog() == true;
+        new ProductWindow(null).By(owner).ShowDialog() == true;
+
+    /// <summary>
+    /// The same form, opened already knowing the barcode — the cashier has just scanned
+    /// something the shop does not sell yet, and the number is the one thing about it that is
+    /// already certain. The caret starts on the name, which is the first thing that is not.
+    /// </summary>
+    public static bool AddScanned(Window owner, string barcode)
+    {
+        var form = new ProductWindow(null).By(owner);
+        form.BarcodeBox.Text = barcode;
+        form.Loaded += (_, _) => { form.NameBox.Focus(); form.NameBox.SelectAll(); };
+
+        return form.ShowDialog() == true;
+    }
 
     public static bool Edit(Window owner, StockItem item) =>
-        new ProductWindow(item) { Owner = owner }.ShowDialog() == true;
+        new ProductWindow(item).By(owner).ShowDialog() == true;
 
     private void FillForNew()
     {
@@ -105,8 +125,8 @@ public partial class ProductWindow : Window
         StockBox.Text = item.Stock.ToString("0.###", CultureInfo.InvariantCulture);
         StockBox.IsReadOnly = true;
         StockBox.Opacity = 0.6;
-        StockLabel.Text = "STOCK (CHANGE IT ON INVENTORY)";
-        StockBox.ToolTip = "Stock is changed on the Inventory page, so every movement has a reason recorded.";
+        StockLabel.Text = Loc.T("STOCK (CHANGE IT ON INVENTORY)");
+        StockBox.ToolTip = Loc.T("Stock is changed on the Inventory page, so every movement has a reason recorded.");
 
         MinStockBox.Text = item.MinStock.ToString("0.###", CultureInfo.InvariantCulture);
         ShelfBox.Text = item.Shelf;
@@ -119,7 +139,7 @@ public partial class ProductWindow : Window
 
     // ------------------------------- Validation -------------------------------
 
-    private void Save_Click(object sender, RoutedEventArgs e)
+    private async void Save_Click(object sender, RoutedEventArgs e)
     {
         ErrorText.Text = string.Empty;
 
@@ -152,7 +172,17 @@ public partial class ProductWindow : Window
             return;
         }
 
-        if (StockRepository.BarcodeTaken(barcode, _existing?.Id ?? 0))
+        var existingByBarcode = Catalog.FindByBarcode(barcode);
+        if (existingByBarcode != null && (_existing == null || existingByBarcode.Id != _existing.Id))
+        {
+            Fail(string.Format(Loc.T("This product is already in inventory: {0}"), existingByBarcode.Name), BarcodeBox);
+            return;
+        }
+
+        // On a till the shop settles this, not the machine: the barcode is sent with the
+        // product and the server answers whether it already has one, which is the only answer
+        // that can be right when two counters are adding stock at once.
+        if (!Catalog.BelongsToAServer && Link.Shop.Stock.BarcodeTaken(barcode, _existing?.Id ?? 0))
         {
             Fail("Another product already uses that barcode.", BarcodeBox);
             return;
@@ -186,10 +216,54 @@ public partial class ProductWindow : Window
 
         try
         {
-            if (_existing is null)
-                StockRepository.Create(item, openingStock: stock);
+            // A till holds a copy of the shop, not the shop. A new product written into that
+            // copy would be overwritten by the server on the next sync, so it goes to the
+            // server — which is also the only place the back office, the stock list and the
+            // other till will ever look for it.
+            if (_existing is null && Catalog.BelongsToAServer)
+            {
+                var made = await ShopLink.AddProduct(new Link.NewProduct(
+                    barcode, name, category, price, cost, item.TaxRate,
+                    item.Unit.ToString(), stock,
+                    Session.Current?.Name ?? Session.OwnerLabel));
+
+                if (made is null)
+                {
+                    // Deliberately not saved here as a fallback. A product that exists on this
+                    // counter and nowhere else is worse than one that does not exist yet: it
+                    // sells, the stock never moves in the books, and nobody finds out until
+                    // the shelves are counted.
+                    ErrorText.Text = Loc.T("The shop's server did not take it: {0}",
+                                           ShopLink.LastProblem);
+                    return;
+                }
+
+                if (made.AlreadyHad)
+                {
+                    Fail(string.Format(Loc.T("This product is already in inventory: {0}"), made.Name), BarcodeBox);
+                    return;
+                }
+
+                // Straight back down again, so the thing just added is on this till's own
+                // screen before the cashier looks up.
+                await ShopLink.PullCatalogue();
+            }
+            else if (Catalog.BelongsToAServer)
+            {
+                // A till reaching here is a till being asked to change a product it does not
+                // own. There is no local write to fall back to and there must not be one: a
+                // product edited into this machine's database would be edited nowhere.
+                ErrorText.Text = Loc.T("Products are changed on the shop's own computer.");
+                return;
+            }
+            else if (_existing is null)
+            {
+                Link.Shop.Stock.Create(item, openingStock: stock);
+            }
             else
-                StockRepository.Update(item);
+            {
+                Link.Shop.Stock.Update(item);
+            }
 
             FilePicture(barcode, _existing?.Barcode);
             Catalog.Reload();
@@ -262,7 +336,7 @@ public partial class ProductWindow : Window
 
         // Says what the photo is actually for, which depends on whether this product will
         // ever appear as something to press.
-        var scanned = BarcodeBox.Text.Trim() is { Length: > 0 } code && !Product.IsShopsOwnCode(code);
+        var scanned = BarcodeBox.Text.Trim().Length > 0;
         PictureNote.Text = scanned
             ? "Optional. This product is scanned, so the photo only shows on receipts and lists."
             : "Shown on the till, where the cashier presses it. Worth adding for anything without a barcode.";
@@ -292,7 +366,7 @@ public partial class ProductWindow : Window
 
     private void Fail(string message, System.Windows.Controls.Control focus)
     {
-        ErrorText.Text = message;
+        ErrorText.Text = Loc.T(message);
         focus.Focus();
     }
 
@@ -336,18 +410,29 @@ public partial class ProductWindow : Window
         MarginWarning.Visibility = margin < 0m ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void GenerateBarcode_Click(object sender, MouseButtonEventArgs e)
-    {
-        BarcodeBox.Text = StockRepository.NextInternalBarcode();
-
-        // An in-store code means this product will be a tile at the till, so what the photo is
-        // for has just changed. Say so rather than leaving the old note under it.
-        ShowPicture();
-    }
-
     private void Barcode_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (IsLoaded) ShowPicture();
+        if (IsLoaded)
+        {
+            ShowPicture();
+            var code = BarcodeBox.Text.Trim();
+            if (code.Length > 0)
+            {
+                var already = Catalog.FindByBarcode(code);
+                if (already != null && (_existing == null || already.Id != _existing.Id))
+                {
+                    ErrorText.Text = string.Format(Loc.T("This product is already in inventory: {0}"), already.Name);
+                }
+                else if (ErrorText.Text.StartsWith(Loc.T("This product is already in inventory: {0}").Split('{')[0]))
+                {
+                    ErrorText.Text = string.Empty;
+                }
+            }
+            else if (ErrorText.Text.StartsWith(Loc.T("This product is already in inventory: {0}").Split('{')[0]))
+            {
+                ErrorText.Text = string.Empty;
+            }
+        }
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)

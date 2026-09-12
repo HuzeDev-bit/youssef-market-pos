@@ -1,4 +1,4 @@
-using MarketPos.Models;
+﻿using MarketPos.Models;
 using MarketPos.Services;
 
 namespace MarketPos.Data;
@@ -176,7 +176,8 @@ public static class StockRepository
                                      reference: "New product", unitCost: item.Cost, connection: connection);
 
         ActivityRepository.Record("added product", "Product", id, newValue: item.Name,
-                                  detail: $"added product {item.Name}", connection: connection);
+                                  detail: ActivityRepository.Say("added product {0}", item.Name),
+                                  connection: connection);
 
         transaction.Commit();
         return id;
@@ -228,12 +229,14 @@ public static class StockRepository
         if (price is not null && price != before.Price)
             ActivityRepository.Record("changed selling price", "Product", productId,
                 oldValue: $"{before.Price:0.00} DH", newValue: $"{price:0.00} DH",
-                detail: $"changed {before.Name} selling price", connection: connection);
+                detail: ActivityRepository.Say("changed {0} selling price", before.Name),
+                connection: connection);
 
         ActivityRepository.Record("received stock at the till", "Product", productId,
             oldValue: before.Stock.ToString("0.###"),
             newValue: (before.Stock + quantity).ToString("0.###"),
-            detail: $"received {quantity:0.###} of {before.Name}", connection: connection);
+            detail: ActivityRepository.Say("received {0} of {1}", $"{quantity:0.###}", before.Name),
+            connection: connection);
 
         transaction.Commit();
     }
@@ -280,14 +283,17 @@ public static class StockRepository
         if (before is not null && before.Price != item.Price)
             ActivityRepository.Record("changed selling price", "Product", item.Id,
                 oldValue: $"{before.Price:0.00} DH", newValue: $"{item.Price:0.00} DH",
-                detail: $"changed {item.Name} selling price", connection: connection);
+                detail: ActivityRepository.Say("changed {0} selling price", item.Name),
+                connection: connection);
         else if (before is not null && before.Cost != item.Cost)
             ActivityRepository.Record("changed purchase price", "Product", item.Id,
                 oldValue: $"{before.Cost:0.00} DH", newValue: $"{item.Cost:0.00} DH",
-                detail: $"changed {item.Name} purchase price", connection: connection);
+                detail: ActivityRepository.Say("changed {0} purchase price", item.Name),
+                connection: connection);
         else
             ActivityRepository.Record("edited product", "Product", item.Id, newValue: item.Name,
-                detail: $"edited product {item.Name}", connection: connection);
+                detail: ActivityRepository.Say("edited product {0}", item.Name),
+                connection: connection);
 
         transaction.Commit();
     }
@@ -295,20 +301,24 @@ public static class StockRepository
     /// <summary>
     /// The category to file this product under.
     ///
-    /// The schema insists on one, so "no category" has to be a real shelf rather than a
-    /// missing link. It used to be an empty name, which made a category called "" — a
-    /// nameless card in the back office and a blank shelf on the till, with nothing looking
-    /// wrong until somebody went looking. Anything unfiled goes to Other, which a shopkeeper
-    /// can find and move things out of.
+    /// The schema insists on one, so "no category" has to be a real row rather than a
+    /// missing link: the one with no name, which is also where a deleted category's products
+    /// go. It was Other for a while, which quietly brought back an Other the shop had deleted
+    /// the first time a delivery arrived with something new on it. The blank row is kept off
+    /// every list of categories — the Categories page, the product forms, the till's chips —
+    /// and reads "No category" wherever a product's own category is shown.
     /// </summary>
-    private const string Unfiled = "Other";
+    private const string Unfiled = "";
 
     private static string Grouping(StockItem item) =>
         string.IsNullOrWhiteSpace(item.Category) ? Unfiled : item.Category.Trim();
 
     private static void Bind(Microsoft.Data.Sqlite.SqliteCommand command, StockItem item)
     {
-        command.With("$barcode", item.Barcode)
+        // NULL, not "". A product with nothing printed on it has no barcode, and the
+        // unique index only constrains the rows that have one — SQLite counts every NULL as
+        // distinct, so a shop can have as many unbarcoded products as it likes.
+        command.WithBarcode("$barcode", item.Barcode)
                .With("$name", item.Name)
                .With("$sku", item.Sku)
                .With("$category", Grouping(item))
@@ -339,34 +349,25 @@ public static class StockRepository
         command.ExecuteNonQuery();
 
         ActivityRepository.Record(active ? "reactivated product" : "deactivated product",
-            "Product", id, newValue: name, detail: $"{(active ? "reactivated" : "deactivated")} {name}");
-    }
-
-    /// <summary>Barcode uniqueness check for the product form, excluding the row being edited.</summary>
-    public static bool BarcodeTaken(string barcode, int exceptId = 0)
-    {
-        using var connection = Database.Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(*) FROM products WHERE barcode = $barcode AND id <> $id;";
-        command.With("$barcode", barcode.Trim()).With("$id", exceptId);
-        return Convert.ToInt32(command.ExecuteScalar()) > 0;
+            "Product", id, newValue: name, detail: ActivityRepository.Say(active ? "reactivated {0}" : "deactivated {0}", name));
     }
 
     /// <summary>
-    /// The next free internal barcode for a product that has none printed on it. Uses the
-    /// 2xxxxxxxxxxx range, which EAN-13 reserves for in-store use, so a shop-made code can
-    /// never collide with a manufacturer's.
+    /// Whether another product already carries this barcode, excluding the row being edited.
+    ///
+    /// An empty barcode is never taken: that is the answer for every product without one, and
+    /// there is no limit on how many of those a shop may have.
     /// </summary>
-    public static string NextInternalBarcode()
+    public static bool BarcodeTaken(string barcode, int exceptId = 0)
     {
+        barcode = barcode.Trim();
+        if (barcode.Length == 0) return false;
+
         using var connection = Database.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT COALESCE(MAX(CAST(barcode AS INTEGER)), 2000000000000)
-            FROM products WHERE barcode GLOB '2[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]';
-            """;
-        var next = Convert.ToInt64(command.ExecuteScalar()) + 1;
-        return next.ToString("D13");
+        command.CommandText = "SELECT COUNT(*) FROM products WHERE barcode = $barcode AND id <> $id;";
+        command.With("$barcode", barcode).With("$id", exceptId);
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
     }
 
     // ------------------------------- Alerts -------------------------------

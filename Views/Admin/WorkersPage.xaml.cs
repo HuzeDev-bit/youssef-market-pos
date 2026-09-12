@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.Services;
@@ -61,13 +61,13 @@ public partial class WorkersPage : AdminPageBase
     {
         Session.Require(Permission.ManageWorkers);
 
-        var staff = WorkerRepository.List(includeInactive: ShowInactive.IsChecked == true);
+        var staff = Link.Shop.Workers.List(includeInactive: ShowInactive.IsChecked == true);
 
         // Wages are the owner's business, not a manager's. Without that permission the page
         // still works as a staff list — the money columns simply are not there to read.
         var seesMoney = Session.Can(Permission.SeeSalaries);
         var ledger = seesMoney
-            ? WorkerRepository.Ledger(Dates.Range).ToDictionary(l => l.Worker.Id)
+            ? Link.Shop.Workers.Ledger(Dates.Range).ToDictionary(l => l.Worker.Id)
             : new Dictionary<int, SalaryLedger>();
 
         _rows = staff.Select(w => new Row
@@ -184,7 +184,7 @@ public partial class WorkersPage : AdminPageBase
         var password = PinWindow.Ask(Shell, row.Name, row.Worker.HasPin);
         if (password is null) return;
 
-        WorkerRepository.SetPin(row.Id, password);
+        Link.Shop.Workers.SetPin(row.Id, password);
         ReloadAll();
     }
 
@@ -220,7 +220,7 @@ public partial class WorkersPage : AdminPageBase
 
         if (result is null) return;
 
-        WorkerRepository.PaySalary(row.Id, row.Name, row.Due, result.Amount,
+        Link.Shop.Workers.PaySalary(row.Id, row.Name, row.Due, result.Amount,
                                    Dates.Range, result.Date, result.Method, result.Note);
         ReloadAll();
     }

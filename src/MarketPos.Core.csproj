@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Everything the shop knows, with no screen attached.
 
@@ -15,6 +15,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
+
+  <!-- The web types, for the handful of files that describe what the shop's server answers.
+       The library does not host anything; both servers do. What lives here is the shape of the
+       answers and the check that a request is allowed to ask, written once so the standalone
+       server and the all-in-one cannot enforce it differently. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />

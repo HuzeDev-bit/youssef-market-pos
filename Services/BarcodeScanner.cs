@@ -36,7 +36,7 @@ public sealed class BarcodeScanner
     public static readonly TimeSpan BurstGap = TimeSpan.FromMilliseconds(40);
 
     /// <summary>Short runs are a person typing a quantity or a price, not a scan.</summary>
-    public const int MinimumLength = 6;
+    public const int MinimumLength = 3;
 
     /// <summary>
     /// How long after the last digit a code is taken as finished when no Enter arrives.
@@ -89,15 +89,23 @@ public sealed class BarcodeScanner
     }
 
     /// <summary>
+    /// Checks if a character is a valid barcode character. Barcodes can be numeric (EAN, UPC)
+    /// or alphanumeric (Code 128, Code 39, QR codes) and may contain common symbols.
+    /// Non-ASCII characters and whitespace are excluded.
+    /// </summary>
+    public static bool IsValidBarcodeChar(char c) =>
+        (c >= '0' && c <= '9') ||
+        (c >= 'a' && c <= 'z') ||
+        (c >= 'A' && c <= 'Z') ||
+        c is '-' or '_' or '.' or '/' or '+' or '*' or '#' or '@' or '$' or '%' or ':';
+
+    /// <summary>
     /// The whole rule, kept out of the event handler so it can be exercised directly rather
     /// than by trying to fake keyboard timings.
-    ///
-    /// Only 0-9: char.IsDigit is also true for Arabic-Indic ٠١٢, and a barcode is never
-    /// written in those.
     /// </summary>
     public static Keystroke Classify(string text, TimeSpan sinceLastKeystroke)
     {
-        if (text.Length != 1 || text[0] is < '0' or > '9') return Keystroke.NotAScan;
+        if (text.Length != 1 || !IsValidBarcodeChar(text[0])) return Keystroke.NotAScan;
         return sinceLastKeystroke > BurstGap ? Keystroke.PossibleStart : Keystroke.Burst;
     }
 

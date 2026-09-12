@@ -1,3 +1,4 @@
+using MarketPos.Views;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -26,13 +27,16 @@ public partial class ExpenseWindow : Window
         Services.Responsive.Fit(this);
         _existing = existing;
 
-        CategoryBox.ItemsSource = ExpenseRepository.Categories().Select(c => c.Name).ToList();
+        CategoryBox.ItemsSource = Link.Shop.Expenses.Categories().Select(c => Loc.T(c.Name)).ToList();
         MethodBox.ItemsSource = new[]
         {
             Loc.T("Cash"), Loc.T("Bank transfer"), Loc.T("Cheque"),
             Loc.T("Card"), Loc.T("Other"),
         };
-        RepeatBox.ItemsSource = new[] { "Does not repeat", "Weekly", "Monthly", "Yearly" };
+        RepeatBox.ItemsSource = new[]
+        {
+            Loc.T("Does not repeat"), Loc.T("Weekly"), Loc.T("Monthly"), Loc.T("Yearly"),
+        };
 
         var source = existing ?? template;
 
@@ -83,13 +87,13 @@ public partial class ExpenseWindow : Window
     }
 
     public static bool AddNew(Window owner) =>
-        new ExpenseWindow(null) { Owner = owner }.ShowDialog() == true;
+        new ExpenseWindow(null).By(owner).ShowDialog() == true;
 
     public static bool Edit(Window owner, Expense expense) =>
-        new ExpenseWindow(expense) { Owner = owner }.ShowDialog() == true;
+        new ExpenseWindow(expense).By(owner).ShowDialog() == true;
 
     public static bool Repeat(Window owner, Expense template) =>
-        new ExpenseWindow(null, template) { Owner = owner }.ShowDialog() == true;
+        new ExpenseWindow(null, template).By(owner).ShowDialog() == true;
 
     private void ShowReceipt() =>
         ReceiptText.Text = string.IsNullOrWhiteSpace(_receiptPath)
@@ -120,7 +124,7 @@ public partial class ExpenseWindow : Window
         var name = NameBox.Text.Trim();
         if (name.Length == 0)
         {
-            ErrorText.Text = "Say what the money was spent on.";
+            ErrorText.Text = Loc.T("Say what the money was spent on.");
             NameBox.Focus();
             return;
         }
@@ -129,7 +133,7 @@ public partial class ExpenseWindow : Window
                               NumberStyles.Number, CultureInfo.InvariantCulture, out var amount)
             || amount <= 0m)
         {
-            ErrorText.Text = "Enter an amount greater than zero.";
+            ErrorText.Text = Loc.T("Enter an amount greater than zero.");
             AmountBox.Focus();
             return;
         }
@@ -143,7 +147,7 @@ public partial class ExpenseWindow : Window
             {
                 Id = _existing?.Id ?? 0,
                 Name = name,
-                CategoryId = ExpenseRepository.AddCategory(category),
+                CategoryId = Link.Shop.Expenses.AddCategory(category),
                 Category = category,
                 Amount = amount,
                 SpentOn = DateBox.SelectedDate ?? DateTime.Today,
@@ -159,8 +163,8 @@ public partial class ExpenseWindow : Window
                 },
             };
 
-            if (_existing is null) ExpenseRepository.Create(expense);
-            else ExpenseRepository.Update(expense);
+            if (_existing is null) Link.Shop.Expenses.Create(expense);
+            else Link.Shop.Expenses.Update(expense);
 
             DialogResult = true;
             Close();

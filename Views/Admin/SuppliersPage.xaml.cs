@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.Services;
@@ -39,6 +41,9 @@ public partial class SuppliersPage : AdminPageBase
     private List<Supplier> _rows = new();
     private int _picked;
 
+    /// <summary>What the back office scrolls pages in, found once the add form first opens.</summary>
+    private ScrollViewer? _viewport;
+
     public SuppliersPage() => InitializeComponent();
 
     public override string Title => "Suppliers";
@@ -48,7 +53,10 @@ public partial class SuppliersPage : AdminPageBase
     {
         Session.Require(Permission.ManageSuppliers);
 
-        _rows = SupplierRepository.List(includeInactive: true, search: SearchBox.Text);
+        // Hidden suppliers stay off the list unless asked for. Hiding one is what Deactivate
+        // is for, and a row still sitting there afterwards reads as a button that did nothing.
+        _rows = Link.Shop.Suppliers.List(includeInactive: ShowHidden.IsChecked == true,
+                                         search: SearchBox.Text);
 
         if (OwedOnly.IsChecked == true)
             _rows = _rows.Where(s => s.Owed > 0m).ToList();
@@ -75,16 +83,22 @@ public partial class SuppliersPage : AdminPageBase
     /// <summary>
     /// The whole book, not the filtered list. What the shop owes does not change because
     /// somebody typed a name into the search box.
+    ///
+    /// Hidden suppliers are out of the money, as they are out of the dashboard's "money
+    /// owed": the two figures have to agree, and a total that no row on the list adds up to
+    /// is a total nobody can check.
     /// </summary>
     private void FillSummary()
     {
-        var all = SupplierRepository.List(includeInactive: true);
+        var all = Link.Shop.Suppliers.List(includeInactive: true);
+        var books = all.Where(s => s.IsActive).ToList();
 
-        var owed = all.Sum(s => s.Owed);
-        var bought = all.Sum(s => s.TotalPurchased);
-        var paid = all.Sum(s => s.TotalPaid);
-        var owing = all.Count(s => s.Owed > 0m);
-        var active = all.Count(s => s.IsActive);
+        var owed = books.Sum(s => s.Owed);
+        var bought = books.Sum(s => s.TotalPurchased);
+        var paid = books.Sum(s => s.TotalPaid);
+        var credit = books.Sum(s => s.Credit);
+        var owing = books.Count(s => s.Owed > 0m);
+        var active = books.Count;
 
         OwedValue.Text = Money(owed);
         OwedNote.Text = owing == 0
@@ -92,12 +106,16 @@ public partial class SuppliersPage : AdminPageBase
             : Loc.T(owing == 1 ? "to {0} supplier" : "to {0} suppliers", owing);
 
         BoughtValue.Text = Money(bought);
-        BoughtNote.Text = "stock received, all time";
+        BoughtNote.Text = Loc.T("stock received, all time");
 
         PaidValue.Text = Money(paid);
-        PaidNote.Text = bought <= 0m
-            ? Loc.T("nothing paid yet")
-            : Loc.T("{0}% of what was bought", Loc.Ltr($"{paid / bought * 100m:0}"));
+        PaidNote.Text = credit > 0m
+            // Paid for a delivery that was then cancelled. Said, rather than left as a paid
+            // figure bigger than the bought one with nothing beside it to explain why.
+            ? Loc.T("{0} of it is credit with suppliers", Money(credit))
+            : bought <= 0m
+                ? Loc.T("nothing paid yet")
+                : Loc.T("{0}% of what was bought", Loc.Ltr($"{paid / bought * 100m:0}"));
 
         CountValue.Text = active.ToString();
         CountNote.Text = all.Count > active
@@ -115,7 +133,7 @@ public partial class SuppliersPage : AdminPageBase
         Empty.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         if (_rows.Count > 0) return;
 
-        EmptyTitle.Text = filtered ? "Nothing matches" : "No suppliers yet";
+        EmptyTitle.Text = Loc.T(filtered ? "Nothing matches" : "No suppliers yet");
         EmptyBody.Text = filtered
             ? "Try a different name, or clear the filter."
             : "Add the wholesalers the shop buys from. Once a delivery is recorded against one, "
@@ -141,15 +159,18 @@ public partial class SuppliersPage : AdminPageBase
         PickedNote.Text = supplier.Owed > 0m
             ? Loc.T("{0} still owed of {1} bought.",
                     Money(supplier.Owed), Money(supplier.TotalPurchased))
-            : supplier.TotalPurchased > 0m
-                ? Loc.T("Paid up. {0} bought all told.", Money(supplier.TotalPurchased))
-                : Loc.T("Nothing bought from them yet.");
+            : supplier.Credit > 0m
+                ? Loc.T("They owe the shop {0}: a delivery paid for was cancelled.",
+                        Money(supplier.Credit))
+                : supplier.TotalPurchased > 0m
+                    ? Loc.T("Paid up. {0} bought all told.", Money(supplier.TotalPurchased))
+                    : Loc.T("Nothing bought from them yet.");
 
-        var goods = SupplierRepository.WhatWeBuy(supplier.Id);
+        var goods = Link.Shop.Suppliers.WhatWeBuy(supplier.Id);
         Goods.ItemsSource = goods;
         NoGoods.Visibility = goods.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        var purchases = SupplierRepository.ListPurchases(supplierId: supplier.Id);
+        var purchases = Link.Shop.Suppliers.Purchases(supplierId: supplier.Id);
 
         Deliveries.ItemsSource = purchases.Select(p => new Delivery
         {
@@ -167,7 +188,7 @@ public partial class SuppliersPage : AdminPageBase
 
         NoDeliveries.Visibility = purchases.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        var payments = SupplierRepository.ListPayments(supplierId: supplier.Id);
+        var payments = Link.Shop.Suppliers.Payments(supplierId: supplier.Id);
         Payments.ItemsSource = payments;
         NoPayments.Visibility = payments.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -179,7 +200,7 @@ public partial class SuppliersPage : AdminPageBase
     /// </summary>
     private static List<DeliveryLine> Contents(Purchase purchase)
     {
-        var lines = SupplierRepository.ListPurchaseLines(purchase.Id);
+        var lines = Link.Shop.Suppliers.PurchaseLines(purchase.Id);
 
         if (lines.Count == 0)
         {
@@ -222,15 +243,79 @@ public partial class SuppliersPage : AdminPageBase
     }
 
     /// <summary>
-    /// Adds a supplier, along with whatever they brought with them. The page then lands on
-    /// them, so the delivery just entered is on screen without having to be looked for.
+    /// Adds a supplier, along with whatever they brought with them — on this page, in place
+    /// of the list, not in a window over it. Saving lands on them, so the delivery just
+    /// entered is on screen without having to be looked for.
     /// </summary>
     private void Add_Click(object sender, RoutedEventArgs e)
     {
-        if (Shell is null || !SupplierWindow.AddNew(Shell, out var created)) return;
+        var form = new SupplierForm(null);
+        form.Done += (_, saved) =>
+        {
+            ShowAddForm(null);
+            if (!saved) return;
 
-        _picked = created;
-        ReloadAll();
+            _picked = form.Created;
+            ReloadAll();
+        };
+
+        ShowAddForm(form);
+    }
+
+    /// <summary>
+    /// Puts the form up in place of everything else on the page, or takes it down again. The
+    /// rest is collapsed rather than covered, so Tab cannot wander into a list nobody can see.
+    /// </summary>
+    private void ShowAddForm(SupplierForm? form)
+    {
+        AddArea.Child = form;
+        if (form is not null) Localizer.Apply(form);
+
+        foreach (UIElement part in ((Panel)AddArea.Parent).Children)
+        {
+            var show = part == AddArea ? form is not null : form is null;
+            part.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        FitAddForm();
+    }
+
+    /// <summary>
+    /// Keeps the form's buttons on screen.
+    ///
+    /// The back office scrolls a page as a whole, so a page is given all the height it asks
+    /// for — and a long delivery pushed Save and Cancel below the bottom of the window. Capped
+    /// at what is actually visible, the form scrolls inside itself and its buttons stay put.
+    /// Measured again whenever the window changes size.
+    /// </summary>
+    private void FitAddForm()
+    {
+        if (AddArea.Child is not FrameworkElement form) return;
+
+        if (_viewport is null)
+        {
+            DependencyObject? at = this;
+            while (at is not null and not ScrollViewer) at = VisualTreeHelper.GetParent(at);
+
+            _viewport = at as ScrollViewer;
+            if (_viewport is null) return;
+            _viewport.SizeChanged += (_, _) => FitAddForm();
+        }
+
+        // Between the visible area and the form: the page's margin inside the shell, and the
+        // card's own padding around the form.
+        var around = Parent is FrameworkElement host ? host.Margin.Top + host.Margin.Bottom : 0;
+        var room = _viewport.ViewportHeight - around - AddArea.Padding.Top - AddArea.Padding.Bottom;
+
+        form.MaxHeight = Math.Max(320, room);
+    }
+
+    public override bool GoBack()
+    {
+        if (AddArea.Child is not SupplierForm form) return false;
+
+        form.Cancel();
+        return true;
     }
 
     private void Edit_Click(object sender, RoutedEventArgs e)
@@ -239,11 +324,49 @@ public partial class SuppliersPage : AdminPageBase
         if (SupplierWindow.Edit(Shell, supplier)) ReloadAll();
     }
 
-    /// <summary>A delivery: what arrived, what it cost, and how much was handed over there and then.</summary>
-    private void Purchase_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// What just happened, in the line beside the filters. Cleared by the next reload, so it
+    /// never becomes an old message about a row that has since changed.
+    /// </summary>
+    private void Note(string what, bool gentle)
     {
-        if (Shell is null) return;
-        if (PurchaseWindow.Show(Shell, _picked > 0 ? _picked : null)) ReloadAll();
+        Hint.Text = what;
+        Hint.Foreground = (Brush)FindResource(gentle ? "Brush.Muted" : "Brush.Danger");
+    }
+
+    /// <summary>
+    /// Deletes a supplier, with their deliveries and payments. A supplier the shop has
+    /// dealt with takes history with them that cannot be brought back, so that one is asked
+    /// about first; one entered by mistake and never used simply goes.
+    /// </summary>
+    private void Remove_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        if (sender is not FrameworkElement { Tag: int id }) return;
+
+        var supplier = _rows.FirstOrDefault(s => s.Id == id);
+        if (supplier is null) return;
+
+        var history = supplier.TotalPurchased > 0m || supplier.TotalPaid > 0m;
+        if (history && !Confirm(Loc.T("Delete {0}?", supplier.Name),
+                Loc.T("Their deliveries and payments are deleted with them. This cannot be undone.")))
+            return;
+
+        try
+        {
+            Link.Shop.Suppliers.Delete(supplier.Id, supplier.Name, out var removed, out var why);
+            ReloadAll();
+
+            Note(removed
+                ? Loc.T("{0} was removed.", supplier.Name)
+                : why,
+                gentle: removed);
+        }
+        catch (Exception problem)
+        {
+            Note(problem.Message, gentle: false);
+        }
     }
 
     /// <summary>
@@ -267,8 +390,8 @@ public partial class SuppliersPage : AdminPageBase
 
         if (result is null) return;
 
-        SupplierRepository.Pay(supplier.Id, supplier.Name, result.Amount, result.Date,
-                               result.Method, result.Note);
+        Link.Shop.Suppliers.Pay(supplier.Id, supplier.Name, result.Amount, result.Date,
+                                result.Method, result.Note);
         ReloadAll();
     }
 }

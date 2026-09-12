@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using MarketPos.Models;
 using MarketPos.Services;
 
@@ -39,7 +39,15 @@ public static class SaleRepository
                 return Convert.ToInt32(already);
         }
 
-        using var transaction = connection.BeginTransaction();
+        // Immediate, not deferred: the write lock is taken now rather than at the first write.
+        //
+        // The next line reads the highest invoice number and adds one. Two tills paying at the
+        // same moment on a deferred transaction both read the same number, and the second one
+        // to commit is refused by the unique index — a sale lost to a race, at the counter,
+        // with the money already in the drawer. Taking the lock first makes the second till
+        // wait the few milliseconds the first one needs, and then read a number that is
+        // genuinely free. The same lock is what stops two tills selling the last tin.
+        using var transaction = connection.BeginTransaction(deferred: false);
 
         using var next = connection.CreateCommand();
         next.CommandText = "SELECT COALESCE(MAX(invoice_number), 0) + 1 FROM sales;";
@@ -127,7 +135,8 @@ public static class SaleRepository
 
         ActivityRepository.Record("completed a sale", "Sale", invoiceNumber,
             newValue: $"{total:0.00} DH",
-            detail: $"completed sale #{invoiceNumber} for {total:0.00} DH", connection: connection);
+            detail: ActivityRepository.Say("completed sale #{0} for {1}",
+                                          invoiceNumber, $"{total:0.00} DH"), connection: connection);
 
         transaction.Commit();
 

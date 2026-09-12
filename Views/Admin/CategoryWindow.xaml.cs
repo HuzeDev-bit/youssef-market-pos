@@ -1,3 +1,4 @@
+﻿using MarketPos.Views;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
@@ -57,10 +58,10 @@ public partial class CategoryWindow : Window
     }
 
     public static bool AddNew(Window owner) =>
-        new CategoryWindow(null) { Owner = owner }.ShowDialog() == true;
+        new CategoryWindow(null).By(owner).ShowDialog() == true;
 
     public static bool Edit(Window owner, CategoryRow row) =>
-        new CategoryWindow(row) { Owner = owner }.ShowDialog() == true;
+        new CategoryWindow(row).By(owner).ShowDialog() == true;
 
     private void Suggestion_Click(object sender, RoutedEventArgs e)
     {
@@ -131,7 +132,7 @@ public partial class CategoryWindow : Window
         var name = NameBox.Text.Trim();
         if (name.Length == 0)
         {
-            ErrorText.Text = "Give the category a name.";
+            ErrorText.Text = Loc.T("Give the category a name.");
             NameBox.Focus();
             return;
         }
@@ -143,9 +144,9 @@ public partial class CategoryWindow : Window
             if (_existing is null)
             {
                 // The picture is named after the category, so the row has to exist first.
-                var id = CategoryRepository.Create(name, icon);
+                var id = Link.Shop.Categories.Create(name, icon);
                 if (_pickedFrom is not null)
-                    CategoryRepository.Rename(id, name, name, icon, CategoryImageWriter.Save(id, _pickedFrom));
+                    Link.Shop.Categories.Rename(id, name, name, icon, CategoryImageWriter.Save(id, _pickedFrom));
             }
             else
             {
@@ -157,7 +158,7 @@ public partial class CategoryWindow : Window
                 // in the folder that nothing will ever point at again.
                 if (image.Length == 0) CategoryImages.Forget(_existing.Id);
 
-                CategoryRepository.Rename(_existing.Id, _existing.Name, name, icon, image);
+                Link.Shop.Categories.Rename(_existing.Id, _existing.Name, name, icon, image);
             }
 
             DialogResult = true;
@@ -167,7 +168,7 @@ public partial class CategoryWindow : Window
         {
             // A duplicate name hits the UNIQUE constraint; say so in shop language.
             ErrorText.Text = error.Message.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase)
-                ? $"There is already a category called {name}."
+                ? Loc.T("There is already a category called {0}.", name)
                 : error.Message;
         }
     }
@@ -205,11 +206,11 @@ public partial class CategoryWindow : Window
     {
         if (_existing is null) return;
 
-        if (!ConfirmWindow.Ask(this, $"Deactivate {_existing.Name}?",
-                "It stops appearing on the till. Nothing is deleted."))
+        if (!ConfirmWindow.Ask(this, Loc.T("Delete {0}?", _existing.Name),
+                Loc.T("It goes for good. Its products stay in stock and on the till, without a category.")))
             return;
 
-        if (!CategoryRepository.SetActive(_existing.Id, _existing.Name, active: false, out var problem))
+        if (!Link.Shop.Categories.Delete(_existing.Id, _existing.Name, out var problem))
         {
             ErrorText.Text = problem;
             return;

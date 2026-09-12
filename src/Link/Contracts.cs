@@ -1,4 +1,4 @@
-namespace MarketPos.Link;
+﻿namespace MarketPos.Link;
 
 /// <summary>
 /// What a till and the server say to each other.
@@ -46,6 +46,29 @@ public sealed record StaffMember(
     string PinSalt,
     bool IsActive);
 
+/// <summary>
+/// A product a cashier put into the books from the counter, on its way to the shop's own
+/// database.
+///
+/// It goes to the server rather than into the till's copy, because the till's copy is a copy:
+/// everything in it arrived from the server and is replaced by the server on the next sync, so
+/// a product written only there would be sold once and then vanish, and would never be seen by
+/// the back office, the stock list or the second till.
+/// </summary>
+public sealed record NewProduct(
+    string Barcode,
+    string Name,
+    string Category,
+    decimal Price,
+    decimal Cost,
+    decimal TaxRate,
+    string Unit,
+    decimal Stock,
+    string AddedBy);
+
+/// <summary>What the server made of it.</summary>
+public sealed record ProductAccepted(int Id, string Barcode, string Name, bool AlreadyHad);
+
 /// <summary>One product as a till needs it — enough to ring it up and print it on a receipt.</summary>
 public sealed record CatalogItem(
     int Id,
@@ -55,7 +78,12 @@ public sealed record CatalogItem(
     decimal Price,
     decimal TaxRate,
     string Unit,
-    decimal Stock);
+    decimal Stock,
+
+    // Whether the shop holds a photo for this. A till fetches the picture itself, and only
+    // for the products that have one — a request per empty tile would be a request per empty
+    // tile, on every till, every time the catalogue changed.
+    bool HasPhoto = false);
 
 /// <summary>
 /// The catalogue, with a stamp the till sends back next time.
@@ -110,3 +138,31 @@ public sealed record SaleAccepted(string TillReference, int InvoiceNumber, bool 
 public sealed record SaleBatch(IReadOnlyList<SaleUpload> Sales);
 
 public sealed record SaleBatchResult(IReadOnlyList<SaleAccepted> Accepted, IReadOnlyList<string> Rejected);
+
+/// <summary>
+/// What the server made of a checkout it was asked to perform.
+///
+/// <para>
+/// Not the same thing as a sale handed over afterwards. A till that owns its own books writes
+/// the sale and tells the server later; a till that owns nothing asks the server to make the
+/// sale and waits for the answer, because until the server says yes there is no sale — and the
+/// cashier is standing in front of the customer, which is exactly the moment to find out that
+/// the last tin was sold on the other counter a second ago.
+/// </para>
+/// </summary>
+public sealed record CheckoutDone(
+    bool Ok,
+    int InvoiceNumber,
+    bool AlreadyHad,
+    string Problem);
+
+/// <summary>Whether the shop's server is up, and what it is serving.</summary>
+public sealed record Health(
+    string Status,
+    string Shop,
+    int Version,
+    string ServerId,
+    string Database,
+    int Products,
+    int SalesToday,
+    DateTime Now);

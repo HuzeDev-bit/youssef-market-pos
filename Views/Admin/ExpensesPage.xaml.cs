@@ -50,7 +50,7 @@ public partial class ExpensesPage : AdminPageBase
 
         FillKindFilter();
 
-        _rows = ExpenseRepository.List(range: Dates.Range, categoryId: SelectedKindId);
+        _rows = Link.Shop.Expenses.List(range: Dates.Range, categoryId: SelectedKindId);
 
         var search = SearchBox.Text.Trim();
         if (search.Length > 0)
@@ -72,32 +72,34 @@ public partial class ExpensesPage : AdminPageBase
 
     // ============================== Filter ==============================
 
+    /// <summary>
+    /// One entry in the kind filter. ToString is what the closed box shows: this theme's combo
+    /// draws the chosen item itself and DisplayMemberPath does not reach it, which is how the
+    /// box came to read "KindChoice { Id = ... }" instead of the kind, in the shop's language.
+    /// </summary>
+    private sealed record KindChoice(int? Id, string Display)
+    {
+        public override string ToString() => Display;
+    }
+
     private void FillKindFilter()
     {
         if (KindFilter.ItemsSource is not null) return;
 
         _building = true;
 
-        var kinds = new List<string> { Loc.T("Every kind") };
-        kinds.AddRange(ExpenseRepository.Categories().Select(c => c.Name));
+        var kinds = new List<KindChoice> { new(null, Loc.T("Every kind")) };
+        kinds.AddRange(Link.Shop.Expenses.Categories().Select(c => new KindChoice(c.Id, Loc.T(c.Name))));
 
+        KindFilter.DisplayMemberPath = nameof(KindChoice.Display);
+        KindFilter.SelectedValuePath = nameof(KindChoice.Id);
         KindFilter.ItemsSource = kinds;
         KindFilter.SelectedIndex = 0;
 
         _building = false;
     }
 
-    private int? SelectedKindId
-    {
-        get
-        {
-            if (KindFilter.SelectedIndex <= 0) return null;
-
-            var name = KindFilter.SelectedItem as string;
-            return ExpenseRepository.Categories()
-                .FirstOrDefault(c => c.Name == name) is { Id: > 0 } found ? found.Id : null;
-        }
-    }
+    private int? SelectedKindId => KindFilter.SelectedValue as int?;
 
     private void Filter_Changed(object sender, RoutedEventArgs e)
     {
@@ -108,7 +110,7 @@ public partial class ExpensesPage : AdminPageBase
 
     private void FillByKind()
     {
-        var kinds = ExpenseRepository.ByCategory(Dates.Range)
+        var kinds = Link.Shop.Expenses.ByCategory(Dates.Range)
             .Where(k => k.Amount > 0m)
             .ToList();
 
@@ -117,7 +119,7 @@ public partial class ExpensesPage : AdminPageBase
 
         var bars = kinds.Select(k => new KindBar
         {
-            Kind = k.Category,
+            Kind = Loc.T(k.Category),
             Amount = Math.Round(k.Amount, 2),
             Share = total <= 0m ? 0m : k.Amount / total,
             // Against the biggest, not the total: the point of the chart is which bill is
@@ -145,7 +147,7 @@ public partial class ExpensesPage : AdminPageBase
     private void FillSummary()
     {
         var live = _rows.Where(e => !e.IsVoid).ToList();
-        var total = ExpenseRepository.Total(Dates.Range);
+        var total = Link.Shop.Expenses.Total(Dates.Range);
 
         TotalValue.Text = Money(total);
         TotalNote.Text = live.Count == 0
@@ -153,7 +155,7 @@ public partial class ExpensesPage : AdminPageBase
             : Loc.T(live.Count == 1 ? "across {0} bill · {1}" : "across {0} bills · {1}",
                     live.Count, Loc.T(Dates.RangeLabel).ToLowerInvariant());
 
-        var kinds = ExpenseRepository.ByCategory(Dates.Range)
+        var kinds = Link.Shop.Expenses.ByCategory(Dates.Range)
             .Where(k => k.Amount > 0m)
             .OrderByDescending(k => k.Amount)
             .ToList();
@@ -174,7 +176,7 @@ public partial class ExpensesPage : AdminPageBase
 
         // What comes back every month whether the shop sells anything or not. This is the
         // number that says how much has to be taken before the doors have paid for themselves.
-        var fixedBills = ExpenseRepository
+        var fixedBills = Link.Shop.Expenses
             .List(range: Dates.Range)
             .Where(e => !e.IsVoid && e.Recurring == Recurrence.Monthly)
             .ToList();
@@ -189,7 +191,7 @@ public partial class ExpensesPage : AdminPageBase
 
         // Against revenue, because that is what says whether it matters. Two thousand dirhams
         // of bills is nothing in a busy month and frightening in a quiet one.
-        var revenue = Finance.For(Dates.Range).Revenue;
+        var revenue = Link.Shop.Reports.Money(Dates.Range).Revenue;
         if (revenue <= 0m)
         {
             ShareValue.Text = "—";
@@ -219,7 +221,7 @@ public partial class ExpensesPage : AdminPageBase
         Empty.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         if (_rows.Count > 0) return;
 
-        EmptyTitle.Text = filtered ? "Nothing matches" : "No bills recorded";
+        EmptyTitle.Text = Loc.T(filtered ? "Nothing matches" : "No bills recorded");
         EmptyBody.Text = filtered
             ? "Try a different search, or another kind."
             : Loc.T("Put in the rent, the light, the water and the internet. Mark the ones "

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using MarketPos.Models;
 using MarketPos.Services;
 using Microsoft.Data.Sqlite;
@@ -28,7 +28,9 @@ public static class ProductRepository
             products.Add(new Product
             {
                 Id = reader.GetInt32(0),
-                Barcode = reader.GetString(1),
+                // Str, not GetString: a product with nothing printed on it has NULL here, and
+                // the till has to be able to read the shelf it is standing in front of.
+                Barcode = reader.Str(1),
                 Name = reader.GetString(2),
                 Category = reader.GetString(3),
                 Price = ParseMoney(reader.GetString(4)),
@@ -37,7 +39,7 @@ public static class ProductRepository
                 // An explicit path in the database wins; otherwise look for a file named
                 // after the barcode, so photos can be added without touching data or code.
                 ImagePath = reader.IsDBNull(7)
-                    ? ProductImages.Find(reader.GetString(1))
+                    ? ProductImages.Find(reader.Str(1))
                     : reader.GetString(7),
                 SoldAtTheTill = reader.IsDBNull(8) || reader.GetInt32(8) != 0,
                 Stock = reader.Dec(9),
@@ -50,7 +52,9 @@ public static class ProductRepository
     {
         using var connection = Database.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT name FROM categories ORDER BY name;";
+        // A blank name is where the products of a deleted category went. It is not a
+        // category anyone made, so it is not a chip on the till.
+        command.CommandText = "SELECT name FROM categories WHERE TRIM(name) <> '' ORDER BY name;";
 
         var categories = new List<string>();
         using var reader = command.ExecuteReader();

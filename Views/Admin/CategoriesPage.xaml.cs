@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using MarketPos.Data;
 using MarketPos.Models;
 using MarketPos.Services;
@@ -29,8 +29,8 @@ public partial class CategoriesPage : AdminPageBase
     {
         Session.Require(Permission.ManageCategories);
 
-        var products = StockRepository.List();
-        _rows = CategoryRepository.List(includeInactive: ShowInactive.IsChecked == true);
+        var products = Link.Shop.Stock.List();
+        _rows = Link.Shop.Categories.List(includeInactive: ShowInactive.IsChecked == true).ToList();
 
         // Each card carries what is actually in it. Read from the products rather than kept
         // on the category, so it cannot drift out of step with the shelves.
@@ -84,6 +84,7 @@ public partial class CategoriesPage : AdminPageBase
             ? "no cost recorded yet"
             : "what the stock in them cost");
 
+        Hint.Foreground = (System.Windows.Media.Brush)FindResource("Brush.Muted");
         Hint.Text = loose == 0
             ? string.Empty
             : Loc.T(loose == 1
@@ -108,5 +109,35 @@ public partial class CategoriesPage : AdminPageBase
 
         var row = _rows.FirstOrDefault(c => c.Id == id);
         if (row is not null && CategoryWindow.Edit(Shell, row)) ReloadAll();
+    }
+
+    /// <summary>
+    /// Deletes a category, for good.
+    ///
+    /// It asks nothing first. What makes that safe is not a dialog but what it refuses to do:
+    /// a category with products still on the shelves in it does not go, and says so in the
+    /// line above the list. What is left to delete is a name and a picture, and typing them
+    /// again is a shorter job than the confirmation would have been.
+    ///
+    /// The click stops here, or it would carry on to the card and open the editor for the
+    /// category just deleted.
+    /// </summary>
+    private void Remove_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        if (sender is not FrameworkElement { Tag: int id }) return;
+
+        var row = _rows.FirstOrDefault(c => c.Id == id);
+        if (row is null) return;
+
+        if (Link.Shop.Categories.Delete(row.Id, row.Name, out var problem))
+        {
+            ReloadAll();
+            return;
+        }
+
+        Hint.Text = problem;
+        Hint.Foreground = (System.Windows.Media.Brush)FindResource("Brush.Danger");
     }
 }

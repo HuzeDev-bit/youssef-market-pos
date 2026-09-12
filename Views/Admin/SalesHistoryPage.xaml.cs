@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using MarketPos.Data;
 using MarketPos.Models;
@@ -34,7 +34,7 @@ public partial class SalesHistoryPage : AdminPageBase
         var seesMoney = Session.Can(Permission.SeeFinancials);
         ProfitHead.Visibility = seesMoney ? Visibility.Visible : Visibility.Hidden;
 
-        _rows = SalesHistoryRepository.List(
+        _rows = Link.Shop.Sales.List(
             range: Dates.Range,
             search: SearchBox.Text,
             workerId: SelectedCashierId);
@@ -58,10 +58,10 @@ public partial class SalesHistoryPage : AdminPageBase
 
         var selected = (CashierFilter.SelectedItem as Worker)?.Id ?? 0;
 
-        var sold = SalesHistoryRepository.WhoSoldIn(Dates.Range);
+        var sold = Link.Shop.Sales.WhoSoldIn(Dates.Range);
 
-        var cashiers = new List<Worker> { new() { Id = 0, Name = "Any cashier" } };
-        cashiers.AddRange(WorkerRepository.List(includeInactive: true)
+        var cashiers = new List<Worker> { new() { Id = 0, Name = Loc.T("Any cashier") } };
+        cashiers.AddRange(Link.Shop.Workers.List(includeInactive: true)
             .Where(w => w.IsActive || sold.Contains(w.Id)));
 
         CashierFilter.ItemsSource = cashiers;
@@ -99,13 +99,13 @@ public partial class SalesHistoryPage : AdminPageBase
         {
             ProfitValue.Text = "—";
             ProfitValue.Foreground = Brush("Brush.Muted");
-            ProfitNote.Text = "Owner only";
+            ProfitNote.Text = Loc.T("Owner only");
         }
         else if (costMissing)
         {
             ProfitValue.Text = "—";
             ProfitValue.Foreground = Brush("Brush.Muted");
-            ProfitNote.Text = "Purchase prices missing";
+            ProfitNote.Text = Loc.T("Purchase prices missing");
         }
         else
         {
@@ -118,7 +118,7 @@ public partial class SalesHistoryPage : AdminPageBase
         }
 
         ItemsValue.Text = items.ToString();
-        ItemsNote.Text = "lines on the receipts";
+        ItemsNote.Text = Loc.T("lines on the receipts");
 
         RefundValue.Text = Money(refunded);
         var affected = _rows.Count(r => r.Status != SaleStatus.Completed);
@@ -144,7 +144,7 @@ public partial class SalesHistoryPage : AdminPageBase
 
         var filtered = SearchBox.Text.Trim().Length > 0 || SelectedCashierId is not null;
 
-        EmptyTitle.Text = filtered ? "Nothing matches" : "No sales in this period";
+        EmptyTitle.Text = Loc.T(filtered ? "Nothing matches" : "No sales in this period");
         EmptyBody.Text = filtered
             ? "Try a different search, or set the cashier back to Any."
             : "Pick a wider date range above, or ring up a sale on the till.";

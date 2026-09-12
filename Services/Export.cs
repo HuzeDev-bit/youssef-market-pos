@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -101,7 +101,7 @@ public static class Export
     /// </summary>
     public static string ProfitReport(DateRange range)
     {
-        var f = Finance.For(range);
+        var f = Link.Shop.Reports.Money(range);
         // Collection-expression elements would be parsed as indexer initialisers inside a
         // collection initialiser, so each row is an explicit array.
         object?[] Row(string label, object? value, string meaning = "") => new object?[] { label, value, meaning };
@@ -134,8 +134,8 @@ public static class Export
             Row("Date", "Revenue", "Profit"),
         };
 
-        var revenue = Finance.Series(range, SeriesKind.Revenue);
-        var profit = Finance.Series(range, SeriesKind.Profit);
+        var revenue = Link.Shop.Reports.Series(range, SeriesKind.Revenue);
+        var profit = Link.Shop.Reports.Series(range, SeriesKind.Profit);
         for (var i = 0; i < revenue.Count; i++)
             rows.Add(new object?[]
             {

@@ -7,6 +7,10 @@ obj/
 # larger than the shop will ever be.
 dist/
 
+# A stray single-file build left in the project root by a publish without -o. Same reason as
+# above: 185MB of binary that git would keep for ever.
+/MarketPos.exe
+
 # Visual Studio and Rider leavings.
 .vs/
 .idea/
